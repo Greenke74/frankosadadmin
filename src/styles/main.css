@@ -1,0 +1,38 @@
+* {
+    /* colors */
+    --theme-color: #1A2E22;
+    --white: #E9FBF0;
+    --background-color: #DFF5E8;
+    --text-color: #222222;
+    --orange: #FFC940;
+    --active-color: #65B284;
+    --disabled-color: #65b2848c;
+    --menu-button-color: #cbe2d414;
+    --menu-active-button-color: #cbe2d43d;
+
+    /* border radius */
+    --block-border-radius: 8px;
+    --page-border-radius: 16px;
+
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+}
+
+*:focus {
+    outline: none;
+}
+
+body {
+    background-color: var(--background-color);
+    overflow-x: hidden;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+dialog::backdrop {
+    background-color: var(--white) !important;
+}
