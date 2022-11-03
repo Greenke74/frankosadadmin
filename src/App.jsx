@@ -1,22 +1,25 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout.jsx";
 import { getRoutes } from "./services/routes-service.jsx";
-import { Provider } from "react-redux";
-import { store } from "./redux/index.js";
+import { useSelector } from "react-redux";
+import SignInForm from "./components/SignInForm.jsx";
 
 function App() {
+  const auth = useSelector(state => state.auth);
+
   return (
-    <Provider store={store}>
-      <Router>
-        <Layout>
-          <Routes>
-            {getRoutes().map(({ path, element }) => (
-              <Route path={path} element={element} key={path} />
-            ))}
-          </Routes>
-        </Layout>
-      </Router>
-    </Provider>
+    auth?.role
+      ? (
+        < Router >
+          <Layout>
+            <Routes>
+              {getRoutes().map(({ path, element }) => (
+                <Route path={path} element={element} key={path} />
+              ))}
+            </Routes>
+          </Layout>
+        </ Router>
+      ) : (<SignInForm />)
   );
 }
 

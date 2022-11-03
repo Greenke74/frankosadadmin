@@ -3,11 +3,11 @@ import { authSlice } from "./slices/authSlice";
 
 export const store = configureStore({
     reducer: combineReducers({
-        authSlice: authSlice.reducer
+        auth: authSlice.reducer
     })
 })
 
 export const actionTypes = {
-    updateAuth: 'UPDATEAUTH',
+    login: 'LOGIN',
     logout: 'LOGOUT'
 }
