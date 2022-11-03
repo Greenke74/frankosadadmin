@@ -8,7 +8,7 @@ const Header = () => {
 			width: 'calc(100% + 24px)',
 			height: '60px',
 			backgroundColor: 'var(--white)',
-			marginLeft: '-24px',
+			// marginLeft: '-24px',
 			fontWeight: '600',
 			color: 'var(--theme-color)',
 			display: 'flex',

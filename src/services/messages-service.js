@@ -6,5 +6,6 @@ export const errorMessages = {
     max: (max) => `Це поле повинно бути меншим за ${max}`,
     urlPattern: 'Неправильний формат посилання',
     emailPattern: 'Неправильний формат електронної пошти',
-    phonePattern: 'Неправильний формат номера телефону'
+    phonePattern: 'Неправильний формат номера телефону',
+    'Invalid login credentials': 'Логін або пароль неправильні'
 }

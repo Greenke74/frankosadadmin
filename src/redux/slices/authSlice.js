@@ -15,7 +15,7 @@ export const authSlice = createSlice({
 	name: 'authSlice',
 	initialState,
 	reducers: {
-		update: (state, { payload }) => {
+		login: (state, { payload }) => {
 			state = payload;
 			return state;
 		},
