@@ -26,10 +26,11 @@ const Sidebar = () => {
       customClass: 'logoutSwal'
     }).then(result => {
       if (result.value) {
-        logout().then(() => { });
-        getSession().then(session => {
-          dispatch(authSlice.actions.login(session?.user ?? null));
-        })
+        logout().then(() => {
+          getSession().then(session => {
+            dispatch(authSlice.actions.login(session?.user ?? null));
+          })
+        });
       }
     })
   }
