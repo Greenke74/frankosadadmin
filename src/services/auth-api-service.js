@@ -1,11 +1,21 @@
 import { supabase } from "../supabase/supabaseClient.js";
 
-export const getSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    return session??null
-}
+export const getSession = () => new Promise((resolve, reject) => {
+    try {
+        supabase.auth.refreshSession()
+            .then(response => {
+                if(response.error){
+                    reject(response.error.message);
+                }
+                resolve(response.data.session)
+            })
+            .catch(error => reject(error))
+    } catch (e) {
+        throw e
+    }
+});
 
-export const register = async (data) => new Promise((resolve, reject) => {
+export const register = (data) => new Promise((resolve, reject) => {
     const { email, password, user_name } = data
     try {
         supabase.auth.signUp(
@@ -27,7 +37,7 @@ export const register = async (data) => new Promise((resolve, reject) => {
     }
 })
 
-export const login = async (credentails) => new Promise((resolve, reject) => {
+export const login = (credentails) => new Promise((resolve, reject) => {
     try {
         supabase.auth.signInWithPassword(credentails)
             .then(response => {
@@ -42,19 +52,22 @@ export const login = async (credentails) => new Promise((resolve, reject) => {
     }
 })
 
-export const logout = async () => new Promise((resolve, reject) => {
+export const logout = () => new Promise((resolve, reject) => {
     try {
         supabase.auth.signOut()
             .then(response => {
-                console.log(response);
+                if(response.error){
+                    reject(response.error.message);
+                }
                 resolve(response);
             })
+            .catch(error => reject(error))
     } catch (e) {
         
     }
 })
 
-export const resetPassword = async (email) => new Promise((resolve, reject) => {
+export const resetPassword = (email) => new Promise((resolve, reject) => {
     try {
         supabase.auth.resetPasswordForEmail(email,
         { redirectTo: `${window.location.origin}/setnewpassword`})
@@ -70,7 +83,7 @@ export const resetPassword = async (email) => new Promise((resolve, reject) => {
     }
 })
 
-export const setNewPassword = async (newPassword) => new Promise((resolve, reject) => {
+export const setNewPassword = (newPassword) => new Promise((resolve, reject) => {
     try {
         supabase.auth.updateUser({ password: newPassword})
             .then(response => {
