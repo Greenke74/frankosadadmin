@@ -5,6 +5,28 @@ export const getSession = async () => {
     return session??null
 }
 
+export const register = async (data) => new Promise((resolve, reject) => {
+    const { email, password, user_name } = data
+    try {
+        supabase.auth.signUp(
+            {
+                email,
+                password,
+                user_name
+            }
+        )
+            .then(response => {
+                if(response.error){
+                    reject(response.error.message)
+                }
+                resolve(response.data.user)
+            })
+            .catch(error => reject(error))
+    } catch (e) {
+        throw e
+    }
+})
+
 export const login = async (credentails) => new Promise((resolve, reject) => {
     try {
         supabase.auth.signInWithPassword(credentails)
