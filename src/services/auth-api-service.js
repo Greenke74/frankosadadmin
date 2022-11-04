@@ -31,3 +31,34 @@ export const logout = async () => new Promise((resolve, reject) => {
         
     }
 })
+
+export const resetPassword = async (email) => new Promise((resolve, reject) => {
+    try {
+        supabase.auth.resetPasswordForEmail(email,
+        { redirectTo: `${window.location.origin}/setnewpassword`})
+            .then(response => {
+                if(response.error){
+                    reject(response.error.message)
+                }
+                resolve(response)
+            })
+            .catch(error => reject(error))
+    } catch (e) {
+        throw e
+    }
+})
+
+export const setNewPassword = async (newPassword) => new Promise((resolve, reject) => {
+    try {
+        supabase.auth.updateUser({ password: newPassword})
+            .then(response => {
+                if(response.error) {
+                    reject(response.error.message)
+                }
+                resolve(response)
+            })
+            .catch(error => reject(error))
+    } catch (e) {
+        throw e
+    }
+})
