@@ -70,7 +70,7 @@ export const logout = () => new Promise((resolve, reject) => {
 export const resetPassword = (email) => new Promise((resolve, reject) => {
     try {
         supabase.auth.resetPasswordForEmail(email,
-        { redirectTo: `${window.location.origin}/setnewpassword`})
+        { redirectTo: `${window.location.origin}/account-settings`})
             .then(response => {
                 if(response.error){
                     reject(response.error.message)
