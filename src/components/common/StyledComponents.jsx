@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import InputBase from '@mui/material/InputBase';
 import { alpha, styled } from '@mui/material/styles';
 import { InputLabel, Button } from '@mui/material';
-import { LinearProgress } from '@mui/material';
+import { CircularProgress, LinearProgress } from '@mui/material';
 
 
 
@@ -38,26 +38,37 @@ export const StyledInputLabel = styled(InputLabel)({
 
 export const SuccessButton = styled(Button)({
   '&': {
-    color: 'var(--white ) !important',
-    backgroundColor: 'var(--active-color) !important',
+    color: 'var(--white )',
+    backgroundColor: 'var(--active-color)',
     textTransform: 'none',
     padding: '6px 20px',
   },
+  '&:hover': {
+    backgroundColor: '#62b784'
+  },
   '&.Mui-disabled': {
-    backgroundColor: 'var(--disabled-color) !important',
+    backgroundColor: 'var(--disabled-color)',
+    color: 'var(--white )'
   }
-
 })
 
 export const StyledLinearProgress = styled(LinearProgress)({
   '&': {
     backgroundColor: 'var(--disabled-color)',
-    marginLeft: '-1.5rem'
   },
   '& .MuiLinearProgress-bar': {
     backgroundColor: 'var(--theme-color)'
   }
 })
+
+export const Spinner = ({style}) => {
+	return (
+		<div style={{width: '100%', display: 'flex', justifyContent: 'center', margin: '25px 0', ...style}}>
+			<CircularProgress size={30} style={{ color: 'var(--theme-color)' }} />
+		</div>
+	)
+}
+
 
 
 
