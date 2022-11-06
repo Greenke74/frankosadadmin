@@ -1,0 +1,24 @@
+.slider-block {
+
+    .slick-track,
+    -slick-list {
+        display: flex;
+        justify-content: start;
+        flex-wrap: nowrap;
+        margin-left: 0;
+    }
+
+    .slick-dots {
+        display: flex;
+        align-items: baseline;
+
+        li button::before {
+            font-size: 10px;
+        }
+
+        li.slick-active button:before {
+            color: var(--theme-color);
+
+        }
+    }
+}

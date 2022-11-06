@@ -1,20 +1,23 @@
-import { lazy } from 'react';
-
-const MainSettings = lazy(() => import('../pages/MainSettings.jsx'));
-
 export const getRoutes = () => ([
 	{
 		path: '/',
-		label: 'Головна сторінка'
+		label: 'Головна сторінка',
+		element: () => import('../pages/MainPage.jsx')
 	},
 	{
 		path: '/main-settings',
 		label: 'Загальні налаштування',
-		element: <MainSettings />,
+		element: () => import('../pages/MainSettings.jsx')
 	},
 	{
 		path: '/portfolio',
 		label: 'Портфоліо',
 		element: <></>,
+	},
+	{
+		path: '/account-settings',
+		label: 'Налаштування профілю',
+		element: () => import('../pages/UserSettings.jsx'),
+		hideAsideButton: true
 	}
-]) 
+])

@@ -1,25 +1,46 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./components/layout/Layout.jsx";
+import { lazy, Suspense } from 'react';
 import { getRoutes } from "./services/routes-service.jsx";
 import { useSelector } from "react-redux";
-import SignInForm from "./components/SignInForm.jsx";
+import { Routes, Route, useLocation } from "react-router-dom";
+import AuthWrapper from "./supabase/AuthWrapper.jsx";
+
+import Layout from "./components/layout/Layout.jsx";
+import Auth from "./components/auth/Auth.jsx";
+import { Spinner } from './components/common/StyledComponents';
+const SetNewPassword = lazy(() => import('./pages/SetNewPassword.jsx'));
 
 function App() {
   const auth = useSelector(state => state.auth);
 
-  return (
-    auth?.role
+  const routes = auth?.role
       ? (
-        < Router >
-          <Layout>
-            <Routes>
-              {getRoutes().map(({ path, element }) => (
-                <Route path={path} element={element} key={path} />
-              ))}
-            </Routes>
-          </Layout>
-        </ Router>
-      ) : (<SignInForm />)
+        <Layout>
+          <Routes>
+            {getRoutes().map(({ path, element }) => {
+              if(!element){
+                return null;
+              }
+              const Element = lazy(element);
+              return (
+                <Route
+                  path={path}
+                  element={<Element />}
+                  key={path} />
+              )
+            }
+            )}
+          </Routes>
+        </Layout>
+      ) : (
+        <Routes>
+          <Route path={'*'} element={<Auth />} />
+        </Routes>
+      )
+
+  return (
+    <AuthWrapper>
+      {routes}
+    </AuthWrapper >
   );
 }
 

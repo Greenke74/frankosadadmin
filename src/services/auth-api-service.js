@@ -63,7 +63,7 @@ export const logout = () => new Promise((resolve, reject) => {
             })
             .catch(error => reject(error))
     } catch (e) {
-        
+        reject(e);
     }
 })
 
