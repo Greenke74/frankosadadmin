@@ -1,13 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { getRoutes } from "./services/routes-service.jsx";
 import { useSelector } from "react-redux";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import AuthWrapper from "./supabase/AuthWrapper.jsx";
 
 import Layout from "./components/layout/Layout.jsx";
 import Auth from "./components/auth/Auth.jsx";
-import { Spinner } from './components/common/StyledComponents';
-const SetNewPassword = lazy(() => import('./pages/SetNewPassword.jsx'));
 
 function App() {
   const auth = useSelector(state => state.auth);
