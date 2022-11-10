@@ -60,9 +60,7 @@ const ImageUploader = (props) => {
 
 			}}>
 				<ReactCrop aspect={props.aspectRatio} onComplete={(res) => {
-					console.log(res);
 					getCroppedImg(file, crop, 'cropped').then(result=>{
-						console.log(result);
 					})
 				}
 				} crop={crop} onChange={c => setCrop(c)} style={{

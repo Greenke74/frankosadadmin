@@ -1,13 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import BlocksComposition from '../components/BlocksComposition/index.jsx';
+import { getPageBlocks } from '../services/pages-api-service.js';
 
 const MainPage = () => {
-	const [blocks, setBlocks] = useState([
-		{type: "slider", is_published: true}, 
-		{type: "counter", is_published: false}
-	]);
+	const [data, setData] = useState([]);
+
+	useEffect(() => {
+		getPageBlocks('mainPage').then((data) => {
+			setData(data)
+		})
+	}, [])
 	return (
-		<BlocksComposition blocks={blocks} setBlocks={setBlocks} />
+		<BlocksComposition data={data} />
 	)
 }
 
