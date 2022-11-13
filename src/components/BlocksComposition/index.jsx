@@ -6,19 +6,18 @@ import Block from './Block';
 import SaveButton from '../common/SaveButton';
 
 import AddIcon from '@mui/icons-material/Add';
+import { insertBlock } from '../../services/blocks-api-service';
 
 const BlocksComposition = ({ data }) => {
+
 	const { control, watch, handleSubmit, setValue, getValues, reset } = useForm({
 		defaultValues: {
-			blocks: data.blocks ?? [],
+			blocks: (data.blocks ?? []).map(b => ({ id: b, onSubmit: null })),
 			pageName: data.name
 		},
 		mode: 'onChange',
 
 	})
-	const onSubmit = (data, blockId) => {
-		// post/put block
-	}
 	const {
 		fields: blocksFields,
 		append: appendBlock,
@@ -28,7 +27,7 @@ const BlocksComposition = ({ data }) => {
 
 	useEffect(() => {
 		reset({
-			blocks: data.blocks ?? [],
+			blocks: (data.blocks ?? []).map(b => ({ id: b, onSubmit: null })),
 			pageName: data.name
 		})
 	}, [data])
@@ -37,32 +36,37 @@ const BlocksComposition = ({ data }) => {
 		setValue(`blocks.${idx}.is_published`, value);
 	}
 
+	const onSubmit = async (data) => {
+		await Promise.all(data.blocks.map(b=>b.onSubmit()))
+	}
 
 	return (
-		<Box p={2}>
+		<Box p={2} component='form' onSubmit={handleSubmit(onSubmit)}>
 			<Box p={2} paddingY={3} border='.13rem #c0c0c0 dashed' borderRadius='8px'>
 				<Grid container spacing={3} direction='column'>
-					{blocksFields.map((b, idx) => (
-						<Grid item key={b.id} xs={12} style={{ maxWidth: '100%' }} >
-							<Controller
-								name={`blocks.${idx}`}
-								control={control}
-								render={({ field }) => {
-									return (
-										<Block
-											block={field.value}
-											idx={idx}
-											move={moveBlock}
-											remove={removeBlock}
-											fields={blocksFields}
-											setIsPublished={handleChangeIsPublished}
-											onSubmit={onSubmit}
-										/>
-									)
-								}}
-							/>
-						</Grid>
-					))}
+					{blocksFields.map((b, idx) => {
+						return (
+							<Grid item key={b.id} xs={12} style={{ maxWidth: '100%' }} >
+								<Controller
+									name={`blocks.${idx}`}
+									control={control}
+									render={({ field }) => {
+										return (
+											<Block
+												block={field.value.id}
+												idx={idx}
+												move={moveBlock}
+												remove={removeBlock}
+												fields={blocksFields}
+												setIsPublished={handleChangeIsPublished}
+												setOnSubmit={(func) => field.onChange({...field.value, onSubmit: func}) }
+											/>
+										)
+									}}
+								/>
+							</Grid>
+						)
+					})}
 				</Grid>
 				<Box display='flex' justifyContent='end' marginTop={2} style={{ gap: '25px' }}>
 					<Button
@@ -77,7 +81,7 @@ const BlocksComposition = ({ data }) => {
 					>
 						Додати блок
 					</Button>
-					<SaveButton style={{ height: 'fit-content' }} />
+					<SaveButton type='submit' style={{ height: 'fit-content' }} />
 				</Box>
 			</Box>
 		</Box>
