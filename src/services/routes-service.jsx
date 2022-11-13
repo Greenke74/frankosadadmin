@@ -12,7 +12,14 @@ export const getRoutes = () => ([
 	{
 		path: '/portfolio',
 		label: 'Портфоліо',
-		element: <></>,
+		element: () => import('../pages/PortfolioPage.jsx'),
+	},
+	{
+		path: '/portfolioform/:id',
+		label: 'Портфоліо',
+		element: () => import('../pages/PortfolioForm.jsx'),
+		hideAsideButton: true
+
 	},
 	{
 		path: '/account-settings',

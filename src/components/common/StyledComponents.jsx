@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import InputBase from '@mui/material/InputBase';
 import { alpha, styled } from '@mui/material/styles';
-import { InputLabel, Button } from '@mui/material';
+import { InputLabel, Button, Checkbox } from '@mui/material';
 import { CircularProgress, LinearProgress } from '@mui/material';
 
 
@@ -52,6 +52,22 @@ export const SuccessButton = styled(Button)({
   }
 })
 
+export const CancelButton = styled(Button)({
+  '&': {
+    color: '#6d6d6d',
+    backgroundColor: '#dedede',
+    textTransform: 'none',
+    padding: '6px 20px',
+  },
+  '&:hover': {
+    backgroundColor: '#cbcbcb'
+  },
+  '&.Mui-disabled': {
+    backgroundColor: 'var(--disabled-color)',
+    color: 'var(--white )'
+  }
+})
+
 export const StyledLinearProgress = styled(LinearProgress)({
   '&': {
     backgroundColor: 'var(--disabled-color)',
@@ -61,12 +77,21 @@ export const StyledLinearProgress = styled(LinearProgress)({
   }
 })
 
-export const Spinner = ({style}) => {
-	return (
-		<div style={{width: '100%', display: 'flex', justifyContent: 'center', margin: '25px 0', ...style}}>
-			<CircularProgress size={30} style={{ color: 'var(--theme-color)' }} />
-		</div>
-	)
+export const StyledCheckbox = styled(Checkbox)({
+  '&': {
+    color: 'var(--theme-color)'
+  },
+  '&.Mui-checked': {
+    color: 'var(--theme-color)'
+  }
+})
+
+export const Spinner = ({ style }) => {
+  return (
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '25px 0', ...style }}>
+      <CircularProgress size={30} style={{ color: 'var(--theme-color)' }} />
+    </div>
+  )
 }
 
 

@@ -24,7 +24,7 @@ export const getPageBlocks = (pageName) => new Promise((resolve, reject) => {
     try {
         supabase
         .from('pages')
-        .select('id, name, page_blocks ( block_id )')
+        .select('id, name, page_blocks ( id, block_id )')
         .eq('name', pageName)
         .single()
         .then(response => {

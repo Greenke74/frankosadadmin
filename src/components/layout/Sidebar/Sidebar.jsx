@@ -10,7 +10,7 @@ import { Stack, Typography, Box, IconButton, Tooltip } from '@mui/material'
 import SidebarButton from './SidebarButton'
 
 import LogoutIcon from '@mui/icons-material/Logout';
-import '../../../styles/swal.css';
+import '../../../styles/swal.scss';
 
 const Sidebar = () => {
   const auth = useSelector(state => state.auth);

@@ -36,3 +36,7 @@ input[type="file"] {
 dialog::backdrop {
     background-color: var(--white) !important;
 }
+
+p {
+    margin: 0;
+}
