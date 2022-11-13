@@ -1,11 +1,11 @@
-import { Box, Dialog, DialogContent, Fade } from '@mui/material';
 import React, { useRef, useState } from 'react';
-import { Cropper } from 'react-cropper';
-import 'react-image-crop/dist/ReactCrop.css'
-import { getSrcFromFile, compressImage } from '../../helpers/file-helpers.js';
+import { Box, Dialog, DialogContent } from '@mui/material';
 import SaveButton from './SaveButton.jsx';
+
+import { getSrcFromFile, compressImage } from '../../helpers/file-helpers.js';
+
+import { Cropper } from 'react-cropper';
 import "cropperjs/dist/cropper.css";
-import { supabase } from '../../supabase/supabaseClient.js';
 
 const ImageUploader = (props) => {
 	const { ratio, onChange } = props;
