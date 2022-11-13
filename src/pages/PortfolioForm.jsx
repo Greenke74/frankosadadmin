@@ -8,7 +8,6 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import SaveButton from '../components/common/SaveButton';
 import { Box } from '@mui/system';
 import { getCompletedProject } from '../services/portfolio-api-service';
-import { postImage } from '../services/images-api-service';
 
 const PortfolioForm = (props) => {
   const navigate = useNavigate();
@@ -33,7 +32,6 @@ const PortfolioForm = (props) => {
       reset({ ...res, completed_at: res.completed_at.substr(0, 10) });
     })
 
-    postImage().then(res => console.log(res));
   }, [id])
 
   const onSubmit = (data) => {
@@ -49,7 +47,7 @@ const PortfolioForm = (props) => {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container direction='column' style={{ gap: 16 }} >
-          <Grid item>
+          <Grid item xs={12}>
             <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={7} >
@@ -69,7 +67,7 @@ const PortfolioForm = (props) => {
                       </Alert>}
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={2}>
+                <Grid item xs={12} sm={6} md={3} lg={2}>
                   <FormControl variant="standard" required fullWidth>
                     <StyledInputLabel shrink htmlFor="completedAtInput">
                       Дата здачі
