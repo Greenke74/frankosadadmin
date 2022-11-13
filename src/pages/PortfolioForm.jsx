@@ -99,7 +99,7 @@ const PortfolioForm = (props) => {
               {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 30 : undefined} />}
             </Grid>
           </Grid>
-          <Grid item>
+          {/* <Grid item>
             <FormControl variant="standard" required fullWidth>
               <StyledInputLabel shrink htmlFor="descriptionInput">
                 Короткий опис
@@ -107,9 +107,9 @@ const PortfolioForm = (props) => {
               <StyledInputBase multiline={true} rows={3} error={!!(errors?.description)} placeholder={'Короткий опис'} id='descriptionInput' {...register('description', { maxLength: 100 })} />
             </FormControl>
             {errors.description && <ErrorMessage type={errors?.description?.type} maxLength={errors?.description?.type === 'maxLength' ? 100 : undefined} />}
-          </Grid>
+          </Grid> */}
         </Grid>
-        <Box display='flex' justifyContent='end' alignItems='center' marginTop={2} style={{ gap: 20 }}>
+        <Box display='flex' justifyContent='end' alignItems='center' marginTop={3} style={{ gap: 20 }}>
           <Link to="/" style={{ color: 'var(--theme-color)' }}>Перейти до редагування сторінки проєкту</Link>
           <CancelButton onClick={() => navigate('/portfolio')}>Скасувати</CancelButton>
           <SaveButton type='submit' />
