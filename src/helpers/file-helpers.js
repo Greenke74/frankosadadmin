@@ -118,10 +118,10 @@ export const compressImage = async (file, fileName = file.name, crop) => {
 	const [fname, extension] = fileName.split('.');
 
 	const rawImage = await createFileObjectURL(file);
+	const res = await getWidthAndHeight(file);
 
-	const { wh } = await getWidthAndHeight(file);
 	const blob = crop
-		? await convertToWebpObjectURL(rawImage, { ...crop, wh })
+		? await convertToWebpObjectURL(rawImage, { ...crop, wh: res })
 		: await convertToWebpObjectURL(rawImage);
 
 	return new File([blob], `${fname}.webp`);
