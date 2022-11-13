@@ -1,26 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import ReactCrop from 'react-image-crop'
+import { Box, Dialog, DialogContent, Fade } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Cropper } from 'react-cropper';
 import 'react-image-crop/dist/ReactCrop.css'
-import { getWidthAndHeightFormUrl, getSrcFromFile, getCroppedImg } from '../../helpers/file-helpers.js';
+import { getSrcFromFile, compressImage } from '../../helpers/file-helpers.js';
+import SaveButton from './SaveButton.jsx';
+import "cropperjs/dist/cropper.css";
+import { supabase } from '../../supabase/supabaseClient.js';
 
 const ImageUploader = (props) => {
-	const { aspectRatio } = props;
+	const { ratio, onChange } = props;
+	const cropperRef = useRef(null);
 	const [fileUrl, setFileUrl] = useState('');
 	const [file, setFile] = useState(null);
-	const [crop, setCrop] = useState({});
 
-	useEffect(() => {
-		getWidthAndHeightFormUrl(fileUrl)
-			.then(({ width, height }) => {
-				setCrop({
-					x: (width - (width >= height * aspectRatio ? height * aspectRatio : width)) / 2,
-					y: (height - (height >= width / aspectRatio ? width / aspectRatio : height)) / 2,
-					width: width >= height * aspectRatio ? height * aspectRatio : width,
-					height: height >= width / aspectRatio ? width / aspectRatio : height,
-					unit: "px"
-				})
-			})
-	}, [fileUrl]);
+	const onSubmit = async () => {
+		const imageElement = cropperRef?.current;
+		const cropper = imageElement?.cropper;
+		const crop = cropper.cropBoxData;
+
+		const image = await compressImage(file, file.name, {
+			...crop,
+			container: cropper.getContainerData()
+		});
+		
+		onChange(image)
+		setFile(null)
+	};
 
 	return (
 		<div>
@@ -48,29 +53,20 @@ const ImageUploader = (props) => {
 					setFile(event.target.files[0]);
 				}}
 			/>
-			<dialog open={!!file} style={{
-				zIndex: '10',
-				margin: 'auto',
-				border: '1px solid var(--theme-color)',
-				padding: '15px',
-				borderRadius: '8px',
-				backgroundColor: 'var(--white)',
-				boxShadow: '0 0 200px 1.3rem #0000004a',
-				top: '30px'
-
-			}}>
-				<ReactCrop aspect={props.aspectRatio} onComplete={(res) => {
-					getCroppedImg(file, crop, 'cropped').then(result=>{
-					})
-				}
-				} crop={crop} onChange={c => setCrop(c)} style={{
-					maxWidth: '90vw',
-					maxHeight: '90vh'
-				}}>
-					<img src={fileUrl} />
-				</ReactCrop>
-				<div>{Math.round(crop.width * 100) / 100} x {Math.round(crop.height * 100) / 100}</div>
-			</dialog>
+			<Dialog open={!!file} onClose={() => setFile(null)} sx={{ padding: '9px' }} >
+				<DialogContent>
+					<Cropper
+						src={fileUrl}
+						style={{ height: '100%', maxHeight: '70vh', width: '100%' }}
+						aspectRatio={ratio}
+						guides={false}
+						ref={cropperRef}
+					/>
+					<Box sx={{ marginTop: 2, display: 'flex', justifyContent: 'end' }}>
+						<SaveButton onClick={onSubmit} />
+					</Box>
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }
