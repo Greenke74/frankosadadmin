@@ -7,9 +7,10 @@ import AddIcon from '@mui/icons-material/Add';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
+import ErrorMessage from '../common/ErrorMessage';
 
 const Counter = ({ form }) => {
-  const { register, control } = form;
+  const { register, control, formState: { errors } } = form;
   const {
     fields,
     append,
@@ -20,6 +21,7 @@ const Counter = ({ form }) => {
     name: 'data.counters',
     rules: { maxLength: 4 }
   })
+
   return (
     <Box>
       <Grid container spacing={2}>
@@ -79,10 +81,12 @@ const Counter = ({ form }) => {
                 <Controller
                   name={`data.counters.${idx}.counter`}
                   control={control}
-                  render={({ field }) => (
+                  rules={{ min: 0 }}
+                  render={({ field, fieldState: { error } }) => (
                     <StyledInputBase type='number' value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
                   )}
                 />
+                {errors?.data?.counters[idx]?.counter?.type == 'min' && <ErrorMessage type='min' />}
               </FormControl>
             </Box>
           </Grid>

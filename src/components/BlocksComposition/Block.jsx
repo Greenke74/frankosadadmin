@@ -9,15 +9,13 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 import Swal from 'sweetalert2';
-import '../../styles/swal.css';
+import '../../styles/swal.scss';
 import './block.css';
-import { getBlock } from '../../services/blocks-api-service';
+import { getBlock, insertBlock } from '../../services/blocks-api-service';
 import { blocks } from '../blocks';
-import { Spinner } from '../common/StyledComponents';
+import IsPublished from '../common/IsPublished';
 
 const Accordion = styled((props) => (
 	<MuiAccordion disableGutters elevation={0} {...props} />
@@ -55,11 +53,12 @@ const AccordionSummary = styled((props) => (
 	},
 }));
 
-const Block = ({ block, idx, remove, fields, move, onSubmit }) => {
+const Block = ({ block, idx, remove, fields, move, setOnSubmit }) => {
 	const [expanded, setExpanded] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [blockData, setBlockData] = useState({});
 	const [Element, setElement] = useState(null);
+	const [label, setLabel] = useState('');
 
 	const form = useForm({
 		defaultValues: {
@@ -87,14 +86,43 @@ const Block = ({ block, idx, remove, fields, move, onSubmit }) => {
 			}
 		})
 	}
+	const onSubmit = async (formData) => {
+		const { id, is_published, type_id, related_to } = blockData
+		const payload = {
+			// id: id, 
+			is_published, 
+			type_id,
+			related_to,
+			data: formData?.data ?? null,
+		};
+		if (related_to === 'offers') {
+			payload.offer_ids = formData?.offers?.map(o => o.id) ?? [];
+		} 
+		else if (related_to === 'completed_projects') {
+			payload.completed_project_ids = formData?.offers?.map(o => o.id) ?? [];
+		}
+		else if (related_to === 'services') {
+			payload.service_ids = formData?.services?.map(o => o.id) ?? [];
+		}
+		await insertBlock(payload);
+	}
+
+	useEffect(() => {
+		setOnSubmit(async () => { await onSubmit(form.getValues()) });
+	}, [blockData])
+
 
 	useEffect(() => {
 		let mounted = true;
 		mounted && setLoading(true);
 
 		getBlock(block).then(data => {
+			const b = blocks.find(b => b.type === data?.type ?? null);
+
 			mounted && setBlockData(data);
-			mounted && setElement(lazy(blocks.find(b => b.type === data?.type ?? null).element))
+			mounted && setElement(lazy(b.element))
+			mounted && setLabel(b.label);
+
 			const { is_published, data: bdata, completed_projects, offers, services } = data;
 			mounted && form.reset({ is_published, data: bdata, completed_projects, offers, services })
 		})
@@ -126,6 +154,7 @@ const Block = ({ block, idx, remove, fields, move, onSubmit }) => {
 							flexShrink={0}
 							lineHeight='20px'
 						>
+							{label}
 						</Typography>
 					</AccordionSummary>
 					<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
@@ -134,9 +163,7 @@ const Block = ({ block, idx, remove, fields, move, onSubmit }) => {
 								size='small'
 								onClick={() => { form.setValue('is_published', !is_published) }}
 							>
-								{is_published
-									? <VisibilityIcon style={{ fontSize: '20px', color: 'var(--theme-color)' }} />
-									: <VisibilityOffIcon style={{ fontSize: '20px', }} />}
+								<IsPublished isPublished={is_published} />
 							</IconButton>
 						</Tooltip>
 						<ButtonGroup>
@@ -160,7 +187,7 @@ const Block = ({ block, idx, remove, fields, move, onSubmit }) => {
 						</ButtonGroup>
 					</Box>
 				</Box>
-				{blockData && <AccordionDetails>
+				{blockData && <AccordionDetails >
 					<Box className='block-settings' marginY={2}>
 						{Element ? (
 							<Element form={form} />
