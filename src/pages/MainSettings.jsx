@@ -79,18 +79,18 @@ const MainSettings = () => {
 			}
 		}).filter(r => !!r)
 
-		if (faviconFile) {
-			const { data: { path } } =
-				await supabase.storage
-					.from('main-settings-bucket')
-					.upload(`${Date.now()}-${faviconFile.name}`, faviconFile)
+		// if (faviconFile) {
+		// 	const { data: { path } } =
+		// 		await supabase.storage
+		// 			.from('main-settings-bucket')
+		// 			.upload(`${Date.now()}-${faviconFile.name}`, faviconFile)
 
-			payload.push({
-				id: fieldIds.find(field => field.name === 'favicon')?.id,
-				name: 'favicon',
-				value: supabase.storage.from('main-settings-bucket').getPublicUrl(path).data.publicUrl
-			});
-		}
+		// 	payload.push({
+		// 		id: fieldIds.find(field => field.name === 'favicon')?.id,
+		// 		name: 'favicon',
+		// 		value: supabase.storage.from('main-settings-bucket').getPublicUrl(path).data.publicUrl
+		// 	});
+		// }
 
 		if (payload.length === 0) return;
 
@@ -140,6 +140,7 @@ const MainSettings = () => {
 							</Card>
 							<ImageUploader id='mainImageUploader' ratio={1 / 1} onChange={async (file) => {
 								setValue('faviconFile', file);
+								setValue('favicon', await getSrcFromFile(file))
 							}} />
 						</Box>
 					</Grid>
