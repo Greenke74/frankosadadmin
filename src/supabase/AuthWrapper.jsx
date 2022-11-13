@@ -7,7 +7,7 @@ const AuthWrapper = ({ children }) => {
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		supabase.auth.refreshSession().then(({ data: { session } }) => {
+		supabase.auth.getSession().then(({ data: { session } }) => {
 			const { user } = session;
 			if (user) {
 				const newState = {

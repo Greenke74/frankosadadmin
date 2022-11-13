@@ -12,7 +12,7 @@ const SidebarButton = ({ label, to }) => {
 				margin: '10px 10px 0',
 				textTransform: 'none',
 				color: 'var(--white)',
-				backgroundColor: location.pathname===to ? 'var(--menu-active-button-color)' : 'var(--menu-button-color)',
+				backgroundColor: location.pathname===to ? 'var(--menu-active-button-color)' : 'var(--menu-button-color)'
 			}}
 			onClick={() => navigate(to)}
 		>

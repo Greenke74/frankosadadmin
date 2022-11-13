@@ -13,7 +13,7 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import Swal from 'sweetalert2';
 import '../../styles/swal.scss';
 import './block.css';
-import { getBlock, insertBlock } from '../../services/blocks-api-service';
+import { getBlock, insertBlock, updateBlock } from '../../services/blocks-api-service';
 import { blocks } from '../blocks';
 import IsPublished from '../common/IsPublished';
 
@@ -89,11 +89,12 @@ const Block = ({ block, idx, remove, fields, move, setOnSubmit }) => {
 	const onSubmit = async (formData) => {
 		const { id, is_published, type_id, related_to } = blockData
 		const payload = {
-			// id: id, 
+			id: id, 
 			is_published, 
 			type_id,
 			related_to,
 			data: formData?.data ?? null,
+			position: idx
 		};
 		if (related_to === 'offers') {
 			payload.offer_ids = formData?.offers?.map(o => o.id) ?? [];
@@ -104,7 +105,8 @@ const Block = ({ block, idx, remove, fields, move, setOnSubmit }) => {
 		else if (related_to === 'services') {
 			payload.service_ids = formData?.services?.map(o => o.id) ?? [];
 		}
-		await insertBlock(payload);
+		
+		await payload.id? updateBlock(payload) : insertBlock(payload);
 	}
 
 	useEffect(() => {

@@ -12,6 +12,20 @@ export function getWidthAndHeight(file) {
 	});
 }
 
+export const dataURLtoFile = (dataUrl, filename) => {
+	var arr = dataUrl.split(','),
+		mime = arr[0].match(/:(.*?);/)[1],
+		bstr = atob(arr[1]),
+		n = bstr.length,
+		u8arr = new Uint8Array(n);
+
+	while (n--) {
+		u8arr[n] = bstr.charCodeAt(n);
+	}
+
+	return new File([u8arr], filename, { type: mime });
+};
+
 export function getWidthAndHeightFormUrl(url) {
 	return new Promise((resolve) => {
 		const inputImage = new Image();
@@ -35,89 +49,80 @@ export const getSrcFromFile = (file) => {
 	});
 };
 
-export const createImage = (url) =>
-  new Promise((resolve, reject) => {
-    const image = new Image()
-    image.addEventListener('load', () => resolve(image))
-    image.addEventListener('error', (error) => reject(error))
-    image.setAttribute('crossOrigin', 'anonymous') // needed to avoid cross-origin issues on CodeSandbox
-    image.src = url
-  })
+const createFileObjectURL = (file) =>
+	new Promise((resolve, reject) => {
+		try {
+			let rawImage = new Image();
 
-export function getRadianAngle(degreeValue) {
-  return (degreeValue * Math.PI) / 180
-}
+			rawImage.addEventListener('load', function () {
+				resolve(rawImage);
+			});
 
-export function rotateSize(width, height, rotation) {
-	const rotRad = getRadianAngle(rotation)
-  
-	return {
-	  width:
-		Math.abs(Math.cos(rotRad) * width) + Math.abs(Math.sin(rotRad) * height),
-	  height:
-		Math.abs(Math.sin(rotRad) * width) + Math.abs(Math.cos(rotRad) * height),
-	}
-  }
+			rawImage.src = URL.createObjectURL(new Blob([file], { type: 'image' }));
+		} catch (e) {
+			reject(e);
+		}
+	});
 
-export async function getCroppedImg(
-	imageSrc,
-	pixelCrop,
-	rotation = 0,
-	flip = { horizontal: false, vertical: false }
-  ) {
-	const image = await createImage(imageSrc)
-	const canvas = document.createElement('canvas')
-	const ctx = canvas.getContext('2d')
-  
-	if (!ctx) {
-	  return null
-	}
-  
-	const rotRad = getRadianAngle(rotation)
-  
-	// calculate bounding box of the rotated image
-	const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
-	  image.width,
-	  image.height,
-	  rotation
-	)
-  
-	// set canvas size to match the bounding box
-	canvas.width = bBoxWidth
-	canvas.height = bBoxHeight
-  
-	// translate canvas context to a central location to allow rotating and flipping around the center
-	ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
-	ctx.rotate(rotRad)
-	ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
-	ctx.translate(-image.width / 2, -image.height / 2)
-  
-	// draw rotated image
-	ctx.drawImage(image, 0, 0)
-  
-	// croppedAreaPixels values are bounding box relative
-	// extract the cropped image using these values
-	const data = ctx.getImageData(
-	  pixelCrop.x,
-	  pixelCrop.y,
-	  pixelCrop.width,
-	  pixelCrop.height
-	)
-  
-	// set canvas width to final desired crop size - this will clear existing context
-	canvas.width = pixelCrop.width
-	canvas.height = pixelCrop.height
-  
-	// paste generated rotate image at the top left corner
-	ctx.putImageData(data, 0, 0)
-  
-	// As Base64 string
-	// return canvas.toDataURL('image/jpeg');
-  
-	// As a blob
-	return new Promise((resolve, reject) => {
-	  canvas.toBlob((file) => {
-		resolve(URL.createObjectURL(file))
-	  }, 'image/jpeg')
-	})
-  }
+const convertToWebpObjectURL = (rawImage, crop = undefined) =>
+	new Promise((resolve, reject) => {
+		try {
+			let canvas = document.createElement('canvas');
+			let ctx = canvas.getContext('2d');
+			const pixelRatio = window.devicePixelRatio || 1;
+
+			if (crop?.container?.width && crop?.wh?.width) {
+				const { wh, container } = crop;
+
+				const maxHeight = container.height;
+				const maxWidth = container.width;
+
+				const width = (crop.width / maxWidth) * wh.width;
+				const height = (crop.height / maxHeight) * wh.height;
+				const left = (crop.left / maxWidth) * wh.width;
+				const top = (crop.top / maxHeight) * wh.height;
+
+				canvas.width = width * pixelRatio;
+				canvas.height = height * pixelRatio;
+
+				ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+				ctx.imageSmoothingQuality = 'high';
+				ctx.drawImage(rawImage, left, top, width, height, 0, 0, width, height);
+				canvas.toBlob(
+					(blob) => {
+						resolve(blob);
+					},
+					'image/webp',
+					0.99
+				);
+			} else {
+				canvas.width = rawImage.width * pixelRatio;
+				canvas.height = rawImage.height * pixelRatio;
+
+				ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+				ctx.imageSmoothingQuality = 'high';
+				ctx.drawImage(rawImage, 0, 0);
+				canvas.toBlob(
+					(blob) => {
+						resolve(blob);
+					},
+					'image/webp'
+				);
+			}
+		} catch (e) {
+			reject(e);
+		}
+	});
+
+export const compressImage = async (file, fileName = file.name, crop) => {
+	const [fname, extension] = fileName.split('.');
+
+	const rawImage = await createFileObjectURL(file);
+	const res = await getWidthAndHeight(file);
+
+	const blob = crop
+		? await convertToWebpObjectURL(rawImage, { ...crop, wh: res })
+		: await convertToWebpObjectURL(rawImage);
+
+	return new File([blob], `${fname}.webp`);
+};
