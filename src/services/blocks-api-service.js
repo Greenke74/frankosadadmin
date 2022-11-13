@@ -25,7 +25,7 @@ export const getBlock = (block_id) => new Promise((resolve, reject) => {
 export const insertBlock = (data) => new Promise((resolve, reject) => {
     try {
         supabase
-        .rpc('insert_block', {data})
+        .rpc('insert_block', data)
             .then(response => {
                 if(response.error){
                     reject(response.error.message)

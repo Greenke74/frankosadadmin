@@ -32,7 +32,6 @@ const MainSettings = () => {
 	const [fieldIds, setFieldIds] = useState([]);
 	const {
 		reset,
-		control,
 		formState: { errors, isValid },
 		handleSubmit,
 		getValues,
@@ -110,7 +109,7 @@ const MainSettings = () => {
 				</Grid>
 				<Grid item container direction='row' flexWrap='nowrap' spacing={2} >
 					<Grid item xs={6}>
-						<FormControl variant="standard" error={!!(errors?.contactPhone)} className='w-100' >
+						<FormControl variant="standard" error={!!(errors?.contactPhone)} fullWidth={true} >
 							<StyledInputLabel shrink htmlFor="contactPhoneInput">
 								Номер телефону
 							</StyledInputLabel>
