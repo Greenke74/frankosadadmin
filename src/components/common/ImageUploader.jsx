@@ -8,7 +8,7 @@ import { Cropper } from 'react-cropper';
 import "cropperjs/dist/cropper.css";
 
 const ImageUploader = (props) => {
-	const { ratio, onChange } = props;
+	const { ratio, onChange, id } = props;
 	const cropperRef = useRef(null);
 	const [fileUrl, setFileUrl] = useState('');
 	const [file, setFile] = useState(null);
@@ -22,7 +22,7 @@ const ImageUploader = (props) => {
 			...crop,
 			container: cropper.getContainerData()
 		});
-		
+
 		onChange(image)
 		setFile(null)
 	};
@@ -38,12 +38,12 @@ const ImageUploader = (props) => {
 					borderRadius: '4px',
 					cursor: 'pointer'
 				}}
-				htmlFor='fileUploader'
+				htmlFor={id ? `fileUploader-${id}` : 'fileUploader'}
 			>Завантажити зображення</label>
 			<input
 				{...props}
 				type='file'
-				id='fileUploader'
+				id={id ? `fileUploader-${id}` : 'fileUploader'}
 				multiple={false}
 				onChange={event => {
 					getSrcFromFile(event.target.files[0])
