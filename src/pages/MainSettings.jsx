@@ -14,6 +14,7 @@ import { Box } from '@mui/system';
 import { CameraAlt, Delete } from '@mui/icons-material';
 import { dataURLtoFile, getSrcFromFile } from '../helpers/file-helpers.js';
 import { supabase } from '../supabase/supabaseClient.js';
+import { deleteImage, uploadImage } from '../services/storage-service.js';
 
 const defaultValues = {
 	siteName: '',
@@ -69,7 +70,13 @@ const MainSettings = () => {
 	const onSubmit = async (data) => {
 		const { faviconFile } = data;
 		delete data.faviconFile;
-		const payload = Object.entries(data).map(([key, value]) => {
+		const payloadData = { ...data}
+		if (faviconFile) {
+			const favicon = await uploadImage(faviconFile)
+			payloadData.favicon = favicon
+		}
+
+		const payload = Object.entries(payloadData).map(([key, value]) => {
 			if (JSON.stringify(defaultFormValue[key]) !== JSON.stringify(value)) {
 				return {
 					id: fieldIds.find(field => field.name === key)?.id,
@@ -78,18 +85,24 @@ const MainSettings = () => {
 				}
 			}
 		}).filter(r => !!r)
-
+		
+		// if (faviconFile) {
+			
+		// 	// if(result) {
+		// 	// 	payload.push({
+		// 	// 		id: fieldIds.find(field => field.name === 'favicon')?.id,
+		// 	// 		name: 'favicon',
+		// 	// 		value: result
+		// 	// 	});
+		// 	// }
+			
+		// }
+		console.log(payload)
 		// if (faviconFile) {
 		// 	const { data: { path } } =
 		// 		await supabase.storage
 		// 			.from('main-settings-bucket')
 		// 			.upload(`${Date.now()}-${faviconFile.name}`, faviconFile)
-
-		// 	payload.push({
-		// 		id: fieldIds.find(field => field.name === 'favicon')?.id,
-		// 		name: 'favicon',
-		// 		value: supabase.storage.from('main-settings-bucket').getPublicUrl(path).data.publicUrl
-		// 	});
 		// }
 
 		if (payload.length === 0) return;
