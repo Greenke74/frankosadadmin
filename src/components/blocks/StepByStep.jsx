@@ -5,10 +5,13 @@ import { Box } from '@mui/system';
 import { Button, FormControl, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
+import ImageUploader from '../common/ImageUploader';
+import { getSrcFromFile } from '../../helpers/file-helpers';
+import { DATA_GRID_PROPS_DEFAULT_VALUES } from '@mui/x-data-grid';
 
 
 const StepByStep = ({ form }) => {
-  const { register, control } = form
+  const { register, control, setValue, getValues } = form
   const {
     fields,
     append,
@@ -16,15 +19,23 @@ const StepByStep = ({ form }) => {
     move
   } = useFieldArray({
     control: form.control,
-    name: 'data.stepByStep',
+    name: 'data.stepByStep.data',
     rules: { maxLength: 5 }
   })
 
 
   return (
     <Box>
+      <Box marginBottom={2}>
+        <FormControl variant="standard" required fullWidth>
+          <StyledInputLabel shrink htmlFor="stepsBlockId">
+            Заголовок
+          </StyledInputLabel>
+          <StyledInputBase {...register('data.stepByStep.stepsBlockTitle')} id='stepsBlockId' />
+        </FormControl>
+      </Box>
       <Grid container spacing={2}>
-        {fields.map((c, idx) => (
+        {fields.map((c, idx) => { console.log(idx); return(
           <Grid item xs={12} lg={4} key={c.id}>
             <Box
               bgcolor='#f7f7f7'
@@ -64,45 +75,31 @@ const StepByStep = ({ form }) => {
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Назва кроку
                   </StyledInputLabel>
-                  <Controller
-                    name={`data.stepByStep.${idx}.title`}
-                    control={control}
-                    rules={{ maxLength: 100, required: true }}
-                    render={({ field }) => (
-                      <StyledInputBase value={field.value} onChange={field.onChange} id={`step-${c.id}`} />
-                    )}
-                  />
+                  <StyledInputBase {...register(`data.stepByStep.data.${idx}.title`)} id={`step-${c.id}`} />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Номер кроку
                   </StyledInputLabel>
-                  <Controller
-                    name={`data.stepByStep.${idx}.number`}
-                    control={control}
-                    rules={{ maxLength: 2, required: true }}
-                    render={({ field }) => (
-                      <StyledInputBase value={field.value} onChange={field.onChange} id={`step-${c.id}`} />
-                    )}
-                  />
+                  <StyledInputBase disabled value={`0${idx+1}`} onChange={setValue(`data.stepByStep.data.${idx}.number`, `0${idx+1}`)} id={`step-${c.id}`} />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Опис кроку
                   </StyledInputLabel>
-                  <Controller
-                    name={`data.stepByStep.${idx}.description`}
-                    control={control}
-                    rules={{ maxLength: 500, required: true }}
-                    render={({ field }) => (
-                      <StyledInputBase multiline rows={3} value={field.value} onChange={field.onChange} id={`step-${c.id}`} />
-                    )}
-                  />
+                  <StyledInputBase {...register(`data.stepByStep.data.${idx}.description`)} id={`step-${c.id}`} />
+                </FormControl>
+                <FormControl variant='standard' required fullWidth>
+                  <StyledInputLabel shrink htmlFor={`step-${c.id}`} style={{ marginBottom: '10px' }} >
+                    Зображення до кроку {idx}
+                  </StyledInputLabel>
+                  <ImageUploader onClick={() => console.log(idx)}/>
+                  <img src={getValues(`data.stepByStep.data.${idx}.image`)}/>
                 </FormControl>
               </Box>
             </Box>
           </Grid>
-        ))}
+        )})}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
         <Button
@@ -113,7 +110,8 @@ const StepByStep = ({ form }) => {
             append({
               title: ' ',
               number: ' ',
-              description: ' '
+              description: ' ',
+              image: ' '
             })}
           sx={{
             padding: '6px 15px !important',
