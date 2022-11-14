@@ -85,25 +85,6 @@ const MainSettings = () => {
 				}
 			}
 		}).filter(r => !!r)
-		
-		// if (faviconFile) {
-			
-		// 	// if(result) {
-		// 	// 	payload.push({
-		// 	// 		id: fieldIds.find(field => field.name === 'favicon')?.id,
-		// 	// 		name: 'favicon',
-		// 	// 		value: result
-		// 	// 	});
-		// 	// }
-			
-		// }
-		console.log(payload)
-		// if (faviconFile) {
-		// 	const { data: { path } } =
-		// 		await supabase.storage
-		// 			.from('main-settings-bucket')
-		// 			.upload(`${Date.now()}-${faviconFile.name}`, faviconFile)
-		// }
 
 		if (payload.length === 0) return;
 
