@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 
 import { Box, Grid, Button } from '@mui/material';
@@ -6,17 +6,16 @@ import Block from './Block';
 import SaveButton from '../common/SaveButton';
 
 import AddIcon from '@mui/icons-material/Add';
-import { insertBlock } from '../../services/blocks-api-service';
+import Swal from 'sweetalert2';
 
 const BlocksComposition = ({ data }) => {
-
-	const { control, watch, handleSubmit, setValue, getValues, reset } = useForm({
+	const [submitDisabled, setSubmitDisabled] = useState(false);	
+	const { control, handleSubmit, setValue, reset } = useForm({
 		defaultValues: {
 			blocks: (data.blocks ?? []).map(b => ({ id: b, onSubmit: null })),
 			pageName: data.name
 		},
-		mode: 'onChange',
-
+		mode: 'onChange'
 	})
 	const {
 		fields: blocksFields,
@@ -37,7 +36,17 @@ const BlocksComposition = ({ data }) => {
 	}
 
 	const onSubmit = async (data) => {
-		await Promise.all(data.blocks.map(b=>b.onSubmit()))
+		setSubmitDisabled(true)
+		await Promise.all(data.blocks.map(b => b.onSubmit()))
+		Swal.fire({
+			position: 'top-right',
+			icon: 'success',
+			title: 'Дані успішно оновлено',
+			color: 'var(--theme-color)',
+			timer: 3000,
+			showConfirmButton: false,
+			toast: true,
+		}).then(() => setSubmitDisabled(false));
 	}
 
 	return (
@@ -59,7 +68,7 @@ const BlocksComposition = ({ data }) => {
 												remove={removeBlock}
 												fields={blocksFields}
 												setIsPublished={handleChangeIsPublished}
-												setOnSubmit={(func) => field.onChange({...field.value, onSubmit: func}) }
+												setOnSubmit={(func) => field.onChange({ ...field.value, onSubmit: func })}
 											/>
 										)
 									}}
@@ -81,7 +90,7 @@ const BlocksComposition = ({ data }) => {
 					>
 						Додати блок
 					</Button>
-					<SaveButton type='submit' style={{ height: 'fit-content' }} />
+					<SaveButton type='submit' style={{ height: 'fit-content' }} disabled={submitDisabled} />
 				</Box>
 			</Box>
 		</Box>
