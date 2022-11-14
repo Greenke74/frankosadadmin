@@ -87,10 +87,10 @@ const Block = ({ block, idx, remove, fields, move, setOnSubmit }) => {
 		})
 	}
 	const onSubmit = async (formData) => {
-		const { id, is_published, type_id, related_to } = blockData
+		const { id, type_id, related_to } = blockData
 		const payload = {
 			id: id, 
-			is_published, 
+			is_published: formData.is_published, 
 			type_id,
 			related_to,
 			data: formData?.data ?? null,
