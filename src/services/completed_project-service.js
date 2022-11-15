@@ -7,6 +7,7 @@ export const insertCompletedProject = (data) => new Promise((resolve, reject) =>
             if(response.error) {
                 reject(response.error.message)
             }
+            resolve(response)
         })
         .catch(error => reject(error))
     } catch (e) {
