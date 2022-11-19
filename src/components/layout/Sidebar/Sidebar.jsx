@@ -44,8 +44,10 @@ const Sidebar = () => {
     <Stack style={{
       backgroundColor: 'var(--theme-color)',
       minHeight: '100vh',
-      height: '100%'
-
+      height: '100%',
+      width: 'auto',
+      position: 'sticky',
+      top: 0
     }}>
       <Box padding='30px 20px' marginBottom='10px' display='flex' flexWrap='nowrap' alignItems='center' backgroundColor='var(--menu-button-color)' justifyContent='space-between'>
         <Link to='/account-settings' style={{

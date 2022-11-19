@@ -53,12 +53,13 @@ const AccordionSummary = styled((props) => (
 	},
 }));
 
-const Block = ({ block, idx, remove, fields, move, setOnSubmit }) => {
+const Block = ({ block, blockType, idx, remove, fields, move, setOnSubmit, relatedTo, pageId, update }) => {
 	const [expanded, setExpanded] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [blockData, setBlockData] = useState({});
 	const [Element, setElement] = useState(null);
 	const [label, setLabel] = useState('');
+	const [error, setError] = useState(false);
 
 	const form = useForm({
 		defaultValues: {
@@ -87,117 +88,149 @@ const Block = ({ block, idx, remove, fields, move, setOnSubmit }) => {
 		})
 	}
 	const onSubmit = async (formData) => {
-		const { id, type_id, related_to } = blockData
+		const { id, type_id, data_from } = blockData
 		const payload = {
-			id: id, 
-			is_published: formData.is_published, 
+			id: id,
+			is_published: formData.is_published,
 			type_id,
-			related_to,
+			data_from,
+			related_to: relatedTo,
 			data: formData?.data ?? null,
-			position: idx
+			position: idx,
 		};
-		if (related_to === 'offers') {
+		if (!id && blockType) {
+			payload.type = blockType;
+		}
+		if (relatedTo == 'page' && pageId) {
+			payload.page_id = pageId
+		}
+		if (data_from === 'offers') {
 			payload.offer_ids = formData?.offers?.map(o => o.id) ?? [];
-		} 
-		else if (related_to === 'completed_projects') {
+		}
+		else if (data_from === 'completed_projects') {
 			payload.completed_project_ids = formData?.offers?.map(o => o.id) ?? [];
 		}
-		else if (related_to === 'services') {
+		else if (data_from === 'services') {
 			payload.service_ids = formData?.services?.map(o => o.id) ?? [];
 		}
-		
-		await payload.id? updateBlock(payload) : insertBlock(payload);
+
+		if (payload.id) {
+			await updateBlock(payload);
+		} else {
+			const { data } = await insertBlock(payload)
+			setBlockData(prev => ({ ...prev, id: data.id }));
+			update(idx, { 
+				blockId: data.id,
+				onSubmit: async () => await onSubmit(form.getValues()),
+				blockType
+			})
+
+			return data.id;
+		}
 	}
 
 	useEffect(() => {
-		setOnSubmit(async () => { await onSubmit(form.getValues()) });
-	}, [blockData])
+		setOnSubmit(async () => await onSubmit(form.getValues()));
+	}, [blockData, block, blockType, idx])
 
 
 	useEffect(() => {
 		let mounted = true;
-		mounted && setLoading(true);
+		
+		if (block) {
+			mounted && setLoading(true);
+			getBlock(block).then(data => {
+				const b = blocks.find(b => b.type === data?.type ?? null);
+				
+				mounted && setBlockData(data);
+				mounted && setElement(lazy(b.element))
+				mounted && setLabel(b.label);
 
-		getBlock(block).then(data => {
-			const b = blocks.find(b => b.type === data?.type ?? null);
+				const { is_published, data: bdata, completed_projects, offers, services, position } = data;
+				mounted && form.reset({ is_published, data: bdata, completed_projects, offers, services })
+			})
+				.catch(e => console.error(e))
+				.finally(() => {
+					mounted && setLoading(false);
+				})
+		} else if (blockType) {
+			const b = blocks.find(b => b.type === blockType);
 
-			mounted && setBlockData(data);
+			mounted && setBlockData({});
 			mounted && setElement(lazy(b.element))
 			mounted && setLabel(b.label);
-
-			const { is_published, data: bdata, completed_projects, offers, services } = data;
-			mounted && form.reset({ is_published, data: bdata, completed_projects, offers, services })
-		})
-			.catch(e => console.error(e))
-			.finally(() => {
-				mounted && setLoading(false);
-			})
+		} else {
+			setError(true);
+			setLoading(false);
+		}
 		return () => mounted = false;
 	}, [block])
 
-	return loading
-		? (<div style={{ width: '100%', height: 58, backgroundColor: '#f7f7f7', borderRadius: 4 }}></div>)
-		: (
-			<Accordion expanded={expanded} >
-				<Box
-					display='flex'
-					width='100%'
-					justifyContent='space-between'
-					alignItems='center'
-					flexWrap='nowrap'
-				>
-					<AccordionSummary
-						onClick={() => setExpanded(prev => !prev)}
+	return error
+		? null
+		: loading
+			? (<div style={{ width: '100%', height: 58, backgroundColor: '#f7f7f7', borderRadius: 4 }}></div>)
+			: (
+				<Accordion expanded={expanded} >
+					<Box
+						display='flex'
+						width='100%'
+						justifyContent='space-between'
+						alignItems='center'
+						flexWrap='nowrap'
 					>
-						<Typography
-							component="h3"
-							fontSize='14px'
-							flexGrow={1}
-							flexShrink={0}
-							lineHeight='20px'
+						<AccordionSummary
+							onClick={() => setExpanded(prev => !prev)}
 						>
-							{label}
-						</Typography>
-					</AccordionSummary>
-					<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
-						<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
-							<IconButton
-								size='small'
-								onClick={() => { form.setValue('is_published', !is_published) }}
+							<Typography
+								component="h3"
+								fontSize='14px'
+								flexGrow={1}
+								flexShrink={0}
+								lineHeight='20px'
 							>
-								<IsPublished isPublished={is_published} />
-							</IconButton>
-						</Tooltip>
-						<ButtonGroup>
-							<Button
-								disableRipple={true}
-								onClick={() => move(idx, idx + 1)}
-								disabled={idx + 1 == fields.length}
-							><ArrowCircleDownIcon />
-							</Button>
-							<Button
-								disableRipple={true}
-								onClick={() => move(idx, idx - 1)}
-								disabled={idx == 0}
-							><ArrowCircleUpIcon />
-							</Button>
-							<Button
-								color='error'
-								onClick={onDelete}
-							><HighlightOffIcon />
-							</Button>
-						</ButtonGroup>
+								{label}
+							</Typography>
+						</AccordionSummary>
+						<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
+							<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
+								<IconButton
+									size='small'
+									onClick={() => { form.setValue('is_published', !is_published) }}
+								>
+									<IsPublished isPublished={is_published} />
+								</IconButton>
+							</Tooltip>
+							<ButtonGroup>
+								<Button
+									disableRipple={true}
+									onClick={() => move(idx, idx + 1)}
+									disabled={idx + 1 == fields.length}
+								><ArrowCircleDownIcon />
+								</Button>
+								<Button
+									disableRipple={true}
+									onClick={() => move(idx, idx - 1)}
+									disabled={idx == 0}
+								><ArrowCircleUpIcon />
+								</Button>
+								<Button
+									color='error'
+									onClick={onDelete}
+								><HighlightOffIcon />
+								</Button>
+							</ButtonGroup>
+						</Box>
 					</Box>
-				</Box>
-				{blockData && <AccordionDetails >
-					<Box className='block-settings' marginY={2}>
-						{Element ? (
-							<Element form={form} />
-						) : null}
-					</Box>
-				</AccordionDetails>}
-			</Accordion >
-		)
+					{blockData && <AccordionDetails >
+						<Box className='block-settings' marginY={2}>
+							{Element ? (
+								<Element form={form} />
+							) : null}
+						</Box>
+					</AccordionDetails>}
+				</Accordion >
+			)
 }
 
 export default Block

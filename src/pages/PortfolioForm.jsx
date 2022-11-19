@@ -1,24 +1,33 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 
-import { Alert, FormControl, FormControlLabel, Grid, Typography } from '@mui/material';
+import { Box, Alert, Card, FormControl, FormControlLabel, Grid, IconButton, Typography } from '@mui/material';
 import { CancelButton, StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
-import ErrorMessage from '../components/common/ErrorMessage';
+import ImageUploader from '../components/common/ImageUploader';
 import SaveButton from '../components/common/SaveButton';
-import { Box } from '@mui/system';
-import { getCompletedProject } from '../services/portfolio-api-service';
+import ErrorMessage from '../components/common/ErrorMessage';
+import { CameraAlt, Delete } from '@mui/icons-material';
+import { getCompletedProject, insertCompletedProject } from '../services/portfolio-api-service';
+import { getSrcFromFile } from '../helpers/file-helpers';
+import { deleteImage, uploadImage } from '../services/storage-service.js';
+import { slugify, transliterate as tr } from 'transliteration';
+import Swal from 'sweetalert2';
 
 const PortfolioForm = (props) => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { reset, setValue, watch, handleSubmit, register, formState: { errors } } = useForm({
+
+  const [imageToDelete, setImageToDelete] = useState(null);
+  const [submitDisabled, setSubmitDisabled] = useState(false);
+
+  const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors } } = useForm({
     defaultValues: {
       title: '',
       location: '',
       alias: '',
       image: '',
-      description: '',
+      imageFile: null,
       is_published: true,
       completed_at: new Date().toISOString().substr(0, 10)
     },
@@ -26,15 +35,58 @@ const PortfolioForm = (props) => {
   })
 
   const is_published = watch('is_published')
+  const image = watch('image')
 
   useEffect(() => {
     !isNaN(id) && getCompletedProject(id).then(res => {
-      reset({ ...res, completed_at: res.completed_at.substr(0, 10) });
+      reset({ ...getValues(), ...res, completed_at: res.completed_at.substr(0, 10) });
     })
 
   }, [id])
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
+    setSubmitDisabled(true);
+    const { title } = data;
+    const payload = {
+      ...data,
+      alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
+    }
+    if (data.imageFile) {
+      await deleteImage(imageToDelete);
+      const url = await uploadImage(data.imageFile)
+      setValue('image', url);
+      setValue('imageFile', null);
+      payload.image = url
+    }
+    if (!payload.image) {
+      Swal.fire({
+        position: 'top-right',
+        icon: 'error',
+        title: 'Потрібно додати зображення',
+        color: 'var(--theme-color)',
+        timer: 3000,
+        showConfirmButton: false,
+        toast: true,
+      })
+      return;
+    }
+    if (payload.id) {
+      // update
+    } else {
+      const { data: { id } } = await insertCompletedProject(payload);
+      navigate(`/portfolioform/${id}`);
+      Swal.fire({
+        position: 'top-right',
+        icon: 'success',
+        title: 'Обєкт успішно Збережено',
+        color: 'var(--theme-color)',
+        timer: 3000,
+        showConfirmButton: false,
+        toast: true,
+      }).then(() => {
+        setSubmitDisabled(false);
+      })
+    }
   }
 
   return (
@@ -46,73 +98,84 @@ const PortfolioForm = (props) => {
       </Typography>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid container direction='column' style={{ gap: 16 }} >
-          <Grid item xs={12}>
-            <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={7} >
-                  <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
-                    <FormControlLabel
-                      control={
-                        <StyledCheckbox checked={is_published} onChange={((e) => setValue('is_published', e.target.checked))} />
-                      }
-                      label={'Опублікувати'}
-                    />
-                    {is_published
-                      ? <Alert severity='success'>
-                        Цей об'єкт відображатиметься на сторінці "Потрфоліо"
-                      </Alert>
-                      : <Alert severity='info'>
-                        Цей об'єкт буде збережено як чернетку
-                      </Alert>}
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3} lg={2}>
-                  <FormControl variant="standard" required fullWidth>
-                    <StyledInputLabel shrink htmlFor="completedAtInput">
-                      Дата здачі
-                    </StyledInputLabel>
-                    <StyledInputBase type='date' error={!!(errors?.completed_at)} placeholder={'Дата здачі'} id='completedAtInput' {...register('completed_at', { required: true })} />
-                  </FormControl>
-                  {errors.completed_at && <ErrorMessage type={errors?.completed_at?.type} />}
-                </Grid>
-              </Grid>
-            </Box>
-          </Grid>
-          <Grid item container spacing={2}>
-            <Grid item xs={12} md={6}>
+        <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
+          <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
+            <FormControlLabel
+              control={
+                <StyledCheckbox checked={is_published} onChange={((e) => setValue('is_published', e.target.checked))} />
+              }
+              label={'Опублікувати'}
+            />
+            {is_published
+              ? <Alert severity='success'>
+                Цей об'єкт відображатиметься на сторінці "Потрфоліо"
+              </Alert>
+              : <Alert severity='info'>
+                Цей об'єкт буде збережено як чернетку
+              </Alert>}
+          </Box>
+        </Box>
+        <Grid container spacing={2} marginTop={1}>
+          <Grid item xs={12} lg={7}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <FormControl variant="standard" required fullWidth>
                 <StyledInputLabel shrink htmlFor="titleInput">
                   Заголовок об'єкта
                 </StyledInputLabel>
-                <StyledInputBase error={!!(errors?.title)} placeholder={'Заголовок об\'єкта'} id='titleInput' {...register('title', { required: true, maxLength: 30 })} />
+                <StyledInputBase error={!!(errors?.title)} placeholder={'Заголовок об\'єкта'} id='titleInput' {...register('title', { required: true, maxLength: 50 })} />
               </FormControl>
-              {errors.title && <ErrorMessage type={errors?.title?.type} maxLength={errors?.title?.type === 'maxLength' ? 30 : undefined} />}
-            </Grid>
-            <Grid item xs={12} md={6}>
+              {errors.title && <ErrorMessage type={errors?.title?.type} maxLength={errors?.title?.type === 'maxLength' ? 50 : undefined} />}
               <FormControl variant="standard" required fullWidth>
                 <StyledInputLabel shrink htmlFor="locationInput">
                   Локація
                 </StyledInputLabel>
-                <StyledInputBase error={!!(errors?.location)} placeholder={'Локація'} id='locationInput' {...register('location', { required: true, maxLength: 30 })} />
+                <StyledInputBase error={!!(errors?.location)} placeholder={'Локація'} id='locationInput' {...register('location', { required: true, maxLength: 50 })} />
               </FormControl>
-              {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 30 : undefined} />}
-            </Grid>
+              {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 50 : undefined} />}
+              <FormControl variant="standard" required fullWidth>
+                <StyledInputLabel shrink htmlFor="completedAtInput">
+                  Дата здачі
+                </StyledInputLabel>
+                <StyledInputBase type='date' error={!!(errors?.completed_at)} placeholder={'Дата здачі'} id='completedAtInput' {...register('completed_at', { required: true })} />
+              </FormControl>
+              {errors.completed_at && <ErrorMessage type={errors?.completed_at?.type} />}
+            </Box>
           </Grid>
-          {/* <Grid item>
-            <FormControl variant="standard" required fullWidth>
-              <StyledInputLabel shrink htmlFor="descriptionInput">
-                Короткий опис
+          <Grid item xs={12} lg={5}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: '20px' }}>
+              <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
+                Зображення
               </StyledInputLabel>
-              <StyledInputBase multiline={true} rows={3} error={!!(errors?.description)} placeholder={'Короткий опис'} id='descriptionInput' {...register('description', { maxLength: 100 })} />
-            </FormControl>
-            {errors.description && <ErrorMessage type={errors?.description?.type} maxLength={errors?.description?.type === 'maxLength' ? 100 : undefined} />}
-          </Grid> */}
+              <Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible', borderRadius: '5px' }}>
+                {image
+                  ? (<>
+                    <IconButton size='small' onClick={() => {
+                      // setImageToDelete(image);
+                      setValue('image', null)
+                    }
+                    } sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
+                      <Delete sx={{ color: 'red' }} />
+                    </IconButton>
+                    <img src={image} style={{ width: '250px', borderRadius: '5px' }} />
+                  </>)
+                  : (<div style={{ width: 250, height: 125, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
+              </Card>
+              <ImageUploader
+                id='imageUploader'
+                ratio={2 / 1}
+                onChange={async (file) => {
+                  setImageToDelete(image);
+                  setValue('imageFile', file);
+                  setValue('image', await getSrcFromFile(file))
+                }}
+              />
+            </Box>
+          </Grid>
         </Grid>
-        <Box display='flex' justifyContent='end' alignItems='center' marginTop={3} style={{ gap: 20 }}>
+        <Box display='flex' justifyContent='end' alignItems='center' marginTop={4} style={{ gap: 20 }}>
           <Link to="/" style={{ color: 'var(--theme-color)' }}>Перейти до редагування сторінки проєкту</Link>
           <CancelButton onClick={() => navigate('/portfolio')}>Скасувати</CancelButton>
-          <SaveButton type='submit' />
+          <SaveButton type='submit' disabled={submitDisabled} />
         </Box>
       </form>
     </Box>

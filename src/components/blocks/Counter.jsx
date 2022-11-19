@@ -1,7 +1,7 @@
 import React from 'react'
 import { useFieldArray, Controller } from 'react-hook-form';
 
-import { Button, FormControl, Grid, IconButton, Tooltip, Typography } from '@mui/material';
+import { Button, FormControl, Grid, Grow, IconButton, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import AddIcon from '@mui/icons-material/Add';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -27,68 +27,70 @@ const Counter = ({ form }) => {
       <Grid container spacing={2}>
         {fields.map((c, idx) => (
           <Grid item xs={6} lg={3} key={c.id} >
-            <Box
-              bgcolor='#f7f7f7'
-              borderRadius={2}
-              display='flex'
-              justifyContent='center'
-              flexDirection='column'
-              padding={2}
-            >
+            <Grow in={idx !== null}>
               <Box
-                marginBottom={2}
+                bgcolor='#f7f7f7'
+                borderRadius={2}
                 display='flex'
-                width='100%'
-                justifyContent='space-between'
-                alignItems='center'
+                justifyContent='center'
+                flexDirection='column'
+                padding={2}
               >
-                <Typography
-                  fontSize={18}
-                  textAlign='center'
-                  color='var(--theme-color)'
-                  fontWeight={500}
-                  flexGrow={1}
+                <Box
+                  marginBottom={2}
+                  display='flex'
+                  width='100%'
+                  justifyContent='space-between'
+                  alignItems='center'
                 >
-                  Лічильник №{idx + 1}
-                </Typography>
-                <Tooltip disableFocusListener title='Видалити лічильник'>
-                  <IconButton
-                    color='error'
-                    onClick={() => remove(idx)}
-                  ><HighlightOffIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Box marginBottom={2}>
+                  <Typography
+                    fontSize={18}
+                    textAlign='center'
+                    color='var(--theme-color)'
+                    fontWeight={500}
+                    flexGrow={1}
+                  >
+                    Лічильник №{idx + 1}
+                  </Typography>
+                  <Tooltip disableFocusListener title='Видалити лічильник'>
+                    <IconButton
+                      color='error'
+                      onClick={() => remove(idx)}
+                    ><HighlightOffIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Box marginBottom={2}>
+                  <FormControl variant="standard" required fullWidth>
+                    <StyledInputLabel shrink htmlFor={`counter-${c.id}`}>
+                      Заголовок лічильника
+                    </StyledInputLabel>
+                    <Controller
+                      name={`data.counters.${idx}.title`}
+                      control={control}
+                      rules={{ maxLength: 100, required: true }}
+                      render={({ field }) => (
+                        <StyledInputBase value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
+                      )}
+                    />
+                  </FormControl>
+                </Box>
                 <FormControl variant="standard" required fullWidth>
                   <StyledInputLabel shrink htmlFor={`counter-${c.id}`}>
-                    Заголовок лічильника
+                    Лічильник
                   </StyledInputLabel>
                   <Controller
-                    name={`data.counters.${idx}.title`}
+                    name={`data.counters.${idx}.counter`}
                     control={control}
-                    rules={{ maxLength: 100, required: true }}
-                    render={({ field }) => (
-                      <StyledInputBase value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
+                    rules={{ min: 0 }}
+                    render={({ field, fieldState: { error } }) => (
+                      <StyledInputBase type='number' value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
                     )}
                   />
+                  {errors?.data?.counters[idx]?.counter?.type == 'min' && <ErrorMessage type='min' />}
                 </FormControl>
               </Box>
-              <FormControl variant="standard" required fullWidth>
-                <StyledInputLabel shrink htmlFor={`counter-${c.id}`}>
-                  Лічильник
-                </StyledInputLabel>
-                <Controller
-                  name={`data.counters.${idx}.counter`}
-                  control={control}
-                  rules={{ min: 0 }}
-                  render={({ field, fieldState: { error } }) => (
-                    <StyledInputBase type='number' value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
-                  )}
-                />
-                {errors?.data?.counters[idx]?.counter?.type == 'min' && <ErrorMessage type='min' />}
-              </FormControl>
-            </Box>
+            </Grow>
           </Grid>
         )
         )}
@@ -107,7 +109,7 @@ const Counter = ({ form }) => {
           Додати лічильник
         </Button>
       </Box>
-    </Box>
+    </Box >
   )
 }
 

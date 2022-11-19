@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import BlocksComposition from '../components/BlocksComposition/index.jsx';
+
+import { blocks } from '../components/blocks/index.js';
 import { getPageBlocks } from '../services/pages-api-service.js';
 
 const MainPage = () => {
@@ -11,7 +13,7 @@ const MainPage = () => {
 		})
 	}, [])
 	return (
-		<BlocksComposition data={data} />
+		<BlocksComposition data={data} allowedBlocks={blocks} relatedTo={'page'} />
 	)
 }
 
