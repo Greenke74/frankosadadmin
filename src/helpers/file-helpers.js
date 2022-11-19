@@ -92,8 +92,7 @@ const convertToWebpObjectURL = (rawImage, crop = undefined) =>
 					(blob) => {
 						resolve(blob);
 					},
-					'image/webp',
-					0.99
+					'image/webp'
 				);
 			} else {
 				canvas.width = rawImage.width * pixelRatio;
