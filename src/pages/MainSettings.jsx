@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { REGULAR_EXPRESSIONS } from '../services/regex-service.js';
 
-import { Grid, FormControl, Card, CardActions, Button, IconButton } from '@mui/material';
+import { Grid, FormControl, Card, IconButton } from '@mui/material';
 import { StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents.jsx';
 import ImageUploader from '../components/common/ImageUploader.jsx';
 import SaveButton from '../components/common/SaveButton.jsx';
@@ -12,8 +12,7 @@ import Swal from 'sweetalert2';
 import { getMainSettings, updateMainSettings } from '../services/setting-api-service.js';
 import { Box } from '@mui/system';
 import { CameraAlt, Delete } from '@mui/icons-material';
-import { dataURLtoFile, getSrcFromFile } from '../helpers/file-helpers.js';
-import { supabase } from '../supabase/supabaseClient.js';
+import { getSrcFromFile } from '../helpers/file-helpers.js';
 import { deleteImage, uploadImage } from '../services/storage-service.js';
 
 const defaultValues = {
@@ -35,6 +34,7 @@ const defaultValues = {
 
 const MainSettings = () => {
 	const [defaultFormValue, setDefaultFormValue] = useState(defaultValues);
+	const [imageToDelete, setImageToDelete] = useState(null);
 	const [fieldIds, setFieldIds] = useState([]);
 	const {
 		reset,
@@ -70,9 +70,12 @@ const MainSettings = () => {
 	const onSubmit = async (data) => {
 		const { faviconFile } = data;
 		delete data.faviconFile;
-		const payloadData = { ...data}
+		const payloadData = { ...data }
 		if (faviconFile) {
+			await deleteImage(imageToDelete);
 			const favicon = await uploadImage(faviconFile)
+			setValue('favicon', favicon);
+			setValue('faviconFile', null);
 			payloadData.favicon = favicon
 		}
 
@@ -99,64 +102,71 @@ const MainSettings = () => {
 					showConfirmButton: false,
 					toast: true,
 				})
-				setDefaultFormValue(data);
-				reset(data);
+				setDefaultFormValue(payloadData);
+				reset(payloadData);
 			});
 	}
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className='pb-2'>
 			<Grid container direction='column' padding={2} style={{ gap: 16 }} >
-				<Grid item container xs={12} spacing={2}>
+				<Grid item container xs={12} spacing={2} marginBottom={2}>
 					<Grid item xs={12} md={6} >
-						<FormControl variant="standard" required fullWidth>
-							<StyledInputLabel shrink htmlFor="siteNameInput">
-								Назва сайту
-							</StyledInputLabel>
-							<StyledInputBase error={!!(errors?.siteName)} placeholder='Назва сайту' id='siteNameInput' {...register('siteName', { required: true, maxLength: 20 })} />
-						</FormControl>
-						{errors.siteName && <ErrorMessage type={errors?.siteName?.type} maxLength={errors?.siteName?.type === 'maxLength' ? 20 : undefined} />}
+						<Grid container spacing={2} direction='column'>
+							<Grid item xs={12}>
+								<FormControl variant="standard" required fullWidth>
+									<StyledInputLabel shrink htmlFor="siteNameInput">
+										Назва сайту
+									</StyledInputLabel>
+									<StyledInputBase error={!!(errors?.siteName)} placeholder='Назва сайту' id='siteNameInput' {...register('siteName', { required: true, maxLength: 20 })} />
+								</FormControl>
+								{errors.siteName && <ErrorMessage type={errors?.siteName?.type} maxLength={errors?.siteName?.type === 'maxLength' ? 20 : undefined} />}
+							</Grid>
+							<Grid item xs={12}>
+								<FormControl variant="standard" error={!!(errors?.contactPhone)} fullWidth={true} >
+									<StyledInputLabel shrink htmlFor="contactPhoneInput">
+										Номер телефону
+									</StyledInputLabel>
+									<StyledInputBase error={!!(errors?.contactPhone)} placeholder="380123456789" id='contactPhoneInput' {...register('contactPhone', { pattern: REGULAR_EXPRESSIONS.PHONE })} />
+								</FormControl>
+								{errors.contactPhone && <ErrorMessage type={errors?.contactPhone ? 'phonePattern' : undefined} />}
+							</Grid>
+							<Grid item xs={12}>
+								<FormControl variant="standard" error={!!(errors?.contactMail)} fullWidth>
+									<StyledInputLabel shrink htmlFor="contactMailInput">
+										Електронна пошта
+									</StyledInputLabel>
+									<StyledInputBase error={!!(errors?.contactMail)} placeholder="example@mail.com" id='contactMailInput' {...register('contactMail', { pattern: REGULAR_EXPRESSIONS.EMAIL })} />
+								</FormControl>
+								{errors.contactMail && <ErrorMessage type={errors?.contactMail ? 'emailPattern' : undefined} />}
+							</Grid>
+						</Grid>
 					</Grid>
 					<Grid item xs={12} md={6}>
 						<Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: '20px' }}>
 							<StyledInputLabel shrink htmlFor='mainImageUploader' sx={{ alignSelf: 'start' }}>
 								Головне зображення
 							</StyledInputLabel>
-							<Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible' }}>
+							<Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible', borderRadius: '5px' }}>
 								{favicon
 									? (<>
-										<IconButton onClick={() => setValue('favicon', null)} sx={{ position: 'absolute', top: -20, right: -20, bgcolor: 'white' }}>
+										<IconButton size='small' onClick={() => {
+											// setImageToDelete(favicon);
+											setValue('favicon', null)
+										}
+										} sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
 											<Delete sx={{ color: 'red' }} />
 										</IconButton>
-										<img src={favicon} style={{ width: '100px' }} />
+										<img src={favicon} style={{ width: '100px', borderRadius: '5px' }} />
 									</>)
 									: (<div style={{ width: 100, height: 100, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
 							</Card>
 							<ImageUploader id='mainImageUploader' ratio={1 / 1} onChange={async (file) => {
+								setImageToDelete(favicon);
 								setValue('faviconFile', file);
 								setValue('favicon', await getSrcFromFile(file))
 							}} />
 						</Box>
-					</Grid>
-				</Grid>
-				<Grid item container direction='row' flexWrap='nowrap' spacing={2} >
-					<Grid item xs={6}>
-						<FormControl variant="standard" error={!!(errors?.contactPhone)} fullWidth={true} >
-							<StyledInputLabel shrink htmlFor="contactPhoneInput">
-								Номер телефону
-							</StyledInputLabel>
-							<StyledInputBase error={!!(errors?.contactPhone)} placeholder="380123456789" id='contactPhoneInput' {...register('contactPhone', { pattern: REGULAR_EXPRESSIONS.PHONE })} />
-						</FormControl>
-						{errors.contactPhone && <ErrorMessage type={errors?.contactPhone ? 'phonePattern' : undefined} />}
-					</Grid>
-					<Grid item xs={6}>
-						<FormControl variant="standard" error={!!(errors?.contactMail)} fullWidth>
-							<StyledInputLabel shrink htmlFor="contactMailInput">
-								Електронна пошта
-							</StyledInputLabel>
-							<StyledInputBase error={!!(errors?.contactMail)} placeholder="example@mail.com" id='contactMailInput' {...register('contactMail', { pattern: REGULAR_EXPRESSIONS.EMAIL })} />
-						</FormControl>
-						{errors.contactMail && <ErrorMessage type={errors?.contactMail ? 'emailPattern' : undefined} />}
 					</Grid>
 				</Grid>
 				<Grid item>

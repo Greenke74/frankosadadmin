@@ -33,6 +33,10 @@ const PortfolioPage = () => {
 	}
 	const columns = [
 		{
+			field: 'id',
+			hideable: true
+		},
+		{
 			field: 'image',
 			width: 500,
 			sortable: false,
@@ -74,7 +78,7 @@ const PortfolioPage = () => {
 			getActions: (params) => [
 				<GridActionsCellItem
 					icon={<EditRoundedIcon sx={{ color: 'var(--bs-green)' }} />}
-					onClick={() => { navigate(`/portfolioform/${params.row.id}`)}}
+					onClick={() => { navigate(`/portfolioform/${params.row.id}`) }}
 					label="Print"
 					title={'Редагувати об\'єкт'}
 				/>,
@@ -120,8 +124,11 @@ const PortfolioPage = () => {
 					disableColumnFilter
 					disableColumnMenu
 					rowHeight={80}
-					pageSize={8}
-					// rowsPerPageOptions={[5, 10, 50]}
+					pageSize={7}
+					columnVisibilityModel={{
+						id: false
+					}}
+					sortModel={[{ field: 'id', sort: 'desc' }]}
 				>
 				</DataGrid>
 			</Box>
