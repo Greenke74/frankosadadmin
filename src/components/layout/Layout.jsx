@@ -6,7 +6,7 @@ import { Box, Grid } from '@mui/material'
 
 const Layout = ({ children }) =>
 	<Grid container columns={20} wrap='nowrap' >
-		<Grid item xs={5} lg={4} xl={3} component='aside' style={{ height: '100%'}} >
+		<Grid item xs={5} lg={4} xl={3} component='aside' style={{ height: 'auto' }} >
 			<Sidebar />
 		</Grid>
 		<Grid item xs={15} lg={16} xl={17} >
