@@ -16,10 +16,11 @@ const StepByStep = ({ form }) => {
     fields,
     append,
     remove,
-    move
+    move,
+    update
   } = useFieldArray({
     control: form.control,
-    name: 'data.stepByStep.data',
+    name: 'data.steps',
     rules: { maxLength: 5 }
   })
 
@@ -31,11 +32,11 @@ const StepByStep = ({ form }) => {
           <StyledInputLabel shrink htmlFor="stepsBlockId">
             Заголовок
           </StyledInputLabel>
-          <StyledInputBase {...register('data.stepByStep.stepsBlockTitle')} id='stepsBlockId' />
+          <StyledInputBase {...register('data.stepsBlockTitle')} id='stepsBlockId' />
         </FormControl>
       </Box>
       <Grid container spacing={2}>
-        {fields.map((c, idx) => { console.log(idx); return(
+        {fields.map((c, idx) => (
           <Grid item xs={12} lg={4} key={c.id}>
             <Box
               bgcolor='#f7f7f7'
@@ -75,31 +76,39 @@ const StepByStep = ({ form }) => {
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Назва кроку
                   </StyledInputLabel>
-                  <StyledInputBase {...register(`data.stepByStep.data.${idx}.title`)} id={`step-${c.id}`} />
+                  <StyledInputBase {...register(`data.steps.${idx}.title`)} id={`step-${c.id}`} />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Номер кроку
                   </StyledInputLabel>
-                  <StyledInputBase disabled value={`0${idx+1}`} onChange={setValue(`data.stepByStep.data.${idx}.number`, `0${idx+1}`)} id={`step-${c.id}`} />
+                  <StyledInputBase disabled value={`0${idx + 1}`} onChange={setValue(`data.steps.${idx}.number`, `0${idx + 1}`)} id={`step-${c.id}`} />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Опис кроку
                   </StyledInputLabel>
-                  <StyledInputBase {...register(`data.stepByStep.data.${idx}.description`)} id={`step-${c.id}`} />
+                  <StyledInputBase {...register(`data.steps.${idx}.description`)} id={`step-${c.id}`} />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth>
-                  <StyledInputLabel shrink htmlFor={`step-${c.id}`} style={{ marginBottom: '10px' }} >
-                    Зображення до кроку {idx}
+                  <StyledInputLabel shrink htmlFor={`step-${c.id}`} sx={{ marginBottom: '30px' }}>
+                    Зображення до кроку
                   </StyledInputLabel>
-                  <ImageUploader onClick={() => console.log(idx)}/>
-                  <img src={getValues(`data.stepByStep.data.${idx}.image`)}/>
+                  <Box margin={'25px 0'} display='flex' flexDirection='column' alignItems='center'>
+                    <ImageUploader id={`step-${c.id}`} onChange={async (file) => {
+                      update(idx, { ...c, image: await getSrcFromFile(file) })
+                    }} />
+                    <img src={c.image} style={{
+                      width: '100%', 
+                      marginTop: '15px',
+                      borderRadius: '8px'
+                      }}/>
+                  </Box>
                 </FormControl>
               </Box>
             </Box>
           </Grid>
-        )})}
+        ))}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
         <Button
