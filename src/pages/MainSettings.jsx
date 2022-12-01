@@ -36,9 +36,10 @@ const MainSettings = () => {
 	const [defaultFormValue, setDefaultFormValue] = useState(defaultValues);
 	const [imageToDelete, setImageToDelete] = useState(null);
 	const [fieldIds, setFieldIds] = useState([]);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const {
 		reset,
-		formState: { errors, isValid },
+		formState: { errors },
 		handleSubmit,
 		getValues,
 		setValue,
@@ -68,6 +69,7 @@ const MainSettings = () => {
 	}, [])
 
 	const onSubmit = async (data) => {
+		setIsSubmitting(true);
 		const { faviconFile } = data;
 		delete data.faviconFile;
 		const payloadData = { ...data }
@@ -89,7 +91,10 @@ const MainSettings = () => {
 			}
 		}).filter(r => !!r)
 
-		if (payload.length === 0) return;
+		if (payload.length === 0) {
+			setIsSubmitting(false);
+			return;
+		} 
 
 		updateMainSettings(payload)
 			.then(() => {
@@ -104,11 +109,12 @@ const MainSettings = () => {
 				})
 				setDefaultFormValue(payloadData);
 				reset(payloadData);
-			});
+			})
+			.finally(() => setIsSubmitting(false));
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className='pb-2'>
+		<form onSubmit={handleSubmit(onSubmit)} style={{ paddingBottom: 10 }}>
 			<Grid container direction='column' padding={2} style={{ gap: 16 }} >
 				<Grid item container xs={12} spacing={2} marginBottom={2}>
 					<Grid item xs={12} md={6} >
@@ -157,9 +163,9 @@ const MainSettings = () => {
 										} sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
 											<Delete sx={{ color: 'red' }} />
 										</IconButton>
-										<img src={favicon} style={{ width: '100px', borderRadius: '5px' }} />
+										<img src={favicon} style={{ width: '150px', borderRadius: '5px' }} />
 									</>)
-									: (<div style={{ width: 100, height: 100, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
+									: (<div style={{ width: 150, height: 150, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
 							</Card>
 							<ImageUploader id='mainImageUploader' ratio={1 / 1} onChange={async (file) => {
 								setImageToDelete(favicon);
@@ -226,9 +232,9 @@ const MainSettings = () => {
 					{errors?.mediaLinks?.facebookUrl && <ErrorMessage type={errors?.mediaLinks?.facebookUrl ? 'urlPattern' : undefined} />}
 				</Grid>
 			</Grid>
-			<div className='d-flex justify-content-end px-3 pb-2'>
-				<SaveButton disabled={!isValid} type='submit' />
-			</div>
+			<Box sx={{ display: 'flex', justifyContent: 'end', gap: '25px', paddingRight: 2 }}>
+				<SaveButton disabled={isSubmitting} type='submit' />
+			</Box>
 		</form>
 	)
 }

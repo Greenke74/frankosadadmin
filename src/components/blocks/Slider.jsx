@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form';
 
-import { Box, Button, Popover, IconButton, Tooltip, Typography } from '@mui/material';
+import AddButton from '../common/AddButton';
+import { Box, Popover, IconButton, Tooltip, Typography } from '@mui/material';
 import { default as SlickSlider } from 'react-slick';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import AddIcon from '@mui/icons-material/Add';
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -24,7 +24,7 @@ const Slider = () => {
 	const { control, handleSubmit } = useForm({
 		defaultValues: {
 			services: [
-			
+
 			],
 			completed_objects: [],
 			offers: []
@@ -163,18 +163,10 @@ const Slider = () => {
 			alignItems='center'
 			position='relative'
 		>
-			<Button
-				startIcon={<AddIcon />}
-				variant='text'
-				style={{ textTransform: 'none', color: 'var(--theme-color)' }}
+			<AddButton
+				label='Додати слайд'
 				onClick={handleAddSlide}
-				sx={{
-					padding: '6px 15px !important',
-					'& > span': { marginRight: '8px !important' }
-				}}
-			>
-				Додати слайд
-			</Button>
+			/>
 			<Popover
 				id={id}
 				open={open}

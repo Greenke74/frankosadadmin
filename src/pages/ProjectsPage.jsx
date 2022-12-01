@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { Box, Button } from '@mui/material'
+import { Alert, Box } from '@mui/material'
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import IsPublished from '../components/common/IsPublished';
+import AddButton from '../components/common/AddButton';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import AddIcon from '@mui/icons-material/Add';
 
-import { getCompletedProjects } from '../services/portfolio-api-service';
+import { deleteProject, getProjects } from '../services/portfolio-api-service';
 
 import Swal from 'sweetalert2';
 import '../styles/swal.scss';
 
-const PortfolioPage = () => {
+const ITEMS_PER_PAGE = 8;
+const ROW_HEIGHT = 82;
+
+const ProjectsPage = () => {
 	const navigate = useNavigate();
-	const deleteProject = (id) => {
+	const handleDelete = (id) => {
 		Swal.fire({
 			title: 'Видалити',
 			html: 'Ви впевнені, що хочете видалити проект?',
@@ -24,10 +27,20 @@ const PortfolioPage = () => {
 			confirmButtonText: 'Видалити',
 			focusCancel: true,
 			customClass: 'deleteSwal'
-		}).then(result => {
+		}).then(async result => {
 			if (result.value) {
-				// delete project
-
+				await deleteProject(id);
+				Swal.fire({
+					position: 'top-right',
+					icon: 'success',
+					title: 'Проєкт успішно видалено',
+					color: 'var(--theme-color)',
+					timer: 3000,
+					showConfirmButton: false,
+					toast: true,
+				})
+				const projects = await getProjects()
+				setData(projects);
 			}
 		})
 	}
@@ -77,16 +90,16 @@ const PortfolioPage = () => {
 			width: 100,
 			getActions: (params) => [
 				<GridActionsCellItem
-					icon={<EditRoundedIcon sx={{ color: 'var(--bs-green)' }} />}
-					onClick={() => { navigate(`/portfolioform/${params.row.id}`) }}
+					icon={<EditRoundedIcon color='success' />}
+					onClick={() => { navigate(`/projectform/${params.row.id}`) }}
 					label="Print"
 					title={'Редагувати об\'єкт'}
 				/>,
 				<GridActionsCellItem
-					icon={<DeleteIcon sx={{ color: 'var(--bs-danger)' }} />}
+					icon={<DeleteIcon color='error' />}
 					label="Delete"
 					title={'Видалити об\'єкт'}
-					onClick={() => { deleteProject(params.row.id) }}
+					onClick={() => { handleDelete(params.row.id) }}
 				/>
 			]
 		}
@@ -95,7 +108,7 @@ const PortfolioPage = () => {
 
 	useEffect(() => {
 		let mounted = true;
-		getCompletedProjects().then(response => {
+		getProjects().then(response => {
 			mounted && setData(response);
 		})
 		return () => mounted = false;
@@ -104,36 +117,38 @@ const PortfolioPage = () => {
 	return (
 
 		<Box padding={2} >
-			<Button
-				startIcon={<AddIcon />}
-				variant='text'
-				style={{ textTransform: 'none', color: 'var(--theme-color)', backgroundColor: '#f7f7f7' }}
-				onClick={() => navigate('/portfolioform/new')}
-				sx={{
-					padding: '6px 15px !important',
-					marginBottom: 2,
-					'& > span': { marginRight: '8px !important' }
-				}}
-			>
-				Додати об'єкт
-			</Button>
-			<Box height='calc(100vh - 200px)'>
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #e0e0e0', borderRadius: 1, marginBottom: 2, padding: 1 }}>
+				<AddButton
+					label='Додати проєкт'
+					onClick={() => navigate('/projectform/new')}
+				/>
+				<Alert sx={{ height: '36.5px', overflow: 'hidden', padding: '0 10px' }} severity='info'>
+					Ви можете додати нові проєкти
+				</Alert>
+			</Box>
+			<Box height={`calc((${ITEMS_PER_PAGE} * ${ROW_HEIGHT}px) + 111px)`}>
 				<DataGrid
 					rows={data}
 					columns={columns}
 					disableColumnFilter
 					disableColumnMenu
-					rowHeight={80}
-					pageSize={7}
+					rowHeight={ROW_HEIGHT}
+					pageSize={ITEMS_PER_PAGE}
+					disableSelectionOnClick={true}
 					columnVisibilityModel={{
 						id: false
 					}}
 					sortModel={[{ field: 'id', sort: 'desc' }]}
+					sx={{
+						'div:last-child > div': {
+							borderBottom: 'none !important'
+						}
+					}}
 				>
 				</DataGrid>
 			</Box>
-		</Box>
+		</Box >
 	)
 }
 
-export default PortfolioPage
+export default ProjectsPage
