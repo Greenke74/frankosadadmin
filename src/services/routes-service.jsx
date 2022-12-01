@@ -10,14 +10,14 @@ export const getRoutes = () => ([
 		element: () => import('../pages/MainSettings.jsx')
 	},
 	{
-		path: '/portfolio',
+		path: '/projects',
 		label: 'Портфоліо',
-		element: () => import('../pages/PortfolioPage.jsx'),
+		element: () => import('../pages/ProjectsPage.jsx'),
 	},
 	{
-		path: '/portfolioform/:id',
-		label: 'Портфоліо',
-		element: () => import('../pages/PortfolioForm.jsx'),
+		path: '/projectform/:id',
+		label: 'Проєкт',
+		element: () => import('../pages/ProjectForm.jsx'),
 		hideAsideButton: true
 
 	},

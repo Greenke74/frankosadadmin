@@ -10,6 +10,9 @@
     --menu-button-color: #cbe2d414;
     --menu-active-button-color: #cbe2d43d;
 
+    --error: #d32f2f;
+    --success: #3ea043;
+
     /* border radius */
     --block-border-radius: 8px;
     --page-border-radius: 16px;
@@ -25,6 +28,7 @@
 }
 
 body {
+    font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--background-color);
     overflow-x: hidden;
 }
