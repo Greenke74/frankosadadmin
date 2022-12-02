@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import BlocksComposition from '../components/BlocksComposition/index.jsx';
 
 import { blocks } from '../components/blocks/index.js';
-import { getMainPageBlocks } from '../services/blocks-api-service.js';
+import { getMainPageBlocks } from '../services/main-page-blocks-service.js';
 
 const MainPage = () => {
 	const [data, setData] = useState([]);
@@ -16,8 +16,9 @@ const MainPage = () => {
 
 		return () => mounted = false;
 	}, [])
+
 	return (
-		<BlocksComposition blocks={data} allowedBlocks={blocks} relatedTo={'page'} />
+		<BlocksComposition blocks={data} allowedBlocks={blocks} isMainPage={true} />
 	)
 }
 

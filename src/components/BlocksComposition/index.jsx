@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, createRef } from 'react';
+import React, { useState, useEffect, useRef, createRef, lazy } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 
 import {
@@ -13,17 +13,18 @@ import AddButton from '../common/AddButton';
 import Swal from 'sweetalert2';
 import { deleteBlock } from '../../services/blocks-api-service';
 import BlockModal from './BlockModal';
+import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
 
-const BlocksComposition = ({ blocks, allowedBlocks = [], relatedTo }) => {
+const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false }) => {
 	const [submitDisabled, setSubmitDisabled] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [initialBlocks, setInitialBlocks] = useState([]);
 
 	const blocksRef = useRef([]);
 
-	const { control, handleSubmit, setValue, reset, watch } = useForm({
+	const { control, handleSubmit, reset } = useForm({
 		defaultValues: {
-			blocks: blocks.map(b => ({ block: b }))
+			blocks: (blocks ?? []).map(b => ({ block: b }))
 		},
 		mode: 'onChange'
 	})
@@ -56,23 +57,21 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], relatedTo }) => {
 			.map((_, i) => blocksRef.current[i] || createRef());
 	}
 
-	const handleChangeIsPublished = (idx, value) => {
-		setValue(`blocks.${idx}.is_published`, value);
-	}
-
 	const onSubmit = async ({ blocks }) => {
 		setSubmitDisabled(true)
 
-		const newBlocks = (await Promise.all((blocksRef.current ?? []).map((ref) => {
+		const newBlocks = await Promise.all((blocksRef.current ?? []).map((ref) => {
 			ref.current.onSubmit()
 		}
-		))).filter(v => Boolean(v));
+		).filter(v => Boolean(v)));
 
 		const newInitialBlocks = [];
 
 		await Promise.all(initialBlocks.map(initBlock => {
-			if (initBlock && !blocks.find(b => b.blockId == initBlock)) {
-				return deleteBlock(initBlock);
+			if (initBlock && !blocks.find(({ block }) => block.id == initBlock)) {
+				return isMainPage
+					? deleteMainPageBlock(initBlock)
+					: deleteBlock(initBlock)
 			} else {
 				newInitialBlocks.push(initBlock);
 			}
@@ -90,7 +89,6 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], relatedTo }) => {
 			toast: true,
 
 		}).finally(() => setSubmitDisabled(false));
-		setSubmitDisabled(false);
 	}
 
 	return (
@@ -107,19 +105,24 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], relatedTo }) => {
 												name={`blocks.${idx}`}
 												control={control}
 												render={({ field }) => {
-													return (
-														<Block
-															ref={blocksRef.current[idx]}
-															block={field.value.block}
-															idx={idx}
-															move={moveBlock}
-															remove={removeBlock}
-															update={updateBlock}
-															blocksLength={blocksFields.length}
-															setIsPublished={handleChangeIsPublished}
-															relatedTo={relatedTo}
-														/>
-													)
+
+													const { element, label } = allowedBlocks.find(b => b.type === field.value.block?.type ?? null);
+													if(element){
+														return (
+															<Block
+																ref={blocksRef.current[idx]}
+																block={field.value.block}
+																idx={idx}
+																move={moveBlock}
+																remove={removeBlock}
+																update={updateBlock}
+																blocksLength={blocksFields.length}
+																element={element}
+																label={label??'Елемент сторінки'}
+																isMainPage={isMainPage}
+															/>
+														)
+													}
 												}}
 											/>
 										</div>

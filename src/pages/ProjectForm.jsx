@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 
 import { Box, Alert, Card, FormControl, FormControlLabel, Grid, IconButton, Typography, Select, MenuItem } from '@mui/material';
@@ -15,6 +15,7 @@ import { slugify, transliterate as tr } from 'transliteration';
 import Swal from 'sweetalert2';
 import Tabs from '../components/common/Tabs';
 import BlocksComposition from '../components/BlocksComposition';
+import { projectBlocks } from '../components/blocks/index.js';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 
@@ -207,7 +208,6 @@ const ProjectForm = (props) => {
                 </Grid>
               </Grid>
               <Box display='flex' justifyContent='end' alignItems='center' marginTop={4} style={{ gap: 20 }}>
-                <Link to="/" style={{ color: 'var(--theme-color)' }}>Перейти до редагування сторінки проєкту</Link>
                 <CancelButton onClick={() => navigate('/projects')}>Скасувати</CancelButton>
                 <SaveButton type='submit' disabled={isSubmitting} />
               </Box>
@@ -217,7 +217,7 @@ const ProjectForm = (props) => {
         {
           label: 'Сторінка проєкту',
           content: (
-            <><BlocksComposition data={{blocks: [] }} allowedBlocks={[]} /></>
+            <><BlocksComposition data={{blocks: [] }} allowedBlocks={projectBlocks} /></>
           )
         }
       ]} />

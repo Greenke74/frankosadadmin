@@ -71,20 +71,3 @@ export const updateBlock = (new_block) => new Promise((resolve, reject) => {
 		reject(e)
 	}
 })
-
-export const getMainPageBlocks = () => new Promise((resolve, reject) => {
-	try {
-		supabase.rpc('get_main_page_blocks')
-			.then(response => {
-				if (response.error) {
-					reject(response)
-				}
-
-				resolve(response)
-			})
-			.catch(error => reject(error))
-
-	} catch (e) {
-		reject(e)
-	}
-})
