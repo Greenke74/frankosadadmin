@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
-import { Tabs as MuiTabs, Tab, styled } from '@mui/material'
+import { Tabs as MuiTabs, Tab, styled, Box } from '@mui/material'
 
 const StyledTabs = styled(MuiTabs)({
   '& .MuiTab-root': {
     textTransform: 'none',
-    color: 'var(--theme-color)'
+    color: '#6d6d6d !important'
   },
   '& .MuiTabs-indicator': {
     backgroundColor: 'var(--active-color)'
+  },
+  '& .Mui-selected': {
+    color: 'var(--active-color) !important'
   }
 })
 
@@ -21,12 +24,13 @@ const Tabs = ({ tabs }) => {
         ))}
       </StyledTabs>
       {tabs.map((tab, index) => (
-        <div
+        <Box
           role='tabpanel'
+          paddingTop={1}
           hidden={currentTab !== index}
         >
           {tab.content}
-        </div>
+        </Box>
       ))}
     </>
   )

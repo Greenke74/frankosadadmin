@@ -14,8 +14,9 @@ import Swal from 'sweetalert2';
 import '../../styles/swal.scss';
 import './block.css';
 import { insertBlock, updateBlock } from '../../services/blocks-api-service';
-import { blocks } from '../blocks';
+
 import IsPublished from '../common/IsPublished';
+import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
 
 const Accordion = styled((props) => (
 	<MuiAccordion disableGutters elevation={0} {...props} />
@@ -53,11 +54,9 @@ const AccordionSummary = styled((props) => (
 	},
 }));
 
-const Block = ({ block, idx, remove, blocksLength, move, setOnSubmit, relatedTo, pageId, update }, ref) => {
+const Block = ({ block, idx, remove, blocksLength, move, update, element, label, isMainPage }, ref) => {
 	const [expanded, setExpanded] = useState(null);
 	const [Element, setElement] = useState(null);
-	const [label, setLabel] = useState('');
-	const [error, setError] = useState(false);
 
 	const form = useForm({
 		defaultValues: block
@@ -90,9 +89,13 @@ const Block = ({ block, idx, remove, blocksLength, move, setOnSubmit, relatedTo,
 		}
 
 		if (payload.id) {
-			await updateBlock(payload);
+			await isMainPage
+				? updateMainPageBlock(payload)
+				: updateBlock(payload)
 		} else {
-			const { data } = await insertBlock(payload)
+			const { data } = await isMainPage
+				? insertMainPageBlock(payload)
+				: insertBlock(payload)
 			update(idx, {
 				block: {
 					...formData,
@@ -110,88 +113,72 @@ const Block = ({ block, idx, remove, blocksLength, move, setOnSubmit, relatedTo,
 	useEffect(() => {
 		let mounted = true;
 
-		if (block) {
-			const b = blocks.find(b => b.type === block?.type ?? null);
+		mounted && setElement(lazy(element));
 
-			mounted && setElement(lazy(b.element))
-			mounted && setLabel(b.label);
-
-			mounted && form.reset(block)
-
-		} else if (blockType) {
-			const b = blocks.find(b => b.type === blockType);
-
-			mounted && setElement(lazy(b.element))
-			mounted && setLabel(b.label);
-		} else {
-			setError(true);
-		}
 		return () => mounted = false;
-	}, [block])
+	}, [element])
 
-	return error
-		? null
-		: (
-			<Accordion expanded={expanded} >
-				<Box
-					display='flex'
-					width='100%'
-					justifyContent='space-between'
-					alignItems='center'
-					flexWrap='nowrap'
+	return (
+		<Accordion expanded={expanded} >
+			<Box
+				display='flex'
+				width='100%'
+				justifyContent='space-between'
+				alignItems='center'
+				flexWrap='nowrap'
+			>
+				<AccordionSummary
+					onClick={() => setExpanded(prev => !prev)}
 				>
-					<AccordionSummary
-						onClick={() => setExpanded(prev => !prev)}
+					<Typography
+						component="h3"
+						fontSize='14px'
+						flexGrow={1}
+						flexShrink={0}
+						lineHeight='20px'
 					>
-						<Typography
-							component="h3"
-							fontSize='14px'
-							flexGrow={1}
-							flexShrink={0}
-							lineHeight='20px'
+						{label}
+					</Typography>
+				</AccordionSummary>
+				<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
+					<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
+						<IconButton
+							size='small'
+							onClick={() => { form.setValue('is_published', !is_published) }}
 						>
-							{label}
-						</Typography>
-					</AccordionSummary>
-					<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
-						<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
-							<IconButton
-								size='small'
-								onClick={() => { form.setValue('is_published', !is_published) }}
-							>
-								<IsPublished isPublished={is_published} />
-							</IconButton>
-						</Tooltip>
-						<ButtonGroup>
-							<Button
-								disableRipple={true}
-								onClick={() => move(idx, idx + 1)}
-								disabled={idx + 1 == blocksLength}
-							><ArrowCircleDownIcon />
-							</Button>
-							<Button
-								disableRipple={true}
-								onClick={() => move(idx, idx - 1)}
-								disabled={idx == 0}
-							><ArrowCircleUpIcon />
-							</Button>
-							<Button
-								color='error'
-								onClick={onDelete}
-							><HighlightOffIcon />
-							</Button>
-						</ButtonGroup>
-					</Box>
+							<IsPublished isPublished={is_published} />
+						</IconButton>
+					</Tooltip>
+					<ButtonGroup>
+						<Button
+							disableRipple={true}
+							onClick={() => move(idx, idx + 1)}
+							disabled={idx + 1 == blocksLength}
+						><ArrowCircleDownIcon />
+						</Button>
+						<Button
+							disableRipple={true}
+							onClick={() => move(idx, idx - 1)}
+							disabled={idx == 0}
+						><ArrowCircleUpIcon />
+						</Button>
+						<Button
+							color='error'
+							onClick={onDelete}
+						><HighlightOffIcon />
+						</Button>
+					</ButtonGroup>
 				</Box>
-				<AccordionDetails >
-					<Box className='block-settings' marginY={2}>
-						{Element ? (
-							<Element form={form} />
-						) : null}
-					</Box>
-				</AccordionDetails>
-			</Accordion >
-		)
+			</Box>
+			<AccordionDetails >
+				<Box className='block-settings' marginY={2}>
+					{Element ? (
+						<Element form={form} />
+					) : null}
+				</Box>
+			</AccordionDetails>
+		</Accordion >
+	)
 }
 
 export default forwardRef(Block)
