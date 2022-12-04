@@ -15,7 +15,7 @@ import { deleteBlock } from '../../services/blocks-api-service';
 import BlockModal from './BlockModal';
 import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
 
-const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false }) => {
+const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onSubmitComposition }) => {
 	const [submitDisabled, setSubmitDisabled] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [initialBlocks, setInitialBlocks] = useState([]);
@@ -77,7 +77,13 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false }) =
 			}
 		}).filter(d => !!d));
 
-		setInitialBlocks([...newInitialBlocks, ...newBlocks]);
+		const currentBlocks = [...newInitialBlocks, ...newBlocks];
+		
+		setInitialBlocks(currentBlocks);
+
+		if (onSubmitComposition) {
+			await onSubmitComposition(currentBlocks)
+		}
 
 		Swal.fire({
 			position: 'top-right',
@@ -107,7 +113,7 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false }) =
 												render={({ field }) => {
 
 													const { element, label } = allowedBlocks.find(b => b.type === field.value.block?.type ?? null);
-													if(element){
+													if (element) {
 														return (
 															<Block
 																ref={blocksRef.current[idx]}
@@ -118,7 +124,7 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false }) =
 																update={updateBlock}
 																blocksLength={blocksFields.length}
 																element={element}
-																label={label??'Елемент сторінки'}
+																label={label ?? 'Елемент сторінки'}
 																isMainPage={isMainPage}
 															/>
 														)

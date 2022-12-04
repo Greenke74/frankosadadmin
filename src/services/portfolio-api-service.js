@@ -22,6 +22,7 @@ export const getProject = (id) => new Promise((resolve, reject) => {
 			.from('projects')
 			.select()
 			.eq('id', id)
+			.single()
 			.then(({ data, error }) => {
 				if (error) {
 					reject(error);
