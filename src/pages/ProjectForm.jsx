@@ -12,7 +12,7 @@ import BlocksComposition from '../components/BlocksComposition';
 
 import { CameraAlt, Delete } from '@mui/icons-material';
 
-import { getProject, insertProject } from '../services/portfolio-api-service';
+import { getProject, insertProject, updateProject } from '../services/portfolio-api-service';
 import { getSrcFromFile } from '../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
 import { slugify, transliterate as tr } from 'transliteration';
@@ -27,6 +27,7 @@ const ProjectForm = () => {
 
   const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialValues, setInitialValues] = useState({});
 
   const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = useForm({
     defaultValues: {
@@ -46,34 +47,28 @@ const ProjectForm = () => {
   const image = watch('image')
 
   useEffect(() => {
+    let mounted = true;
     !isNaN(id) && getProject(id).then(res => {
-      reset({
+      const formData = {
         ...getValues(),
         ...res,
         completed_at: res.completed_at.substr(0, 10),
         image: getImageSrc(res.image)
-      });
+      }
+      reset(formData);
+      mounted && setInitialValues(formData);
     })
 
+    return () => mounted = false;
   }, [id])
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     const { title } = data;
 
-    const payload = {
+    let payload = {
       ...data,
       alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
-    }
-
-    if (data.imageFile) {
-      await deleteImage(imageToDelete);
-      const imageKey = await uploadImage(data.imageFile)
-      setValue('image', getImageSrc(imageKey));
-      setValue('imageFile', null);
-      payload.image = imageKey
-    } else {
-      delete payload.image;
     }
 
     if (!payload.image) {
@@ -88,23 +83,53 @@ const ProjectForm = () => {
       })
       return;
     }
-    if (payload.id) {
-      // update
+
+    if (data.imageFile) {
+      await deleteImage(imageToDelete);
+      const imageKey = await uploadImage(data.imageFile)
+      setValue('image', getImageSrc(imageKey));
+      setValue('imageFile', null);
+      payload.image = imageKey
     } else {
-      const { data: { id } } = await insertProject(payload);
-      navigate(`/projectform/${id}`);
-      Swal.fire({
-        position: 'top-right',
-        icon: 'success',
-        title: 'Обєкт успішно Збережено',
-        color: 'var(--theme-color)',
-        timer: 3000,
-        showConfirmButton: false,
-        toast: true,
-      }).finally(() => {
-        setIsSubmitting(false);
-      })
+      delete payload.image;
     }
+
+    payload = { ...initialValues, ...payload }
+
+    if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
+      delete payload.imageFile;
+
+      if (payload.id) {
+        await updateProject(payload);
+        setValue('imageFile', null);
+
+        Swal.fire({
+          position: 'top-right',
+          icon: 'success',
+          title: 'Обєкт успішно ононвлено',
+          color: 'var(--theme-color)',
+          timer: 3000,
+          showConfirmButton: false,
+          toast: true,
+        })
+      } else {
+        const { data: { id } } = await insertProject(payload);
+        setValue('imageFile', null);
+
+        navigate(`/projectform/${id}`);
+        Swal.fire({
+          position: 'top-right',
+          icon: 'success',
+          title: 'Обєкт успішно збережено',
+          color: 'var(--theme-color)',
+          timer: 3000,
+          showConfirmButton: false,
+          toast: true,
+        })
+      }
+      setInitialValues(payload);
+    }
+    setIsSubmitting(false);
   }
 
   return (
@@ -229,7 +254,12 @@ const ProjectForm = () => {
         {
           label: 'Сторінка проєкту',
           content: (
-            <><BlocksComposition data={{ blocks: [] }} allowedBlocks={projectBlocks} /></>
+            <><BlocksComposition
+              data={{ blocks: [] }}
+              allowedBlocks={projectBlocks}
+              onSubmitComposition={(blocks) => console.log(blocks)}
+            />
+            </>
           )
         }
       ]} />
