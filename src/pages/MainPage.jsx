@@ -3,6 +3,7 @@ import BlocksComposition from '../components/BlocksComposition/index.jsx';
 
 import { blocks } from '../components/blocks/index.js';
 import { getMainPageBlocks } from '../services/main-page-blocks-service.js';
+import Swal from 'sweetalert2';
 
 const MainPage = () => {
 	const [data, setData] = useState([]);
@@ -18,7 +19,20 @@ const MainPage = () => {
 	}, [])
 
 	return (
-		<BlocksComposition blocks={data} allowedBlocks={blocks} isMainPage={true} />
+		<BlocksComposition
+			blocks={data}
+			allowedBlocks={blocks}
+			isMainPage={true}
+			onSubmitComposition={(blocks) => Swal.fire({
+				position: 'top-right',
+				icon: 'success',
+				title: 'Дані успішно оновлено',
+				color: 'var(--theme-color)',
+				timer: 3000,
+				showConfirmButton: false,
+				toast: true,
+			})}
+		/>
 	)
 }
 

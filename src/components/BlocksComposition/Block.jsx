@@ -89,27 +89,34 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 			payload.type = block.type;
 		}
 
-		if (payload.id) {
-			await isMainPage
-				? updateMainPageBlock(payload)
-				: updateBlock(payload)
-		} else {
-			const { data } = await isMainPage
-				? insertMainPageBlock(payload)
-				: insertBlock(payload)
-			update(idx, {
-				block: {
-					...formData,
-					id: data.id,
-					type: block.type,
+		const func = isMainPage
+			? payload.id
+				? updateMainPageBlock
+				: insertMainPageBlock
+			: payload.id
+				? updateBlock
+				: insertBlock
 
-				}
-			})
+		const response = await func(payload)
+		const { data } = response;
+
+		update(idx, {
+			block: {
+				...formData,
+				id: data?.id ?? payload.id,
+				type: block.type,
+
+			}
+		})
+
+		if (data?.id) {
 			return data.id;
 		}
+
+		return null;
 	}
 
-	useImperativeHandle(ref, () => ({ onSubmit: form.handleSubmit(onSubmit) }))
+	useImperativeHandle(ref, () => ({ onSubmit: async () => await onSubmit(form.getValues()) }))
 
 	useEffect(() => {
 		let mounted = true;
