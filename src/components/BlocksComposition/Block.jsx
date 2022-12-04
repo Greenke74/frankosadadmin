@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef } from 'react'
+import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef, Suspense } from 'react'
 import { useForm } from 'react-hook-form';
 import { Box, ButtonGroup, Button, Typography, styled, IconButton, Tooltip } from '@mui/material'
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
@@ -17,6 +17,7 @@ import { insertBlock, updateBlock } from '../../services/blocks-api-service';
 
 import IsPublished from '../common/IsPublished';
 import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
+import { StyledLinearProgress } from '../common/StyledComponents';
 
 const Accordion = styled((props) => (
 	<MuiAccordion disableGutters elevation={0} {...props} />
@@ -173,7 +174,9 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 			<AccordionDetails >
 				<Box className='block-settings' marginY={2}>
 					{Element ? (
-						<Element form={form} />
+						<Suspense fallback={<StyledLinearProgress />}>
+							<Element form={form} />
+						</Suspense>
 					) : null}
 				</Box>
 			</AccordionDetails>

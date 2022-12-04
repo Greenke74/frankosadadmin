@@ -12,6 +12,7 @@ import { deleteProject, getProjects } from '../services/portfolio-api-service';
 
 import Swal from 'sweetalert2';
 import '../styles/swal.scss';
+import { getImageSrc } from '../services/storage-service';
 
 const ITEMS_PER_PAGE = 8;
 const ROW_HEIGHT = 82;
@@ -55,7 +56,7 @@ const ProjectsPage = () => {
 			sortable: false,
 			renderCell: ({ row }) => (
 				<div style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center' }}>
-					<img style={{ objectFit: 'contain', maxWidth: '150px', maxHeight: '100%', borderRadius: 4, marginRight: 10 }} src={row.image} />
+					<img style={{ objectFit: 'contain', maxWidth: '150px', maxHeight: '100%', borderRadius: 4, marginRight: 10 }} src={getImageSrc(row.image)} />
 					<p style={{ whiteSpace: 'normal', margin: 0, fontWeight: 500 }}>{row.title}</p>
 				</div>
 			),
@@ -72,9 +73,8 @@ const ProjectsPage = () => {
 		{
 			field: 'is_published',
 			sortable: false,
-			// type: 'boolean',
 			width: 120,
-			headerName: 'Опубліковно',
+			headerName: 'Опубліковано',
 			renderCell: ({ row }) => (<div style={{ margin: 'auto' }}><IsPublished isPublished={row.is_published} colored /></div>)
 		},
 		{

@@ -13,7 +13,7 @@ import { getMainSettings, updateMainSettings } from '../services/setting-api-ser
 import { Box } from '@mui/system';
 import { CameraAlt, Delete } from '@mui/icons-material';
 import { getSrcFromFile } from '../helpers/file-helpers.js';
-import { deleteImage, uploadImage } from '../services/storage-service.js';
+import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
 
 const defaultValues = {
 	siteName: '',
@@ -49,36 +49,45 @@ const MainSettings = () => {
 	const geoLocationUrl = watch('geoLocation.url');
 	const favicon = watch('favicon');
 
+	const fetchData = async () => {
+		const { data, fields } = await getMainSettings();
+		setFieldIds(fields);
+		setDefaultFormValue(data);
+		reset({ ...getValues(), ...data, favicon: getImageSrc(data.favicon) });
+	}
+
 	useEffect(() => {
 		if (!geoLocationUrl) {
+
 			setValue('geoLocation.address', undefined);
 		}
 	}, [geoLocationUrl])
 
 	useEffect(() => {
 		let mounted = true;
-		const f = async () => {
-			const { data, fields } = await getMainSettings();
-			setFieldIds(fields);
-			setDefaultFormValue(data);
-			mounted && reset({ ...getValues(), ...data });
-		}
 
-		f();
+		mounted && fetchData();
+
 		return () => mounted = false;
 	}, [])
 
 	const onSubmit = async (data) => {
 		setIsSubmitting(true);
 		const { faviconFile } = data;
+		let faviconKey = null;
 		delete data.faviconFile;
 		const payloadData = { ...data }
+
 		if (faviconFile) {
 			await deleteImage(imageToDelete);
-			const favicon = await uploadImage(faviconFile)
-			setValue('favicon', favicon);
+
+			faviconKey = await uploadImage(faviconFile)
+			setValue('favicon', getImageSrc(faviconKey));
 			setValue('faviconFile', null);
-			payloadData.favicon = favicon
+
+			payloadData.favicon = faviconKey
+		} else {
+			delete payloadData.favicon;
 		}
 
 		const payload = Object.entries(payloadData).map(([key, value]) => {
@@ -94,10 +103,11 @@ const MainSettings = () => {
 		if (payload.length === 0) {
 			setIsSubmitting(false);
 			return;
-		} 
+		}
 
 		updateMainSettings(payload)
-			.then(() => {
+			.then(async () => {
+				await fetchData();
 				Swal.fire({
 					position: 'top-right',
 					icon: 'success',
@@ -107,8 +117,6 @@ const MainSettings = () => {
 					showConfirmButton: false,
 					toast: true,
 				})
-				setDefaultFormValue(payloadData);
-				reset(payloadData);
 			})
 			.finally(() => setIsSubmitting(false));
 	}
