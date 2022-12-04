@@ -34,7 +34,7 @@ export const getProject = (id) => new Promise((resolve, reject) => {
 	}
 })
 
-export const getProjectBlocks = (id) => new Promise((resolve, reject) => {
+export const getProjectWithBlocks = (id) => new Promise((resolve, reject) => {
 	try {
 
 		supabase.rpc('get_project_blocks', {_id: id})
