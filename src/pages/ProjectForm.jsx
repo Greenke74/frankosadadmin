@@ -7,19 +7,21 @@ import { CancelButton, StyledCheckbox, StyledInputBase, StyledInputLabel } from 
 import ImageUploader from '../components/common/ImageUploader';
 import SaveButton from '../components/common/SaveButton';
 import ErrorMessage from '../components/common/ErrorMessage';
-import { CameraAlt, Delete } from '@mui/icons-material';
-import { getProject, insertProject } from '../services/portfolio-api-service';
-import { getSrcFromFile } from '../helpers/file-helpers';
-import { deleteImage, uploadImage } from '../services/storage-service.js';
-import { slugify, transliterate as tr } from 'transliteration';
-import Swal from 'sweetalert2';
 import Tabs from '../components/common/Tabs';
 import BlocksComposition from '../components/BlocksComposition';
+
+import { CameraAlt, Delete } from '@mui/icons-material';
+
+import { getProject, insertProject } from '../services/portfolio-api-service';
+import { getSrcFromFile } from '../helpers/file-helpers';
+import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
+import { slugify, transliterate as tr } from 'transliteration';
+import Swal from 'sweetalert2';
 import { projectBlocks } from '../components/blocks/index.js';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 
-const ProjectForm = (props) => {
+const ProjectForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -45,7 +47,12 @@ const ProjectForm = (props) => {
 
   useEffect(() => {
     !isNaN(id) && getProject(id).then(res => {
-      reset({ ...getValues(), ...res, completed_at: res.completed_at.substr(0, 10) });
+      reset({
+        ...getValues(),
+        ...res,
+        completed_at: res.completed_at.substr(0, 10),
+        image: getImageSrc(res.image)
+      });
     })
 
   }, [id])
@@ -53,17 +60,22 @@ const ProjectForm = (props) => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     const { title } = data;
+
     const payload = {
       ...data,
       alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
     }
+
     if (data.imageFile) {
       await deleteImage(imageToDelete);
-      const url = await uploadImage(data.imageFile)
-      setValue('image', url);
+      const imageKey = await uploadImage(data.imageFile)
+      setValue('image', getImageSrc(imageKey));
       setValue('imageFile', null);
-      payload.image = url
+      payload.image = imageKey
+    } else {
+      delete payload.image;
     }
+
     if (!payload.image) {
       Swal.fire({
         position: 'top-right',
@@ -217,7 +229,7 @@ const ProjectForm = (props) => {
         {
           label: 'Сторінка проєкту',
           content: (
-            <><BlocksComposition data={{blocks: [] }} allowedBlocks={projectBlocks} /></>
+            <><BlocksComposition data={{ blocks: [] }} allowedBlocks={projectBlocks} /></>
           )
         }
       ]} />
