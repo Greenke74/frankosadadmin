@@ -20,9 +20,8 @@ export const getProject = (id) => new Promise((resolve, reject) => {
 	try {
 		supabase
 			.from('projects')
-			.select('*')
+			.select()
 			.eq('id', id)
-			.single()
 			.then(({ data, error }) => {
 				if (error) {
 					reject(error);
@@ -36,7 +35,22 @@ export const getProject = (id) => new Promise((resolve, reject) => {
 
 export const insertProject = (data) => new Promise((resolve, reject) => {
 	try {
-		supabase.rpc('insert_completed_project', data)
+		supabase.rpc('insert_project', data)
+			.then(response => {
+				if (response.error) {
+					reject(response.error.message)
+				}
+				resolve(response)
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const updateProject = (data) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc('update_project', data)
 			.then(response => {
 				if (response.error) {
 					reject(response.error.message)
