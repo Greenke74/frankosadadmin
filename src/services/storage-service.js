@@ -23,7 +23,7 @@ export const deleteImage = (path) => new Promise((resolve, reject) => {
 	try {
 		supabase.storage
 			.from('images')
-			.remove([path.split('/').slice(-2, path.split('/').length).join('/')])
+			.remove([path])
 			.then(response => {
 				if (response.error) {
 					reject(response.error.message)

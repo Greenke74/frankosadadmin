@@ -12,7 +12,7 @@ import BlocksComposition from '../components/BlocksComposition';
 
 import { CameraAlt, Delete } from '@mui/icons-material';
 
-import { getProject, insertProject, updateProject } from '../services/portfolio-api-service';
+import { getProjectWithBlocks, insertProject, updateProject } from '../services/portfolio-api-service';
 import { getSrcFromFile } from '../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
 import { slugify, transliterate as tr } from 'transliteration';
@@ -28,7 +28,7 @@ const ProjectForm = () => {
   const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState({});
-
+  const [blocks, setBlocks] = useState([]);
   const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = useForm({
     defaultValues: {
       title: '',
@@ -48,88 +48,101 @@ const ProjectForm = () => {
 
   useEffect(() => {
     let mounted = true;
-    !isNaN(id) && getProject(id).then(res => {
+    !isNaN(id) && getProjectWithBlocks(id).then(({ data: project }) => {
       const formData = {
         ...getValues(),
-        ...res,
-        completed_at: res.completed_at.substr(0, 10),
-        image: getImageSrc(res.image)
+        ...project,
+        completed_at: project.completed_at.substr(0, 10),
+        image: getImageSrc(project.image)
       }
       reset(formData);
       mounted && setInitialValues(formData);
+
+
+      mounted && setBlocks(project?.blocks ?? []);
     })
 
     return () => mounted = false;
   }, [id])
 
   const onSubmit = async (data) => {
+
     setIsSubmitting(true);
-    const { title } = data;
 
-    let payload = {
-      ...data,
-      alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
-    }
+    try {
+      const { title } = data;
 
-    if (!payload.image) {
-      Swal.fire({
-        position: 'top-right',
-        icon: 'error',
-        title: 'Потрібно додати зображення',
-        color: 'var(--theme-color)',
-        timer: 3000,
-        showConfirmButton: false,
-        toast: true,
-      })
-      return;
-    }
-
-    if (data.imageFile) {
-      await deleteImage(imageToDelete);
-      const imageKey = await uploadImage(data.imageFile)
-      setValue('image', getImageSrc(imageKey));
-      setValue('imageFile', null);
-      payload.image = imageKey
-    } else {
-      delete payload.image;
-    }
-
-    payload = { ...initialValues, ...payload }
-
-    if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
-      delete payload.imageFile;
-
-      if (payload.id) {
-        await updateProject(payload);
-        setValue('imageFile', null);
-
-        Swal.fire({
-          position: 'top-right',
-          icon: 'success',
-          title: 'Обєкт успішно ононвлено',
-          color: 'var(--theme-color)',
-          timer: 3000,
-          showConfirmButton: false,
-          toast: true,
-        })
-      } else {
-        const { data: { id } } = await insertProject(payload);
-        setValue('imageFile', null);
-
-        navigate(`/projectform/${id}`);
-        Swal.fire({
-          position: 'top-right',
-          icon: 'success',
-          title: 'Обєкт успішно збережено',
-          color: 'var(--theme-color)',
-          timer: 3000,
-          showConfirmButton: false,
-          toast: true,
-        })
+      let payload = {
+        ...data,
+        alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
       }
-      setInitialValues(payload);
+
+      if (!payload.image) {
+        Swal.fire({
+          position: 'top-right',
+          icon: 'error',
+          title: 'Потрібно додати зображення',
+          color: 'var(--theme-color)',
+          timer: 3000,
+          showConfirmButton: false,
+          toast: true,
+        })
+        return;
+      }
+
+      payload = { ...initialValues, ...payload }
+
+      if (data.imageFile) {
+        await deleteImage(imageToDelete);
+        const imageKey = await uploadImage(data.imageFile)
+        setValue('image', getImageSrc(imageKey));
+        setValue('imageFile', null);
+        payload.image = imageKey
+      } else {
+        delete payload.image;
+      }
+
+      if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
+        delete payload.imageFile;
+
+        if (payload.id) {
+          await updateProject(payload);
+          setValue('imageFile', null);
+
+          Swal.fire({
+            position: 'top-right',
+            icon: 'success',
+            title: 'Обєкт успішно ононвлено',
+            color: 'var(--theme-color)',
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+          })
+        } else {
+          const { data: { id } } = await insertProject(payload);
+          setValue('imageFile', null);
+
+          navigate(`/projectform/${id}`);
+          Swal.fire({
+            position: 'top-right',
+            icon: 'success',
+            title: 'Обєкт успішно збережено',
+            color: 'var(--theme-color)',
+            timer: 3000,
+            showConfirmButton: false,
+            toast: true,
+          })
+        }
+        setInitialValues(payload);
+      }
     }
-    setIsSubmitting(false);
+    catch (error) {
+      console.error(error)
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 3000);
+    }
   }
 
   return (
@@ -143,6 +156,7 @@ const ProjectForm = () => {
       <Tabs tabs={[
         {
           label: 'Загальна інформація',
+          errors: errors,
           content: (
             <form onSubmit={handleSubmit(onSubmit)}>
               <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
@@ -255,16 +269,16 @@ const ProjectForm = () => {
           label: 'Сторінка проєкту',
           content: (
             <><BlocksComposition
-              data={{ blocks: [] }}
+              blocks={blocks}
               allowedBlocks={projectBlocks}
-              onSubmitComposition={(blocks) => console.log(blocks)}
+              onSubmitComposition={(blocks) => {
+                onSubmit({ ...getValues(), block_ids: blocks })
+              }}
             />
             </>
           )
         }
       ]} />
-
-
     </Box>
   )
 }
