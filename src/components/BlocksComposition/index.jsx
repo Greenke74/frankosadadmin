@@ -9,10 +9,9 @@ import {
 import Block from './Block';
 import SaveButton from '../common/SaveButton';
 import AddButton from '../common/AddButton';
-
-import Swal from 'sweetalert2';
-import { deleteBlock } from '../../services/blocks-api-service';
 import BlockModal from './BlockModal';
+
+import { deleteBlock } from '../../services/blocks-api-service';
 import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
 
 const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onSubmitComposition }) => {
@@ -60,41 +59,33 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onS
 	const onSubmit = async ({ blocks }) => {
 		setSubmitDisabled(true)
 
-		const newBlocks = await Promise.all((blocksRef.current ?? []).map((ref) => {
-			ref.current.onSubmit()
-		}
-		).filter(v => Boolean(v)));
+		const newBlocks = (await Promise.all((blocksRef.current ?? []).map(async (ref) =>
+			await ref.current.onSubmit()
+		))).filter(b => b !== null);
 
 		const newInitialBlocks = [];
 
 		await Promise.all(initialBlocks.map(initBlock => {
 			if (initBlock && !blocks.find(({ block }) => block.id == initBlock)) {
-				return isMainPage
-					? deleteMainPageBlock(initBlock)
-					: deleteBlock(initBlock)
+				const deleteFunc = isMainPage
+					? deleteMainPageBlock
+					: deleteBlock
+
+				return deleteFunc(initBlock)
 			} else {
 				newInitialBlocks.push(initBlock);
 			}
 		}).filter(d => !!d));
 
 		const currentBlocks = [...newInitialBlocks, ...newBlocks];
-		
+
 		setInitialBlocks(currentBlocks);
 
 		if (onSubmitComposition) {
 			await onSubmitComposition(currentBlocks)
 		}
 
-		Swal.fire({
-			position: 'top-right',
-			icon: 'success',
-			title: 'Дані успішно оновлено',
-			color: 'var(--theme-color)',
-			timer: 3000,
-			showConfirmButton: false,
-			toast: true,
-
-		}).finally(() => setSubmitDisabled(false));
+		setSubmitDisabled(false)
 	}
 
 	return (

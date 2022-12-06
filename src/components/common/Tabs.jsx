@@ -3,14 +3,13 @@ import { Tabs as MuiTabs, Tab, styled, Box } from '@mui/material'
 
 const StyledTabs = styled(MuiTabs)({
   '& .MuiTab-root': {
-    textTransform: 'none',
-    color: '#6d6d6d !important'
+    textTransform: 'none !important',
   },
   '& .MuiTabs-indicator': {
     backgroundColor: 'var(--active-color)'
   },
   '& .Mui-selected': {
-    color: 'var(--active-color) !important'
+    color: 'var(--active-color)'
   }
 })
 
@@ -20,7 +19,9 @@ const Tabs = ({ tabs }) => {
     <>
       <StyledTabs value={currentTab} onChange={(event, value) => setCurrentTab(value)}>
         {tabs.map((tab, index) => (
-          <Tab value={index} label={tab.label} />
+          <Tab value={index} label={tab.label} sx={{
+            color: Object.keys(tab.errors ?? {}).length > 0 ? 'red !important' : index == currentTab ? 'var(--active-color) !important' : undefined
+          }} />
         ))}
       </StyledTabs>
       {tabs.map((tab, index) => (
