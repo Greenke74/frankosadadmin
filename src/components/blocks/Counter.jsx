@@ -1,13 +1,13 @@
 import React from 'react'
 import { useFieldArray, Controller } from 'react-hook-form';
 
-import { Button, FormControl, Grid, Grow, IconButton, Tooltip, Typography } from '@mui/material';
+import { FormControl, Grid, Grow, IconButton, Tooltip, Typography } from '@mui/material';
 import { Box } from '@mui/system';
-import AddIcon from '@mui/icons-material/Add';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
 import ErrorMessage from '../common/ErrorMessage';
+import AddButton from '../common/AddButton';
 
 const Counter = ({ form }) => {
   const { register, control, formState: { errors } } = form;
@@ -96,18 +96,10 @@ const Counter = ({ form }) => {
         )}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
-        <Button
-          startIcon={<AddIcon />}
-          variant='text'
-          style={{ textTransform: 'none', color: 'var(--theme-color)' }}
+        <AddButton
+          label='Додати лічильник'
           onClick={() => fields.length < 4 && append({ title: ' ', counter: 0 })}
-          sx={{
-            padding: '6px 15px !important',
-            '& > span': { marginRight: '8px !important' }
-          }}
-        >
-          Додати лічильник
-        </Button>
+        />
       </Box>
     </Box >
   )

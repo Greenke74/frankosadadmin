@@ -1,19 +1,30 @@
-import React, { useState } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form';
+import React, { useState, useEffect } from 'react'
+import { useFieldArray } from 'react-hook-form';
 
-import { Box, Button, Popover, IconButton, Tooltip, Typography } from '@mui/material';
+import AddButton from '../common/AddButton';
+import { Box, Popover, IconButton, Tooltip, Typography, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { default as SlickSlider } from 'react-slick';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import AddIcon from '@mui/icons-material/Add';
+
+import { getProjects } from '../../services/portfolio-api-service';
+import { getImageSrc } from '../../services/storage-service.js';
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import './slider.scss';
+const dataOptions = [
+	{ value: 'projects', label: 'Проєкти' },
+	{ value: 'services', label: 'Послуги' },
+	{ value: 'offers', label: 'Сезонні пропозиції' },
+]
+const Slider = ({ form }) => {
+	const [anchorEl, setAnchorEl] = useState(null);
+	const [dataSelected, setDataSelected] = useState(dataOptions[0].value);
+	const [projects, setProjects] = useState([]);
+	const [selectedSlides, setSelectedSlides] = useState([]);
 
-const Slider = () => {
-	const [anchorEl, setAnchorEl] = React.useState(null);
-	const handleAddSlide = (event) => {
+	const handleOpenModal = (event) => {
 		setAnchorEl(event.currentTarget);
 	};
 
@@ -21,32 +32,51 @@ const Slider = () => {
 		setAnchorEl(null);
 	};
 
-	const { control, handleSubmit } = useForm({
-		defaultValues: {
-			services: [
-			
-			],
-			completed_objects: [],
-			offers: []
-		},
-		mode: 'onChange',
-
-	})
+	const { control, setValue } = form;
 
 	const {
-		fields: servicesFields,
-		move: moveService,
-		append: appendService,
-		remove: removeService,
-		swap: swapServices,
-	} = useFieldArray({ control: control, name: 'services' })
+		fields: slidesFields,
+		append: appendSlide,
+		remove: removeSlide,
+	} = useFieldArray({ control: control, name: `data.slides` })
+
+	useEffect(() => {
+		getProjects()
+			.then(data =>
+				setProjects((data ?? []).map(p =>
+					({ ...p, image: getImageSrc(p.image) })
+				)))
+	}, [])
+
+	const handleToggleChange = (e, value) => {
+		setDataSelected(value)
+		setSelectedSlides([])
+	}
+
+	const handleAddSlide = (slide) => {
+		setSelectedSlides(prev => {
+			const slides = [...prev, slide]
+
+			setValue(dataSelected, slides)
+
+			return slides;
+		})
+
+	}
 
 	const open = Boolean(anchorEl);
 	const id = open ? 'simple-popover' : undefined;
 	return (<>
 		<div className='slider-block'>
+			<div className='toggle-container'>
+				<ToggleButtonGroup exclusive value={dataSelected} onChange={handleToggleChange}>
+					{dataOptions.map(o => (
+						<ToggleButton key={o.value} value={o.value}>{o.label}</ToggleButton>
+					))}
 
-			{servicesFields?.length == 0
+				</ToggleButtonGroup>
+			</div>
+			{selectedSlides?.length == 0
 				? (
 					<Box bgcolor='white' borderRadius={2} display='flex' justifyContent='center' flexDirection='column'>
 						<Typography
@@ -104,7 +134,7 @@ const Slider = () => {
 							}
 						]}
 					>
-						{servicesFields.map((s, idx) => (
+						{selectedSlides.map((s, idx) => (
 							<Box
 								key={s.id}
 								flexGrow='1'
@@ -146,7 +176,7 @@ const Slider = () => {
 									<Tooltip disableFocusListener title='Видалити слайд'>
 										<IconButton
 											color='error'
-											onClick={() => removeService(idx)}
+											onClick={() => removeSlide(idx)}
 										><HighlightOffIcon />
 										</IconButton>
 									</Tooltip>
@@ -163,29 +193,40 @@ const Slider = () => {
 			alignItems='center'
 			position='relative'
 		>
-			<Button
-				startIcon={<AddIcon />}
-				variant='text'
-				style={{ textTransform: 'none', color: 'var(--theme-color)' }}
-				onClick={handleAddSlide}
-				sx={{
-					padding: '6px 15px !important',
-					'& > span': { marginRight: '8px !important' }
-				}}
-			>
-				Додати слайд
-			</Button>
+			<AddButton
+				label='Додати слайд'
+				onClick={handleOpenModal}
+			/>
 			<Popover
 				id={id}
 				open={open}
 				anchorEl={anchorEl}
 				onClose={handleClose}
+				overflow='scroll'
 				anchorOrigin={{
 					vertical: 'bottom',
 					horizontal: 'left',
 				}}
 			>
-				<Typography sx={{ p: 2 }}>The content of the Popover.</Typography>
+				<Typography sx={{ p: 2 }}>
+					Виберіть {dataSelected == 'projects' ? 'проєкт' : null}
+				</Typography>
+				<Box maxHeight={350} overflow='scroll'>
+					{(
+						dataSelected == 'projects'
+							? projects : [])
+						.filter(p => !selectedSlides.find(slide => slide.id === p.id))
+						.map((p) => (
+							<p
+								key={p.id}
+								className='slide-option'
+								onClick={() => {
+									handleAddSlide(p);
+									handleClose()
+								}}
+							>{p.title}</p>
+						))}
+				</Box>
 			</Popover>
 		</Box>
 	</>)

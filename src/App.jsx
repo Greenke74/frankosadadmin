@@ -11,29 +11,28 @@ function App() {
   const auth = useSelector(state => state.auth);
 
   const routes = auth?.role
-      ? (
-        <Layout>
-          <Routes>
-            {getRoutes().map(({ path, element }) => {
-              if(!element){
-                return null;
-              }
-              const Element = lazy(element);
-              return (
-                <Route
-                  path={path}
-                  element={<Element />}
-                  key={path} />
-              )
-            }
-            )}
-          </Routes>
-        </Layout>
-      ) : (
+    ? (
+      <Layout>
         <Routes>
-          <Route path={'*'} element={<Auth />} />
+          {getRoutes().map(({ path, element }) => {
+            if (!element) {
+              return null;
+            }
+            const Element = lazy(element);
+            return (
+              <Route
+                path={path}
+                element={<Element />}
+                key={path} />
+            )
+          })}
         </Routes>
-      )
+      </Layout>
+    ) : (
+      <Routes>
+        <Route path={'*'} element={<Auth />} />
+      </Routes>
+    )
 
   return (
     <AuthWrapper>

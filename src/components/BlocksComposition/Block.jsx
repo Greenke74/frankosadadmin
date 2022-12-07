@@ -1,6 +1,6 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react'
+import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef, Suspense } from 'react'
 import { useForm } from 'react-hook-form';
-import { Box, ButtonGroup, Button, Typography, styled, IconButton, Tooltip, Fade } from '@mui/material'
+import { Box, ButtonGroup, Button, Typography, styled, IconButton, Tooltip } from '@mui/material'
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import MuiAccordion from '@mui/material/Accordion';
 import MuiAccordionSummary from '@mui/material/AccordionSummary';
@@ -13,9 +13,11 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import Swal from 'sweetalert2';
 import '../../styles/swal.scss';
 import './block.css';
-import { getBlock, insertBlock, updateBlock } from '../../services/blocks-api-service';
-import { blocks } from '../blocks';
+import { insertBlock, updateBlock } from '../../services/blocks-api-service';
+
 import IsPublished from '../common/IsPublished';
+import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
+import { StyledLinearProgress } from '../common/StyledComponents';
 
 const Accordion = styled((props) => (
 	<MuiAccordion disableGutters elevation={0} {...props} />
@@ -53,22 +55,12 @@ const AccordionSummary = styled((props) => (
 	},
 }));
 
-const Block = ({ block, blockType, idx, remove, fields, move, setOnSubmit, relatedTo, pageId, update }) => {
+const Block = ({ block, idx, remove, blocksLength, move, update, element, label, isMainPage }, ref) => {
 	const [expanded, setExpanded] = useState(null);
-	const [loading, setLoading] = useState(false);
-	const [blockData, setBlockData] = useState({});
 	const [Element, setElement] = useState(null);
-	const [label, setLabel] = useState('');
-	const [error, setError] = useState(false);
 
 	const form = useForm({
-		defaultValues: {
-			is_published: true,
-			data: null,
-			completed_projects: null,
-			offers: null,
-			services: null
-		}
+		defaultValues: block
 	})
 	const is_published = form.watch('is_published');
 
@@ -88,149 +80,115 @@ const Block = ({ block, blockType, idx, remove, fields, move, setOnSubmit, relat
 		})
 	}
 	const onSubmit = async (formData) => {
-		const { id, type_id, data_from } = blockData
 		const payload = {
-			id: id,
-			is_published: formData.is_published,
-			type_id,
-			data_from,
-			related_to: relatedTo,
+			...formData,
 			data: formData?.data ?? null,
 			position: idx,
 		};
-		if (!id && blockType) {
-			payload.type = blockType;
-		}
-		if (relatedTo == 'page' && pageId) {
-			payload.page_id = pageId
-		}
-		if (data_from === 'offers') {
-			payload.offer_ids = formData?.offers?.map(o => o.id) ?? [];
-		}
-		else if (data_from === 'completed_projects') {
-			payload.completed_project_ids = formData?.offers?.map(o => o.id) ?? [];
-		}
-		else if (data_from === 'services') {
-			payload.service_ids = formData?.services?.map(o => o.id) ?? [];
+		if (!formData.id && block.type) {
+			payload.type = block.type;
 		}
 
-		if (payload.id) {
-			await updateBlock(payload);
-		} else {
-			const { data } = await insertBlock(payload)
-			setBlockData(prev => ({ ...prev, id: data.id }));
-			update(idx, { 
-				blockId: data.id,
-				onSubmit: async () => await onSubmit(form.getValues()),
-				blockType
-			})
+		const func = isMainPage
+			? payload.id
+				? updateMainPageBlock
+				: insertMainPageBlock
+			: payload.id
+				? updateBlock
+				: insertBlock
 
+		const response = await func(payload)
+		const { data } = response;
+
+		update(idx, {
+			block: {
+				...formData,
+				id: data?.id ?? payload.id,
+				type: block.type,
+
+			}
+		})
+
+		if (data?.id) {
 			return data.id;
 		}
+
+		return null;
 	}
 
-	useEffect(() => {
-		setOnSubmit(async () => await onSubmit(form.getValues()));
-	}, [blockData, block, blockType, idx])
-
+	useImperativeHandle(ref, () => ({ onSubmit: async () => await onSubmit(form.getValues()) }))
 
 	useEffect(() => {
 		let mounted = true;
-		
-		if (block) {
-			mounted && setLoading(true);
-			getBlock(block).then(data => {
-				const b = blocks.find(b => b.type === data?.type ?? null);
-				
-				mounted && setBlockData(data);
-				mounted && setElement(lazy(b.element))
-				mounted && setLabel(b.label);
 
-				const { is_published, data: bdata, completed_projects, offers, services, position } = data;
-				mounted && form.reset({ is_published, data: bdata, completed_projects, offers, services })
-			})
-				.catch(e => console.error(e))
-				.finally(() => {
-					mounted && setLoading(false);
-				})
-		} else if (blockType) {
-			const b = blocks.find(b => b.type === blockType);
+		mounted && setElement(lazy(element));
 
-			mounted && setBlockData({});
-			mounted && setElement(lazy(b.element))
-			mounted && setLabel(b.label);
-		} else {
-			setError(true);
-			setLoading(false);
-		}
 		return () => mounted = false;
-	}, [block])
+	}, [element])
 
-	return error
-		? null
-		: loading
-			? (<div style={{ width: '100%', height: 58, backgroundColor: '#f7f7f7', borderRadius: 4 }}></div>)
-			: (
-				<Accordion expanded={expanded} >
-					<Box
-						display='flex'
-						width='100%'
-						justifyContent='space-between'
-						alignItems='center'
-						flexWrap='nowrap'
+	return (
+		<Accordion expanded={expanded} >
+			<Box
+				display='flex'
+				width='100%'
+				justifyContent='space-between'
+				alignItems='center'
+				flexWrap='nowrap'
+			>
+				<AccordionSummary
+					onClick={() => setExpanded(prev => !prev)}
+				>
+					<Typography
+						component="h3"
+						fontSize='14px'
+						flexGrow={1}
+						flexShrink={0}
+						lineHeight='20px'
 					>
-						<AccordionSummary
-							onClick={() => setExpanded(prev => !prev)}
+						{label}
+					</Typography>
+				</AccordionSummary>
+				<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
+					<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
+						<IconButton
+							size='small'
+							onClick={() => { form.setValue('is_published', !is_published) }}
 						>
-							<Typography
-								component="h3"
-								fontSize='14px'
-								flexGrow={1}
-								flexShrink={0}
-								lineHeight='20px'
-							>
-								{label}
-							</Typography>
-						</AccordionSummary>
-						<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
-							<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
-								<IconButton
-									size='small'
-									onClick={() => { form.setValue('is_published', !is_published) }}
-								>
-									<IsPublished isPublished={is_published} />
-								</IconButton>
-							</Tooltip>
-							<ButtonGroup>
-								<Button
-									disableRipple={true}
-									onClick={() => move(idx, idx + 1)}
-									disabled={idx + 1 == fields.length}
-								><ArrowCircleDownIcon />
-								</Button>
-								<Button
-									disableRipple={true}
-									onClick={() => move(idx, idx - 1)}
-									disabled={idx == 0}
-								><ArrowCircleUpIcon />
-								</Button>
-								<Button
-									color='error'
-									onClick={onDelete}
-								><HighlightOffIcon />
-								</Button>
-							</ButtonGroup>
-						</Box>
-					</Box>
-					{blockData && <AccordionDetails >
-						<Box className='block-settings' marginY={2}>
-							{Element ? (
-								<Element form={form} />
-							) : null}
-						</Box>
-					</AccordionDetails>}
-				</Accordion >
-			)
+							<IsPublished isPublished={is_published} />
+						</IconButton>
+					</Tooltip>
+					<ButtonGroup>
+						<Button
+							disableRipple={true}
+							onClick={() => move(idx, idx + 1)}
+							disabled={idx + 1 == blocksLength}
+						><ArrowCircleDownIcon />
+						</Button>
+						<Button
+							disableRipple={true}
+							onClick={() => move(idx, idx - 1)}
+							disabled={idx == 0}
+						><ArrowCircleUpIcon />
+						</Button>
+						<Button
+							color='error'
+							onClick={onDelete}
+						><HighlightOffIcon />
+						</Button>
+					</ButtonGroup>
+				</Box>
+			</Box>
+			<AccordionDetails >
+				<Box className='block-settings' marginY={2}>
+					{Element ? (
+						<Suspense fallback={<StyledLinearProgress />}>
+							<Element form={form} />
+						</Suspense>
+					) : null}
+				</Box>
+			</AccordionDetails>
+		</Accordion >
+	)
 }
 
-export default Block
+export default forwardRef(Block)

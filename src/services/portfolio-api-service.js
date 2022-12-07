@@ -1,9 +1,9 @@
 import { supabase } from "../supabase/supabaseClient.js";
 
-export const getCompletedProjects = () => new Promise((resolve, reject) => {
+export const getProjects = () => new Promise((resolve, reject) => {
 	try {
 		supabase
-			.from('completed_projects')
+			.from('projects')
 			.select('*')
 			.then(({ data, error }) => {
 				if (error) {
@@ -16,11 +16,11 @@ export const getCompletedProjects = () => new Promise((resolve, reject) => {
 	}
 })
 
-export const getCompletedProject = (id) => new Promise((resolve, reject) => {
+export const getProject = (id) => new Promise((resolve, reject) => {
 	try {
 		supabase
-			.from('completed_projects')
-			.select('*')
+			.from('projects')
+			.select()
 			.eq('id', id)
 			.single()
 			.then(({ data, error }) => {
@@ -34,9 +34,60 @@ export const getCompletedProject = (id) => new Promise((resolve, reject) => {
 	}
 })
 
-export const insertCompletedProject = (data) => new Promise((resolve, reject) => {
+export const getProjectWithBlocks = (id) => new Promise((resolve, reject) => {
 	try {
-		supabase.rpc('insert_completed_project', data)
+
+		supabase.rpc('get_project_blocks', {_id: id})
+		.then(response => {
+			if (response.error) {
+				reject(response.error.message)
+			}
+			resolve(response)
+		})
+		.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+
+
+export const insertProject = (data) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc('insert_project', data)
+			.then(response => {
+				if (response.error) {
+					reject(response.error.message)
+				}
+				resolve(response)
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const updateProject = (data) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc('update_project', data)
+			.then(response => {
+				if (response.error) {
+					reject(response.error.message)
+				}
+				resolve(response)
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const deleteProject = (id) => new Promise((resolve, reject) => {
+	try {
+		supabase
+			.from('projects')
+			.delete()
+			.eq('id', id)
 			.then(response => {
 				if (response.error) {
 					reject(response.error.message)

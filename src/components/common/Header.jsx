@@ -1,6 +1,7 @@
 import React from 'react'
 import { getRoutes } from '../../services/routes-service';
 import { useLocation } from 'react-router-dom';
+import { Typography } from '@mui/material';
 
 const Header = () => {
 	const { pathname } = useLocation();
@@ -17,11 +18,9 @@ const Header = () => {
 			alignItems: 'center',
 			boxShadow: '0px 2px 24px rgb(0 0 25 / 15%)'
 		}}>
-			<h1 className='m-0 mx-5' style={{
-				fontSize: '30px',
-			}}>
+			<Typography fontSize='30px' marginX='15px'>
 				{label ?? ''}
-			</h1>
+			</Typography>
 		</header>
 }
 
