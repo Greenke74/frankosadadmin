@@ -16,7 +16,6 @@
     "@mui/x-data-grid": "^5.17.11",
     "@reduxjs/toolkit": "^1.8.6",
     "@supabase/supabase-js": "^2.0.5",
-    "bootstrap": "^5.2.2",
     "classnames": "^2.3.2",
     "dotenv": "^16.0.3",
     "normalize.css": "^8.0.1",
@@ -29,7 +28,8 @@
     "react-slick": "^0.29.0",
     "slick-carousel": "^1.8.1",
     "sweetalert2": "^11.6.5",
-    "transliteration": "^2.3.5"
+    "transliteration": "^2.3.5",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.22",

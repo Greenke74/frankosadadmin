@@ -36,7 +36,9 @@ const ImageUploader = (props) => {
 					textTransform: 'none',
 					padding: '8.5px 20px',
 					borderRadius: '4px',
-					cursor: 'pointer'
+					cursor: 'pointer',
+					fontSize: '14px',
+					fontFamily: 'Roboto'
 				}}
 				htmlFor={id ? `fileUploader-${id}` : 'fileUploader'}
 			>Завантажити зображення</label>

@@ -1,5 +1,18 @@
 .slider-block {
 
+    .toggle-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 15px;
+
+        button {
+            text-transform: none;
+        }
+        button.Mui-selected {
+            color: var(--theme-color);
+        }
+    }
+
     .slick-track,
     -slick-list {
         display: flex;
@@ -21,4 +34,12 @@
 
         }
     }
+}
+
+.slide-option {
+    padding: 10px;
+    background-color: rgb(240, 237, 237);
+    margin: 10px;
+    border-radius: 4px;
+    cursor: pointer;
 }

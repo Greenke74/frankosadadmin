@@ -13,7 +13,7 @@ import { getMainSettings, updateMainSettings } from '../services/setting-api-ser
 import { Box } from '@mui/system';
 import { CameraAlt, Delete } from '@mui/icons-material';
 import { getSrcFromFile } from '../helpers/file-helpers.js';
-import { deleteImage, uploadImage } from '../services/storage-service.js';
+import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
 
 const defaultValues = {
 	siteName: '',
@@ -36,9 +36,10 @@ const MainSettings = () => {
 	const [defaultFormValue, setDefaultFormValue] = useState(defaultValues);
 	const [imageToDelete, setImageToDelete] = useState(null);
 	const [fieldIds, setFieldIds] = useState([]);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const {
 		reset,
-		formState: { errors, isValid },
+		formState: { errors },
 		handleSubmit,
 		getValues,
 		setValue,
@@ -48,35 +49,45 @@ const MainSettings = () => {
 	const geoLocationUrl = watch('geoLocation.url');
 	const favicon = watch('favicon');
 
+	const fetchData = async () => {
+		const { data, fields } = await getMainSettings();
+		setFieldIds(fields);
+		setDefaultFormValue(data);
+		reset({ ...getValues(), ...data, favicon: getImageSrc(data.favicon) });
+	}
+
 	useEffect(() => {
 		if (!geoLocationUrl) {
+
 			setValue('geoLocation.address', undefined);
 		}
 	}, [geoLocationUrl])
 
 	useEffect(() => {
 		let mounted = true;
-		const f = async () => {
-			const { data, fields } = await getMainSettings();
-			setFieldIds(fields);
-			setDefaultFormValue(data);
-			mounted && reset({ ...getValues(), ...data });
-		}
 
-		f();
+		mounted && fetchData();
+
 		return () => mounted = false;
 	}, [])
 
 	const onSubmit = async (data) => {
+		setIsSubmitting(true);
 		const { faviconFile } = data;
+		let faviconKey = null;
 		delete data.faviconFile;
 		const payloadData = { ...data }
+
 		if (faviconFile) {
 			await deleteImage(imageToDelete);
-			const favicon = await uploadImage(faviconFile)
-			setValue('favicon', favicon);
+
+			faviconKey = await uploadImage(faviconFile)
+			setValue('favicon', getImageSrc(faviconKey));
 			setValue('faviconFile', null);
-			payloadData.favicon = favicon
+
+			payloadData.favicon = faviconKey
+		} else {
+			delete payloadData.favicon;
 		}
 
 		const payload = Object.entries(payloadData).map(([key, value]) => {
@@ -89,10 +100,14 @@ const MainSettings = () => {
 			}
 		}).filter(r => !!r)
 
-		if (payload.length === 0) return;
+		if (payload.length === 0) {
+			setIsSubmitting(false);
+			return;
+		}
 
 		updateMainSettings(payload)
-			.then(() => {
+			.then(async () => {
+				await fetchData();
 				Swal.fire({
 					position: 'top-right',
 					icon: 'success',
@@ -102,13 +117,12 @@ const MainSettings = () => {
 					showConfirmButton: false,
 					toast: true,
 				})
-				setDefaultFormValue(payloadData);
-				reset(payloadData);
-			});
+			})
+			.finally(() => setIsSubmitting(false));
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className='pb-2'>
+		<form onSubmit={handleSubmit(onSubmit)} style={{ paddingBottom: 10 }}>
 			<Grid container direction='column' padding={2} style={{ gap: 16 }} >
 				<Grid item container xs={12} spacing={2} marginBottom={2}>
 					<Grid item xs={12} md={6} >
@@ -157,9 +171,9 @@ const MainSettings = () => {
 										} sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
 											<Delete sx={{ color: 'red' }} />
 										</IconButton>
-										<img src={favicon} style={{ width: '100px', borderRadius: '5px' }} />
+										<img src={favicon} style={{ width: '150px', borderRadius: '5px' }} />
 									</>)
-									: (<div style={{ width: 100, height: 100, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
+									: (<div style={{ width: 150, height: 150, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
 							</Card>
 							<ImageUploader id='mainImageUploader' ratio={1 / 1} onChange={async (file) => {
 								setImageToDelete(favicon);
@@ -226,9 +240,9 @@ const MainSettings = () => {
 					{errors?.mediaLinks?.facebookUrl && <ErrorMessage type={errors?.mediaLinks?.facebookUrl ? 'urlPattern' : undefined} />}
 				</Grid>
 			</Grid>
-			<div className='d-flex justify-content-end px-3 pb-2'>
-				<SaveButton disabled={!isValid} type='submit' />
-			</div>
+			<Box sx={{ display: 'flex', justifyContent: 'end', gap: '25px', paddingRight: 2 }}>
+				<SaveButton disabled={isSubmitting} type='submit' />
+			</Box>
 		</form>
 	)
 }
