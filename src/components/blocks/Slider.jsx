@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useFieldArray } from 'react-hook-form';
 
 import AddButton from '../common/AddButton';
-import { Box, Popover, IconButton, Tooltip, Typography, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { Box, Popover, IconButton, Tooltip, Typography, ToggleButtonGroup, ToggleButton, Chip } from '@mui/material';
 import { default as SlickSlider } from 'react-slick';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -57,12 +57,25 @@ const Slider = ({ form }) => {
 		setSelectedSlides(prev => {
 			const slides = [...prev, slide]
 
-			setValue(dataSelected, slides)
+			setValue(dataSelected, slides.map(s=>s.id))
 
 			return slides;
 		})
 
 	}
+
+	const handleDeleteSlide = (id) => {
+		setSelectedSlides(prev => {
+			const slides = (prev ?? []).filter(s => s.id != id)
+
+			setValue(dataSelected, slides.map(s=>s.id))
+
+			return slides;
+		})
+
+	}
+
+	console.log(selectedSlides);
 
 	const open = Boolean(anchorEl);
 	const id = open ? 'simple-popover' : undefined;
@@ -139,7 +152,6 @@ const Slider = ({ form }) => {
 								key={s.id}
 								flexGrow='1'
 								padding={1}
-								// margin={1}
 								bgcolor='white'
 								flexShrink='0'
 							>
@@ -176,7 +188,9 @@ const Slider = ({ form }) => {
 									<Tooltip disableFocusListener title='Видалити слайд'>
 										<IconButton
 											color='error'
-											onClick={() => removeSlide(idx)}
+											onClick={() => {
+												handleDeleteSlide(s.id)
+											}}
 										><HighlightOffIcon />
 										</IconButton>
 									</Tooltip>
@@ -211,20 +225,28 @@ const Slider = ({ form }) => {
 				<Typography sx={{ p: 2 }}>
 					Виберіть {dataSelected == 'projects' ? 'проєкт' : null}
 				</Typography>
-				<Box maxHeight={350} overflow='scroll'>
+				<Box
+					maxHeight={350}
+					overflow='scroll'
+					display='flex'
+					flexDirection='column'
+					padding={2}
+					style={{ gap: 10 }}
+				>
 					{(
 						dataSelected == 'projects'
 							? projects : [])
 						.filter(p => !selectedSlides.find(slide => slide.id === p.id))
 						.map((p) => (
-							<p
+							<Chip
 								key={p.id}
 								className='slide-option'
 								onClick={() => {
 									handleAddSlide(p);
 									handleClose()
 								}}
-							>{p.title}</p>
+								label={p.title}
+							/>
 						))}
 				</Box>
 			</Popover>
