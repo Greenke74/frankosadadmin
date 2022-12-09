@@ -1,91 +1,89 @@
-import { supabase } from "../supabase/supabaseClient.js";
+import { supabase } from "../supabase/supabaseClient";
 
-export const getProjects = () => new Promise((resolve, reject) => {
+export const getOffer = (id) => new Promise((resolve, reject) => {
 	try {
 		supabase
-			.from('projects')
-			.select('*')
-			.then(({ data, error }) => {
-				if (error) {
-					reject(error);
-				}
-				resolve(data);
-			})
-	} catch (e) {
-		reject(e)
-	}
-})
-
-export const getProject = (id) => new Promise((resolve, reject) => {
-	try {
-		supabase
-			.from('projects')
+			.from('offers')
 			.select()
 			.eq('id', id)
-			.single()
 			.then(({ data, error }) => {
 				if (error) {
 					reject(error);
 				}
 				resolve(data);
 			})
-	} catch (e) {
-		reject(e)
-	}
-})
-
-export const getProjectWithBlocks = (id) => new Promise((resolve, reject) => {
-	try {
-
-		supabase.rpc('get_project_with_blocks', {_id: id})
-		.then(response => {
-			if (response.error) {
-				reject(response.error.message)
-			}
-			resolve(response)
-		})
-		.catch(error => reject(error))
-	} catch (e) {
-		reject(e)
-	}
-})
-
-
-
-export const insertProject = (data) => new Promise((resolve, reject) => {
-	try {
-		supabase.rpc('insert_project', data)
-			.then(response => {
-				if (response.error) {
-					reject(response.error.message)
-				}
-				resolve(response)
-			})
 			.catch(error => reject(error))
 	} catch (e) {
 		reject(e)
 	}
 })
 
-export const updateProject = (data) => new Promise((resolve, reject) => {
-	try {
-		supabase.rpc('update_project', data)
-			.then(response => {
-				if (response.error) {
-					reject(response.error.message)
-				}
-				resolve(response)
-			})
-			.catch(error => reject(error))
-	} catch (e) {
-		reject(e)
-	}
-})
-
-export const deleteProject = (id) => new Promise((resolve, reject) => {
+export const getOffers = () => new Promise((resolve, reject) => {
 	try {
 		supabase
-			.from('projects')
+			.from('offers')
+			.select()
+			.then(({ data, error }) => {
+				if (error) {
+					reject(error);
+				}
+				resolve(data);
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const getOfferWithBlocks = (id) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc('get_offer_with_blocks', {_id:id})
+			.then(({ data, error }) => {
+				if (error) {
+					reject(error);
+				}
+				resolve(data);
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const insertOffer = (data) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc('insert_offer', data)
+			.then(response => {
+				if (response.error) {
+					reject(response.error.message)
+				}
+				resolve(response)
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const updateOffer = (data) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc('update_offer', data)
+			.then(response => {
+				if (response.error) {
+					reject(response.error.message)
+				}
+				resolve(response)
+			})
+			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const deleteOffer = (id) => new Promise((resolve, reject) => {
+	try {
+		supabase
+			.from('offers')
 			.delete()
 			.eq('id', id)
 			.then(response => {
