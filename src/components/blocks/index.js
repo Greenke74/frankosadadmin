@@ -13,6 +13,16 @@ export const blocks = [
 		label: 'Покрокова інформація',
 		type: "stepByStep",
 		element: () => import('./StepByStep.jsx')
+	},
+	{
+		label: 'Карусель послуг',
+		type: 'servicesSlider',
+		element: () => import('./ServicesSlider.jsx')
+	},
+	{
+		label: 'Карусель проєктів',
+		type: 'projectsSlider',
+		element: () => import('./ProjectsSlider.jsx')
 	}
 ]
 
