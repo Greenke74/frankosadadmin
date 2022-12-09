@@ -12,7 +12,7 @@ import { getImageSrc } from '../../services/storage-service.js';
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import './slider.scss';
+
 const dataOptions = [
 	{ value: 'projects', label: 'Проєкти' },
 	{ value: 'services', label: 'Послуги' },
@@ -35,17 +35,58 @@ const Slider = ({ form }) => {
 	const { control, setValue } = form;
 
 	const {
-		fields: slidesFields,
-		append: appendSlide,
-		remove: removeSlide,
-	} = useFieldArray({ control: control, name: `data.slides` })
+		fields: projectFields,
+		append: appendProject,
+		remove: removeProject
+	} = useFieldArray({ name: 'project_ids', control: control })
+
+	const {
+		fields: offerFields,
+		append: appendOffer,
+		remove: removeOffer
+	} = useFieldArray({ name: 'offer_ids', control: control })
+
+	const {
+		fields: serviceFields,
+		append: appendService,
+		remove: removeService
+	} = useFieldArray({ name: 'service_ids', control: control })
 
 	useEffect(() => {
-		getProjects()
-			.then(data =>
-				setProjects((data ?? []).map(p =>
-					({ ...p, image: getImageSrc(p.image) })
-				)))
+		Promise.all([
+			getProjects()
+		])
+			.then(([projectsResponse]) => {
+				setProjects(projectsResponse ?? [])
+
+				const blockProjects = form.getValues('projects');
+				const blockOffers = form.getValues('offers');
+				const blockServices = form.getValues('services');
+
+				if ((blockProjects ?? []).length > 0) {
+					setDataSelected(dataOptions.find(o => o.value == 'projects'))
+					setSelectedSlides(prev => ([
+						...prev,
+						...blockProjects
+					]))
+
+				} else if ((blockOffers ?? []).length > 0) {
+					setDataSelected(dataOptions.find(o => o.value == 'offers'))
+					setSelectedSlides(prev => ([
+						...prev,
+						...blockOffers
+					]))
+
+				} else if ((blockServices ?? []).length > 0) {
+					setDataSelected(dataOptions.find(o => o.value == 'services'))
+					setSelectedSlides(prev => ([
+						...prev,
+						...blockServices
+					]))
+
+				}
+			})
+
 	}, [])
 
 	const handleToggleChange = (e, value) => {
@@ -54,21 +95,18 @@ const Slider = ({ form }) => {
 	}
 
 	const handleAddSlide = (slide) => {
-		setSelectedSlides(prev => {
-			const slides = [...prev, slide]
-
-			setValue(dataSelected, slides.map(s=>s.id))
-
-			return slides;
-		})
-
+		if (slide.id) {
+			appendProject(slide.id)
+			setSelectedSlides(prev => ([...prev, slide]))
+		}
 	}
 
 	const handleDeleteSlide = (id) => {
+		removeProject(proje)
 		setSelectedSlides(prev => {
 			const slides = (prev ?? []).filter(s => s.id != id)
 
-			setValue(dataSelected, slides.map(s=>s.id))
+			setValue(dataSelected, slides.map(s => s.id))
 
 			return slides;
 		})
@@ -216,7 +254,6 @@ const Slider = ({ form }) => {
 				open={open}
 				anchorEl={anchorEl}
 				onClose={handleClose}
-				overflow='scroll'
 				anchorOrigin={{
 					vertical: 'bottom',
 					horizontal: 'left',
@@ -227,11 +264,13 @@ const Slider = ({ form }) => {
 				</Typography>
 				<Box
 					maxHeight={350}
-					overflow='scroll'
 					display='flex'
 					flexDirection='column'
 					padding={2}
-					style={{ gap: 10 }}
+					style={{
+						gap: 10,
+						overflowY: 'auto'
+					}}
 				>
 					{(
 						dataSelected == 'projects'
