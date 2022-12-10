@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef, Suspense } from 'react'
+import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef, Suspense, useRef } from 'react'
 import { useForm } from 'react-hook-form';
 import { Box, ButtonGroup, Button, Typography, styled, IconButton, Tooltip } from '@mui/material'
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
@@ -23,9 +23,11 @@ import { dataTypes } from '../../services/data-types-service';
 const Block = ({ block, idx, remove, blocksLength, move, update, element, label, isMainPage }, ref) => {
 	const [expanded, setExpanded] = useState(null);
 	const [Element, setElement] = useState(null);
+	const blockRef = useRef(null);
 
 	const form = useForm({
-		defaultValues: block
+		defaultValues: block,
+		mode: 'onChange'
 	})
 	const is_published = form.watch('is_published');
 
@@ -91,14 +93,12 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 		return null;
 	}
 
-	useImperativeHandle(ref, () => ({
-		onSubmit: async () => await onSubmit(form.getValues())
-	}))
+	useImperativeHandle(ref, () => ({ onSubmit: async () => await onSubmit(blockRef.current.getBlockData()) }))
 
 	useEffect(() => {
 		let mounted = true;
 
-		mounted && setElement(lazy(element));
+		mounted && setElement(forwardRef(lazy(element)));
 
 		return () => mounted = false;
 	}, [element])
@@ -159,7 +159,10 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 				<Box className='block-settings' marginY={2}>
 					{Element ? (
 						<Suspense fallback={<StyledLinearProgress />}>
-							<Element form={form} />
+							<Element
+								form={form}
+								ref={blockRef}
+							/>
 						</Suspense>
 					) : null}
 				</Box>
