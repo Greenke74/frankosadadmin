@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useImperativeHandle } from 'react'
 import { useFieldArray, Controller } from 'react-hook-form';
 
 import { FormControl, Grid, Grow, IconButton, Tooltip, Typography } from '@mui/material';
@@ -9,7 +9,7 @@ import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
 import ErrorMessage from '../common/ErrorMessage';
 import AddButton from '../common/AddButton';
 
-const Counter = ({ form }) => {
+const Counter = ({ form }, ref) => {
   const { register, control, formState: { errors } } = form;
   const {
     fields,
@@ -21,6 +21,12 @@ const Counter = ({ form }) => {
     name: 'data.counters',
     rules: { maxLength: 4 }
   })
+
+  const getBlockData = async (formData) => {
+
+  }
+
+  useImperativeHandle(ref, () => ({ getBlockData: async () => await getBlockData(form.getValues()) }))
 
   return (
     <Box>
