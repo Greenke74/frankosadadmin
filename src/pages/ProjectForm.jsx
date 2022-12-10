@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 
@@ -24,6 +24,7 @@ const projectTypes = ['Приватний будинок', 'Житловий к�
 const ProjectForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const compositionRef = useRef(null);
 
   const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,7 +67,6 @@ const ProjectForm = () => {
   }, [id])
 
   const onSubmit = async (data) => {
-
     setIsSubmitting(true);
 
     try {
@@ -76,6 +76,7 @@ const ProjectForm = () => {
         ...data,
         alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
       }
+
 
       if (!payload.image) {
         Swal.fire({
@@ -102,8 +103,15 @@ const ProjectForm = () => {
         delete payload.image;
       }
 
+      const blocks_ids = await compositionRef.current.onSubmit();
+      if (Array.isArray(blocks_ids) && blocks_ids.length > 0) {
+        delete payload.blocks;
+        payload.blocks_ids = blocks_ids;
+      }
+
       if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
         delete payload.imageFile;
+
 
         if (payload.id) {
           await updateProject(payload);
@@ -158,7 +166,7 @@ const ProjectForm = () => {
           label: 'Загальна інформація',
           errors: errors,
           content: (
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <>
               <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
                 <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
                   <FormControlLabel
@@ -258,27 +266,26 @@ const ProjectForm = () => {
                   </Box>
                 </Grid>
               </Grid>
-              <Box display='flex' justifyContent='end' alignItems='center' marginTop={4} style={{ gap: 20 }}>
-                <CancelButton onClick={() => navigate('/projects')}>Скасувати</CancelButton>
-                <SaveButton type='submit' disabled={isSubmitting} />
-              </Box>
-            </form>
+            </>
           )
         },
         {
           label: 'Сторінка проєкту',
           content: (
             <><BlocksComposition
+              ref={compositionRef}
               blocks={blocks}
               allowedBlocks={projectBlocks}
-              onSubmitComposition={(blocks) => {
-                onSubmit({ ...getValues(), block_ids: blocks })
-              }}
+              hideSubmit={true}
             />
             </>
           )
         }
       ]} />
+      <Box display='flex' justifyContent='end' alignItems='center' marginTop={4} style={{ gap: 20 }}>
+        <CancelButton onClick={() => navigate('/projects')}>Скасувати</CancelButton>
+        <SaveButton onClick={handleSubmit(onSubmit)} disabled={isSubmitting} />
+      </Box>
     </Box>
   )
 }

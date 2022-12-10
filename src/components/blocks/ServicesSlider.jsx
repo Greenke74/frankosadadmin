@@ -7,7 +7,6 @@ const ServicesSlider = ({ form }) => {
 
   useEffect(() => {
     getServices().then(response => {
-      console.log(response);
     })
 
   }, [])

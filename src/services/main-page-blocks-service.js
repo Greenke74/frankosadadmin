@@ -34,16 +34,6 @@ export const getMainPageBlocks = () => new Promise((resolve, reject) => {
 })
 
 export const updateMainPageBlock = (data) => new Promise((resolve, reject) => {
-    if (data.projects) {
-        delete data.projects;
-    }
-    if (data.offers) {
-        delete data.offers;
-    }
-    if (data.services) {
-        delete data.services;
-    }
-    
     try {
         supabase.rpc('update_main_page_block', data)
             .then(response => {
