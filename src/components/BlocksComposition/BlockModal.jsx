@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
-import { Alert, FormControl, InputLabel, MenuItem, Modal, Select, Typography } from '@mui/material';
+import { Alert, Button, Modal, Typography } from '@mui/material';
 import { Box } from '@mui/system';
-import { CancelButton, SuccessButton } from '../common/StyledComponents';
+import { CancelButton } from '../common/StyledComponents';
+
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const BlockModal = ({ open, onClose, allowedBlocks, appendBlock, blocksLength }) => {
   const [newBlock, setNewBlock] = useState(0);
 
-  const onAdd = () => {
+  const onAdd = (newBlock) => {
     if (newBlock) {
       try {
         appendBlock({
@@ -20,7 +22,6 @@ const BlockModal = ({ open, onClose, allowedBlocks, appendBlock, blocksLength })
             services: null
           }
         })
-        setNewBlock(0);
       } catch (error) {
         console.error(error)
       }
@@ -44,7 +45,7 @@ const BlockModal = ({ open, onClose, allowedBlocks, appendBlock, blocksLength })
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 800,
+          width: 450,
           maxWidth: '90%',
           boxShadow: 24,
           pt: 5,
@@ -59,32 +60,35 @@ const BlockModal = ({ open, onClose, allowedBlocks, appendBlock, blocksLength })
         <Alert severity='info' sx={{ mb: 2 }}>
           Виберіть блок нижче щоб додати його
         </Alert>
-        <FormControl fullWidth >
-          <InputLabel shrink htmlFor="blockSelect">
-            Новий блок
-          </InputLabel>
-          <Select
-            fullWidth
-            id='blockSelect'
-            label='Новий блок'
-            value={newBlock}
-            onChange={(e) => setNewBlock(e.target.value)}
-          >
-            {allowedBlocks.map(b => (
-              <MenuItem key={b.type} value={b.type}>{b.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {allowedBlocks.map(b => (
+          <Box sx={{ m: 1, width: '100%', '& .MuiButton-root': { width: '100%' } }}>
+            <Button
+              style={{
+                textTransform: 'none',
+                color: 'var(--theme-color)',
+                borderRightColor: 'var(--menu-active-button-color)'
+              }} onClick={() => {
+                onAdd(b.type)
+                onClose();
+              }}>
+              <Typography sx={{ flexGrow: 1 }}>
+                {b.label}
+              </Typography>
+              <ArrowBackIcon style={{
+                flexBasis: '20%',
+                color: 'var(--theme-color)',
+                fontSize: '16px',
+                marginRight: 16
+              }} />
+            </Button>
+          </Box>
+        ))}
         <Box sx={{ display: 'flex', justifyContent: 'end', mt: 3, gap: '25px' }}>
           <CancelButton onClick={() => {
-            setNewBlock(0);
             onClose()
           }}>
             Скасувати
           </CancelButton>
-          <SuccessButton onClick={onAdd}>
-            Додати
-          </SuccessButton>
         </Box>
       </Box>
     </Modal>
