@@ -93,12 +93,22 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 		return null;
 	}
 
-	useImperativeHandle(ref, () => ({ onSubmit: async () => await onSubmit(blockRef.current.getBlockData()) }))
+	useImperativeHandle(ref, () => ({
+		onSubmit: async () => {
+			let data = null;
+			if (blockRef.current !== null) {
+				data = await blockRef.current.getBlockData()
+			} else {
+				data = form.getValues()
+			}
+			return await onSubmit(data)
+		}
+	}))
 
 	useEffect(() => {
 		let mounted = true;
 
-		mounted && setElement(forwardRef(lazy(element)));
+		mounted && setElement(lazy(element));
 
 		return () => mounted = false;
 	}, [element])

@@ -106,7 +106,7 @@ const StepByStep = ({ form }) => {
         ))}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
-        <AddButton
+        {fields.length < 5 && (<AddButton
           onClick={() => fields.length < 5 &&
             append({
               title: '',
@@ -114,7 +114,7 @@ const StepByStep = ({ form }) => {
               image: ''
             })}
           label='Додати крок'
-        />
+        />)}
       </Box>
     </Box >
   )
