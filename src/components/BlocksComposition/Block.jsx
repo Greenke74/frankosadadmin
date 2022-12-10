@@ -91,7 +91,9 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 		return null;
 	}
 
-	useImperativeHandle(ref, () => ({ onSubmit: async () => await onSubmit(form.getValues()) }))
+	useImperativeHandle(ref, () => ({
+		onSubmit: async () => await onSubmit(form.getValues())
+	}))
 
 	useEffect(() => {
 		let mounted = true;
