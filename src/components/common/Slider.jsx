@@ -10,14 +10,22 @@ import '../../styles/slider.scss';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { getImageSrc } from '../../services/storage-service.js';
+import { useFieldArray } from 'react-hook-form';
 
-const Slider = ({ options, dataType, form: { getValues, setValue, control } }) => {
+const Slider = ({ options, dataType, form: { control } }) => {
   const slideIds = dataType + '_ids';
 
-  const slides = (getValues(dataType) ?? []).map(s => ({ ...s, image: getImageSrc(s.image) }));
   const {
-
+    fields: slidesFields,
+    append: appendSlide,
+    remove: removeSlide,
   } = useFieldArray({ name: dataType, control: control })
+
+  const {
+    fields: slidesIdsFields,
+    append: appendSlideId,
+    remove: removeSlideId
+  } = useFieldArray({ name: slideIds, control: control })
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -31,25 +39,21 @@ const Slider = ({ options, dataType, form: { getValues, setValue, control } }) =
 
   const handleAddSlide = (slide) => {
     if (slide.id) {
-      setValue(slideIds, [...(getValues(slideIds) ?? []), slide.id])
-
-      setValue(dataType, [...(getValues(dataType) ?? []), slide])
+      appendSlideId({ value: slide.id })
+      appendSlide({ value: slide })
     }
   }
 
-  const handleDeleteSlide = (id) => {
-    if (id) {
-      setValue(slideIds, (getValues(slideIds) ?? []).filter(slideId => slideId != id))
+  const handleDeleteSlide = (idx) => {
 
-      setValue(dataType, (getValues(slideIds) ?? []).filter(slide => slide.id != id))
-    }
+    removeSlide(idx);
+    removeSlideId(idx)
   }
-
 
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
   return (<div className='slider-block'>
-    {(slides ?? []).length == 0
+    {(slidesFields ?? []).length == 0
       ? (
         <Box bgcolor='white' borderRadius={2} display='flex' justifyContent='center' flexDirection='column'>
           <Typography
@@ -107,7 +111,7 @@ const Slider = ({ options, dataType, form: { getValues, setValue, control } }) =
             }
           ]}
         >
-          {(slides ?? []).map((s, idx) => (
+          {(slidesFields ?? []).map(({ value: s, id }, idx) => (
             <Box
               key={s.id}
               flexGrow='1'
@@ -116,7 +120,7 @@ const Slider = ({ options, dataType, form: { getValues, setValue, control } }) =
               flexShrink='0'
             >
               <img
-                src={s.image}
+                src={getImageSrc(s.image)}
                 alt={s.title}
                 style={{
                   borderRadius: 5,
@@ -149,7 +153,7 @@ const Slider = ({ options, dataType, form: { getValues, setValue, control } }) =
                   <IconButton
                     color='error'
                     onClick={() => {
-                      handleDeleteSlide(s.id)
+                      handleDeleteSlide(idx)
                     }}
                   ><HighlightOffIcon />
                   </IconButton>
@@ -193,17 +197,19 @@ const Slider = ({ options, dataType, form: { getValues, setValue, control } }) =
             overflowY: 'auto'
           }}
         >
-          {options.map((o) => (
-            <Chip
-              key={o.id}
-              className='slide-option'
-              onClick={() => {
-                handleAddSlide(o);
-                handleClose()
-              }}
-              label={o.title ?? o.name ?? o.label}
-            />
-          ))}
+          {options
+            .filter(o => !slidesFields.find(slide => slide.value.id == o.id))
+            .map((o) => (
+              <Chip
+                key={o.id}
+                className='slide-option'
+                onClick={() => {
+                  handleAddSlide(o);
+                  handleClose()
+                }}
+                label={o.title ?? o.name ?? o.label}
+              />
+            ))}
         </Box>
       </Popover>
     </Box>

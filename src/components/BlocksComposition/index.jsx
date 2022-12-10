@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, createRef, lazy } from 'react';
+import React, { useState, useEffect, useRef, createRef, useImperativeHandle, forwardRef, } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 
 import {
@@ -13,15 +13,20 @@ import BlockModal from './BlockModal';
 
 import { deleteBlock } from '../../services/blocks-api-service';
 import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
+import { dataTypes } from '../../services/data-types-service';
 
-const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onSubmitComposition }) => {
+const BlocksComposition = ({
+	blocks,
+	allowedBlocks = [],
+	isMainPage = false,
+}, ref) => {
 	const [submitDisabled, setSubmitDisabled] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [initialBlocks, setInitialBlocks] = useState([]);
 
 	const blocksRef = useRef([]);
 
-	const { control, handleSubmit, reset } = useForm({
+	const { control, handleSubmit, reset, getValues } = useForm({
 		defaultValues: {
 			blocks: (blocks ?? []).map(b => ({ block: b }))
 		},
@@ -43,7 +48,23 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onS
 				.sort((a, b) => {
 					return a.position - b.position
 				})
-				.map(b => ({ block: b }))
+				.map(b => {
+					const block = {
+						...b
+					}
+					dataTypes.forEach(type => {
+						const typeId = type + '_ids';
+
+						if (b[type] && Array.isArray(b[type])) {
+							block.projects = b.projects.map(p => ({ value: p }))
+
+							block[typeId] = b.projects.map(p => ({ value: p.id ?? null })).filter(({ value }) => value !== null)
+						}
+					})
+					return {
+						block
+					}
+				})
 		})
 		mounted && setInitialBlocks((blocks ?? []).map(b => b.id));
 
@@ -81,12 +102,13 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onS
 
 		setInitialBlocks(currentBlocks);
 
-		if (onSubmitComposition) {
-			await onSubmitComposition(currentBlocks)
-		}
-
 		setSubmitDisabled(false)
+		return currentBlocks;
 	}
+
+	useImperativeHandle(ref, () => ({
+		onSubmit: async () => onSubmit(getValues())
+	}))
 
 	return (
 		<>
@@ -133,7 +155,9 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onS
 							label='Додати блок'
 							onClick={() => setModalOpen(true)}
 						/>
-						<SaveButton type='submit' style={{ height: 'fit-content' }} disabled={submitDisabled} />
+						{isMainPage && (
+							<SaveButton type='submit' style={{ height: 'fit-content' }} disabled={submitDisabled} />
+						)}
 					</Box>
 				</Box>
 			</Box>
@@ -148,4 +172,4 @@ const BlocksComposition = ({ blocks, allowedBlocks = [], isMainPage = false, onS
 	)
 }
 
-export default BlocksComposition
+export default forwardRef(BlocksComposition)
