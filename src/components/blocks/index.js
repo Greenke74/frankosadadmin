@@ -46,6 +46,11 @@ export const projectBlocks = [
 		label: 'Звичайний текст',
 		type: "simpleText",
 		element: () => import('./SimpleText.jsx')
+	},
+	{
+		label: 'Редактор контенту',
+		type: 'htmlContent',
+		element: () => import('./HtmlContent.jsx')
 	}
 ]
 
