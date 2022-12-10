@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 
 const Gallery = () => {
   return (
@@ -6,4 +6,4 @@ const Gallery = () => {
   )
 }
 
-export default Gallery
+export default forwardRef(Gallery)

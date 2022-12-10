@@ -1,4 +1,4 @@
-import React, { useImperativeHandle } from 'react'
+import React, { useImperativeHandle, forwardRef } from 'react'
 import { useFieldArray, Controller } from 'react-hook-form';
 
 import { FormControl, Grid, Grow, IconButton, Tooltip, Typography } from '@mui/material';
@@ -10,21 +10,20 @@ import ErrorMessage from '../common/ErrorMessage';
 import AddButton from '../common/AddButton';
 
 const Counter = ({ form }, ref) => {
-  const { register, control, formState: { errors } } = form;
+  const { control, formState: { errors } } = form;
   const {
     fields,
     append,
-    remove,
-    move
+    remove
   } = useFieldArray({
     control: form.control,
     name: 'data.counters',
     rules: { maxLength: 4 }
   })
 
-  const getBlockData = async (formData) => {
-
-  }
+  const getBlockData = async (formData) => new Promise((resolve, reject) => {
+    resolve(formData)
+  })
 
   useImperativeHandle(ref, () => ({ getBlockData: async () => await getBlockData(form.getValues()) }))
 
@@ -93,7 +92,7 @@ const Counter = ({ form }, ref) => {
                       <StyledInputBase type='number' value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
                     )}
                   />
-                  {errors?.data?.counters[idx]?.counter?.type == 'min' && <ErrorMessage type='min' />}
+                  {errors?.data?.counters[idx]?.counter?.type == 'min' && <ErrorMessage type='min' min={0} />}
                 </FormControl>
               </Box>
             </Grow>
@@ -102,13 +101,13 @@ const Counter = ({ form }, ref) => {
         )}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
-        <AddButton
+        {fields.length < 4 && (<AddButton
           label='Додати лічильник'
           onClick={() => fields.length < 4 && append({ title: ' ', counter: 0 })}
-        />
+        />)}
       </Box>
     </Box >
   )
 }
 
-export default Counter
+export default forwardRef(Counter)

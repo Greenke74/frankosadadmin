@@ -5,7 +5,7 @@ export const uploadImage = (file) => new Promise((resolve, reject) => {
 	try {
 		supabase.storage
 			.from('images')
-			.upload(`public/${uuidv1()}`.replaceAll('-', '_'), file, { upsert: true })
+			.upload(`public/${uuidv1()}.webp`.replaceAll('-', '_'), file, { upsert: true })
 			.then(response => {
 				if (response.error) {
 					reject(response.error.message)
