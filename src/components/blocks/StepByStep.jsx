@@ -1,29 +1,30 @@
 import React from 'react'
-import { Controller, useFieldArray } from 'react-hook-form'
-import AddIcon from '@mui/icons-material/Add';
-import { Box } from '@mui/system';
-import { Button, FormControl, Grid, IconButton, Tooltip, Typography } from '@mui/material';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import { useFieldArray } from 'react-hook-form'
+
+import { Box, FormControl, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
+
+import AdornmentTextField from '../common/AdornmentTextField';
+import AddButton from '../common/AddButton';
 import ImageUploader from '../common/ImageUploader';
+
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+
 import { getSrcFromFile } from '../../helpers/file-helpers';
-import { DATA_GRID_PROPS_DEFAULT_VALUES } from '@mui/x-data-grid';
 
 
 const StepByStep = ({ form }) => {
-  const { register, control, setValue, getValues } = form
+  const { register, control } = form
   const {
     fields,
     append,
     remove,
-    move,
     update
   } = useFieldArray({
-    control: form.control,
+    control: control,
     name: 'data.steps',
     rules: { maxLength: 5 }
   })
-
 
   return (
     <Box>
@@ -32,12 +33,12 @@ const StepByStep = ({ form }) => {
           <StyledInputLabel shrink htmlFor="stepsBlockId">
             Заголовок
           </StyledInputLabel>
-          <StyledInputBase {...register('data.stepsBlockTitle')} id='stepsBlockId' />
+          <StyledInputBase {...register('data.stepsBlockTitle', { required: true })} id='stepsBlockId' />
         </FormControl>
       </Box>
       <Grid container spacing={2}>
         {fields.map((c, idx) => (
-          <Grid item xs={12} lg={4} key={c.id}>
+          <Grid item xs={12} sm={12} md={6} lg={4} key={c.id}>
             <Box
               bgcolor='#f7f7f7'
               display='flex'
@@ -72,37 +73,31 @@ const StepByStep = ({ form }) => {
                 </Tooltip>
               </Box>
               <Box marginBottom={2}>
-                <FormControl variant='standard' required fullWidth>
+                <FormControl variant='standard' required fullWidth sx={{ mb: 2 }}>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
-                    Назва кроку
+                    Заголовок кроку
                   </StyledInputLabel>
-                  <StyledInputBase {...register(`data.steps.${idx}.title`)} id={`step-${c.id}`} />
+                  <AdornmentTextField id={`step-${c.id}`} adornmentText={`0${idx + 1}`} {...register(`data.steps.${idx}.title`, { required: true })} placeholder='Заголовок кроку' />
                 </FormControl>
-                <FormControl variant='standard' required fullWidth>
-                  <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
-                    Номер кроку
-                  </StyledInputLabel>
-                  <StyledInputBase disabled value={`0${idx + 1}`} onChange={setValue(`data.steps.${idx}.number`, `0${idx + 1}`)} id={`step-${c.id}`} />
-                </FormControl>
-                <FormControl variant='standard' required fullWidth>
+                <FormControl variant='standard' required fullWidth sx={{ mb: 2 }}>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Опис кроку
                   </StyledInputLabel>
-                  <StyledInputBase {...register(`data.steps.${idx}.description`)} id={`step-${c.id}`} />
+                  <StyledInputBase multiline={true} minRows={4} maxRows={16} {...register(`data.steps.${idx}.description`, { required: true })} id={`step-${c.id}`} />
                 </FormControl>
-                <FormControl variant='standard' required fullWidth>
+                <FormControl variant='standard' required fullWidth >
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`} sx={{ marginBottom: '30px' }}>
                     Зображення до кроку
                   </StyledInputLabel>
                   <Box margin={'25px 0'} display='flex' flexDirection='column' alignItems='center'>
                     <ImageUploader id={`step-${c.id}`} onChange={async (file) => {
-                      update(idx, { ...c, image: await getSrcFromFile(file) })
+                      update(idx, { ...c, image: await getSrcFromFile(file), imageFile: file })
                     }} />
                     <img src={c.image} style={{
-                      width: '100%', 
+                      width: '100%',
                       marginTop: '15px',
                       borderRadius: '8px'
-                      }}/>
+                    }} />
                   </Box>
                 </FormControl>
               </Box>
@@ -111,26 +106,17 @@ const StepByStep = ({ form }) => {
         ))}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
-        <Button
-          startIcon={<AddIcon />}
-          variant='text'
-          style={{ textTransform: 'none', color: 'var(--theme-color)' }}
+        <AddButton
           onClick={() => fields.length < 5 &&
             append({
-              title: ' ',
-              number: ' ',
-              description: ' ',
-              image: ' '
+              title: '',
+              description: '',
+              image: ''
             })}
-          sx={{
-            padding: '6px 15px !important',
-            '& > span': { marginRight: '8px !important' }
-          }}
-        >
-          Додати крок
-        </Button>
+          label='Додати крок'
+        />
       </Box>
-    </Box>
+    </Box >
   )
 }
 
