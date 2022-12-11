@@ -8,5 +8,6 @@ export const errorMessages = {
     emailPattern: 'Неправильний формат електронної пошти',
     phonePattern: 'Неправильний формат номера телефону',
     'Invalid login credentials': 'Логін або пароль неправильні',
-    passwordsNotEqual: 'Паролі не співпадають'
+    passwordsNotEqual: 'Паролі не співпадають',
+    invalidForm: 'Некоректні дані!'
 }

@@ -19,9 +19,12 @@ import IsPublished from '../common/IsPublished';
 import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
 import { StyledLinearProgress } from '../common/StyledComponents';
 import { dataTypes } from '../../services/data-types-service';
+import { INVALID_FORM } from '../../constants/errors';
+import ErrorMessage from '../common/ErrorMessage';
 
 const Block = ({ block, idx, remove, blocksLength, move, update, element, label, isMainPage }, ref) => {
 	const [expanded, setExpanded] = useState(null);
+	const [valid, setValid] = useState(true);
 	const [Element, setElement] = useState(null);
 	const blockRef = useRef(null);
 
@@ -94,10 +97,32 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 	}
 
 	useImperativeHandle(ref, () => ({
+		validate: async () => {
+			let isValid = true;
+			if (Object.keys(form.formState.errors ?? {}).length > 0) {
+				setValid(false)
+				isValid = false;
+			} else {
+				isValid = await form.trigger(Object.keys(form.getValues() ?? {}))
+			}
+			if (!isValid) {
+				setExpanded(true);
+			}
+
+			return isValid;
+		},
+
 		onSubmit: async () => {
 			let data = null;
 			if (blockRef.current !== null) {
-				data = await blockRef.current.getBlockData()
+				try {
+					data = await blockRef.current.getBlockData()
+				} catch (error) {
+					if (error == INVALID_FORM) {
+						setExpanded(true)
+						return null;
+					}
+				}
 			} else {
 				data = form.getValues()
 			}
@@ -113,6 +138,7 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 		return () => mounted = false;
 	}, [element])
 
+	const invalidForm = !valid || Object.keys(form.formState.errors ?? {}).length > 0;
 	return (
 		<Accordion expanded={expanded} >
 			<Box
@@ -125,15 +151,20 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 				<AccordionSummary
 					onClick={() => setExpanded(prev => !prev)}
 				>
-					<Typography
-						component="h3"
-						fontSize='14px'
-						flexGrow={1}
-						flexShrink={0}
-						lineHeight='20px'
-					>
-						{label}
-					</Typography>
+					<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+						<Typography
+							component="h3"
+							fontSize='14px'
+							flexGrow={1}
+							flexShrink={0}
+							lineHeight='20px'
+						>
+							{label}
+						</Typography>
+						{invalidForm && (
+							<ErrorMessage type='invalidForm' />
+						)}
+					</Box>
 				</AccordionSummary>
 				<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
 					<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>

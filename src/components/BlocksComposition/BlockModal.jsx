@@ -61,7 +61,7 @@ const BlockModal = ({ open, onClose, allowedBlocks, appendBlock, blocksLength })
           Виберіть блок нижче щоб додати його
         </Alert>
         {allowedBlocks.map(b => (
-          <Box sx={{ m: 1, width: '100%', '& .MuiButton-root': { width: '100%' } }}>
+          <Box key={b.label} sx={{ m: 1, width: '100%', '& .MuiButton-root': { width: '100%' } }}>
             <Button
               style={{
                 textTransform: 'none',

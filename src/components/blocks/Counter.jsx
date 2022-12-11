@@ -18,7 +18,9 @@ const Counter = ({ form }, ref) => {
   } = useFieldArray({
     control: form.control,
     name: 'data.counters',
-    rules: { maxLength: 4 }
+    rules: {
+      maxLength: 4
+    }
   })
 
   const getBlockData = async (formData) => new Promise((resolve, reject) => {
@@ -78,6 +80,13 @@ const Counter = ({ form }, ref) => {
                         <StyledInputBase value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
                       )}
                     />
+                    {errors && errors?.data?.counters[idx]?.title && (
+                      <Box sx={{ mt: 1 }}>
+                        <ErrorMessage
+                          type={errors.data.counters[idx]?.title?.type}
+                          maxLength={errors.data.counters[idx]?.title?.type == 'maxLength' ? 100 : null} />
+                      </Box>
+                    )}
                   </FormControl>
                 </Box>
                 <FormControl variant="standard" required fullWidth>
@@ -87,12 +96,18 @@ const Counter = ({ form }, ref) => {
                   <Controller
                     name={`data.counters.${idx}.counter`}
                     control={control}
-                    rules={{ min: 0 }}
+                    rules={{ min: 0, required: true }}
                     render={({ field, fieldState: { error } }) => (
                       <StyledInputBase type='number' value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
                     )}
                   />
-                  {errors?.data?.counters[idx]?.counter?.type == 'min' && <ErrorMessage type='min' min={0} />}
+                  {errors && errors?.data?.counters[idx]?.counter && (
+                    <Box sx={{ mt: 1 }}>
+                      <ErrorMessage
+                        type={errors.data.counters[idx]?.counter?.type}
+                        min={errors.data.counters[idx]?.counter?.type == 'min' ? 0 : null} />
+                    </Box>
+                  )}
                 </FormControl>
               </Box>
             </Grow>
@@ -103,7 +118,7 @@ const Counter = ({ form }, ref) => {
       <Box display='flex' justifyContent='center' marginTop={4}>
         {fields.length < 4 && (<AddButton
           label='Додати лічильник'
-          onClick={() => fields.length < 4 && append({ title: ' ', counter: 0 })}
+          onClick={() => fields.length < 4 && append({ title: '', counter: 0 })}
         />)}
       </Box>
     </Box >

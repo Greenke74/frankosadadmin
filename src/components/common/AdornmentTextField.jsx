@@ -50,7 +50,7 @@ const AdornmentTextField = (props) => {
               color: 'var(--theme-color)'
             }}
           >
-            {props.adornmentText}
+            {props.adornmenttext}
           </InputAdornment>)
       }}
       {...props}

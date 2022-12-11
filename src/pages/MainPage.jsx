@@ -23,15 +23,6 @@ const MainPage = () => {
 			blocks={data}
 			allowedBlocks={blocks}
 			isMainPage={true}
-			onSubmitComposition={(blocks) => Swal.fire({
-				position: 'top-right',
-				icon: 'success',
-				title: 'Дані успішно оновлено',
-				color: 'var(--theme-color)',
-				timer: 3000,
-				showConfirmButton: false,
-				toast: true,
-			})}
 		/>
 	)
 }

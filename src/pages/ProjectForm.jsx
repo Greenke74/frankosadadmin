@@ -12,7 +12,7 @@ import BlocksComposition from '../components/BlocksComposition';
 
 import { CameraAlt, Delete } from '@mui/icons-material';
 
-import { getProjectWithBlocks, insertProject, updateProject } from '../services/portfolio-api-service';
+import { getProjectWithBlocksById, insertProject, updateProject } from '../services/portfolio-api-service';
 import { getSrcFromFile } from '../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
 import { slugify, transliterate as tr } from 'transliteration';
@@ -25,11 +25,14 @@ const ProjectForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const compositionRef = useRef(null);
+  const tabsRef = useRef(null);
 
   const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState({});
   const [blocks, setBlocks] = useState([]);
+  const [blocksError, setBlocksError] = useState(false);
+
   const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = useForm({
     defaultValues: {
       title: '',
@@ -49,7 +52,7 @@ const ProjectForm = () => {
 
   useEffect(() => {
     let mounted = true;
-    !isNaN(id) && getProjectWithBlocks(id).then(({ data: project }) => {
+    !isNaN(id) && getProjectWithBlocksById(id).then(({ data: project }) => {
       const formData = {
         ...getValues(),
         ...project,
@@ -69,52 +72,61 @@ const ProjectForm = () => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
-    try {
-      const { title } = data;
+    let imageKey = null;
 
-      let payload = {
-        ...data,
-        alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
-      }
+    const { title } = data;
+
+    let payload = {
+      ...data,
+      alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
+    }
+
+    if (!payload.image) {
+      Swal.fire({
+        position: 'top-right',
+        icon: 'error',
+        title: 'Потрібно додати зображення',
+        color: 'var(--theme-color)',
+        timer: 3000,
+        showConfirmButton: false,
+        toast: true,
+      })
+      return;
+    }
+
+    payload = { ...initialValues, ...payload }
+
+    if (data.imageFile) {
+
+      imageKey = await uploadImage(data.imageFile)
+      setValue('image', getImageSrc(imageKey));
+      setValue('imageFile', null);
+      payload.image = imageKey
+    } else {
+      delete payload.image;
+    }
+
+    const blocks_ids = await compositionRef.current.onSubmit();
+
+    if (!blocks_ids || !Array.isArray(blocks_ids)) {
+      tabsRef.current.setTab(1)
+      setIsSubmitting(false);
+      setBlocksError(true);
+      return;
+    }
+    if (Array.isArray(blocks_ids) && blocks_ids.length > 0) {
+      delete payload.blocks;
+      payload.blocks_ids = blocks_ids;
+    }
+
+    if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
+      delete payload.imageFile;
 
 
-      if (!payload.image) {
-        Swal.fire({
-          position: 'top-right',
-          icon: 'error',
-          title: 'Потрібно додати зображення',
-          color: 'var(--theme-color)',
-          timer: 3000,
-          showConfirmButton: false,
-          toast: true,
-        })
-        return;
-      }
-
-      payload = { ...initialValues, ...payload }
-
-      if (data.imageFile) {
-        await deleteImage(imageToDelete);
-        const imageKey = await uploadImage(data.imageFile)
-        setValue('image', getImageSrc(imageKey));
-        setValue('imageFile', null);
-        payload.image = imageKey
-      } else {
-        delete payload.image;
-      }
-
-      const blocks_ids = await compositionRef.current.onSubmit();
-      if (Array.isArray(blocks_ids) && blocks_ids.length > 0) {
-        delete payload.blocks;
-        payload.blocks_ids = blocks_ids;
-      }
-
-      if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
-        delete payload.imageFile;
-
-
+      try {
         if (payload.id) {
           await updateProject(payload);
+
           setValue('imageFile', null);
 
           Swal.fire({
@@ -141,16 +153,33 @@ const ProjectForm = () => {
             toast: true,
           })
         }
-        setInitialValues(payload);
+      } catch (error) {
+        if (error?.includes('duplicate key value violates unique constraint')) {
+          Swal.fire({
+            position: 'top-right',
+            icon: 'error',
+            title: 'Проєкт з такою назвою уже існує!',
+            color: 'var(--theme-color)',
+            timer: 5000,
+            showConfirmButton: false,
+            toast: true,
+          })
+        }
+        if (imageKey) {
+          await deleteImage(imageKey);
+        }
+        return;
+      } finally {
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 3000);
       }
+      await deleteImage(imageToDelete);
+      setImageToDelete(null);
+
+      setInitialValues(payload);
     }
-    catch (error) {
-      console.error(error)
-    } finally {
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 3000);
-    }
+
   }
 
   return (
@@ -161,7 +190,7 @@ const ProjectForm = () => {
           : 'Редагування об\'єкта портфоліо'}
       </Typography>
 
-      <Tabs tabs={[
+      <Tabs ref={tabsRef} tabs={[
         {
           label: 'Загальна інформація',
           errors: errors,
@@ -271,13 +300,15 @@ const ProjectForm = () => {
         },
         {
           label: 'Сторінка проєкту',
+          errors: blocksError,
           content: (
-            <><BlocksComposition
-              ref={compositionRef}
-              blocks={blocks}
-              allowedBlocks={projectBlocks}
-              hideSubmit={true}
-            />
+            <>
+              <BlocksComposition
+                ref={compositionRef}
+                blocks={blocks}
+                allowedBlocks={projectBlocks}
+                hideSubmit={true}
+              />
             </>
           )
         }
