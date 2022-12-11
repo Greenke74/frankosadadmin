@@ -15,6 +15,7 @@ import { deleteBlock } from '../../services/blocks-api-service';
 import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
 import { dataTypes } from '../../services/data-types-service';
 import Swal from 'sweetalert2';
+import { deleteImage } from '../../services/storage-service';
 
 const BlocksComposition = ({
 	blocks,
@@ -83,6 +84,7 @@ const BlocksComposition = ({
 	const onSubmit = async ({ blocks }) => {
 		setSubmitDisabled(true)
 
+		// validate blocks
 		const validations = await Promise.all((blocksRef.current ?? []).map(async (ref) => {
 			return await ref.current.validate()
 		}
@@ -104,6 +106,7 @@ const BlocksComposition = ({
 			return null;
 		}
 
+		// save new blocks
 		const newBlocks = (await Promise.all((blocksRef.current ?? []).map(async (ref) => {
 			return await ref.current.onSubmit()
 		}
@@ -111,6 +114,10 @@ const BlocksComposition = ({
 
 		const newInitialBlocks = [];
 
+		// delete images from blocks that being deleted on submit
+		await Promise(idsToDelete.map(async (id) => await deleteImage(id)))
+
+		// save blocks
 		await Promise.all(initialBlocks.map(async (initBlock) => {
 			if (initBlock && !blocks.find(({ block }) => block.id == initBlock)) {
 

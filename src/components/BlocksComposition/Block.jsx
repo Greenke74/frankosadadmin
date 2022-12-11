@@ -57,6 +57,7 @@ const Block = (
 			customClass: 'logoutSwal'
 		}).then(result => {
 			if (result.value) {
+				blockRef.current.onBlockDelete();
 				remove(idx);
 			}
 		})
@@ -133,11 +134,6 @@ const Block = (
 				data = form.getValues()
 			}
 			return await onSubmit(data)
-		},
-		onDeleteBlock: async () => {
-			return blockRef?.current?.onDeleteBlock
-				? await blockRef?.current?.onDeleteBlock
-				: () => { }
 		}
 	}))
 
