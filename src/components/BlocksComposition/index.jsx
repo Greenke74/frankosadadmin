@@ -25,8 +25,8 @@ const BlocksComposition = ({
 	const [submitDisabled, setSubmitDisabled] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [initialBlocks, setInitialBlocks] = useState([]);
-	const [idsToDelet, setIdsToDelete] = useState([]);
-	
+	const [idsToDelete, setIdsToDelete] = useState([]);
+
 	const blocksRef = useRef([]);
 
 	const { control, handleSubmit, reset, getValues } = useForm({
@@ -180,6 +180,7 @@ const BlocksComposition = ({
 																element={element}
 																label={label ?? 'Елемент сторінки'}
 																isMainPage={isMainPage}
+																setIdsToDelete={setIdsToDelete}
 															/>
 														)
 													}
