@@ -20,11 +20,13 @@ const BlocksComposition = ({
 	blocks,
 	allowedBlocks = [],
 	isMainPage = false,
+	onCompositionSubmit
 }, ref) => {
 	const [submitDisabled, setSubmitDisabled] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [initialBlocks, setInitialBlocks] = useState([]);
-
+	const [idsToDelet, setIdsToDelete] = useState([]);
+	
 	const blocksRef = useRef([]);
 
 	const { control, handleSubmit, reset, getValues } = useForm({
@@ -87,7 +89,6 @@ const BlocksComposition = ({
 
 		))
 		if (validations.includes(false)) {
-
 			Swal.fire({
 				title: 'Введено некоректні дані',
 				timer: 5000,
@@ -98,6 +99,8 @@ const BlocksComposition = ({
 				color: 'var(--theme-color)',
 				showConfirmButton: false,
 			})
+
+			setSubmitDisabled(false);
 			return null;
 		}
 
@@ -108,21 +111,37 @@ const BlocksComposition = ({
 
 		const newInitialBlocks = [];
 
-		await Promise.all(initialBlocks.map(initBlock => {
+		await Promise.all(initialBlocks.map(async (initBlock) => {
 			if (initBlock && !blocks.find(({ block }) => block.id == initBlock)) {
+
+				await Promise.all(
+					(blocksRef.current ?? [])
+						.map(async (ref) => {
+							if (ref.current.isMatchingId(initBlock)) {
+								return await ref.current.onSubmit()
+							}
+						})
+						.filter(p => Boolean(p))
+				)
+
 				const deleteFunc = isMainPage
 					? deleteMainPageBlock
 					: deleteBlock
 
-				return deleteFunc(initBlock)
+				return deleteFunc(initBlock);
 			} else {
 				newInitialBlocks.push(initBlock);
 			}
 		}).filter(d => !!d));
 
+
+
 		const currentBlocks = [...newInitialBlocks, ...newBlocks];
 
 		setInitialBlocks(currentBlocks);
+		if (onCompositionSubmit) {
+			onCompositionSubmit()
+		}
 
 		setSubmitDisabled(false)
 		return currentBlocks ?? [];

@@ -1,1 +1,0 @@
-export const INVALID_FORM = 'invalid_form'

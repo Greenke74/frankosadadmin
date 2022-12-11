@@ -68,8 +68,8 @@ const Counter = ({ form }, ref) => {
                   </Tooltip>
                 </Box>
                 <Box marginBottom={2}>
-                  <FormControl variant="standard" required fullWidth>
-                    <StyledInputLabel shrink htmlFor={`counter-${c.id}`}>
+                  <FormControl variant="standard" fullWidth >
+                    <StyledInputLabel required shrink htmlFor={`counter-${c.id}`}>
                       Заголовок лічильника
                     </StyledInputLabel>
                     <Controller
@@ -77,10 +77,15 @@ const Counter = ({ form }, ref) => {
                       control={control}
                       rules={{ maxLength: 100, required: true }}
                       render={({ field }) => (
-                        <StyledInputBase value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
+                        <StyledInputBase
+                          value={field.value}
+                          onChange={field.onChange}
+                          id={`counter-${c.id}`}
+                          name={`data-counters${idx}-title`}
+                        />
                       )}
                     />
-                    {errors && errors?.data?.counters[idx]?.title && (
+                    {errors && errors?.data?.counters && errors?.data?.counters[idx]?.title && (
                       <Box sx={{ mt: 1 }}>
                         <ErrorMessage
                           type={errors.data.counters[idx]?.title?.type}
@@ -89,8 +94,8 @@ const Counter = ({ form }, ref) => {
                     )}
                   </FormControl>
                 </Box>
-                <FormControl variant="standard" required fullWidth>
-                  <StyledInputLabel shrink htmlFor={`counter-${c.id}`}>
+                <FormControl variant="standard"  fullWidth>
+                  <StyledInputLabel required shrink htmlFor={`counter-${c.id}`}>
                     Лічильник
                   </StyledInputLabel>
                   <Controller
@@ -98,10 +103,16 @@ const Counter = ({ form }, ref) => {
                     control={control}
                     rules={{ min: 0, required: true }}
                     render={({ field, fieldState: { error } }) => (
-                      <StyledInputBase type='number' value={field.value} onChange={field.onChange} id={`counter-${c.id}`} />
+                      <StyledInputBase
+                        type='number'
+                        value={field.value}
+                        onChange={field.onChange}
+                        name={`data-counters${idx}-counter`}
+                        id={`counter-${c.id}`}
+                      />
                     )}
                   />
-                  {errors && errors?.data?.counters[idx]?.counter && (
+                  {errors && errors?.data?.counters && errors?.data?.counters[idx]?.counter && (
                     <Box sx={{ mt: 1 }}>
                       <ErrorMessage
                         type={errors.data.counters[idx]?.counter?.type}

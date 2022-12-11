@@ -10,7 +10,6 @@ import { deleteImage, getImageSrc, uploadImage } from '../../services/storage-se
 import ErrorMessage from '../common/ErrorMessage';
 import { v1 as uuid } from 'uuid'
 import { getSrcFromFile } from '../../helpers/file-helpers';
-import { INVALID_FORM } from '../../constants/errors';
 
 const IMAGE_ASPECT_RATIO = 3 / 1;
 
@@ -21,14 +20,6 @@ const PictureParagraph = ({ form: { setValue, getValues, watch, register, trigge
   const imageKey = watch('data.image');
 
   const getBlockData = async (formData) => {
-    if (Object.keys(errors ?? {}).length > 0) {
-      throw INVALID_FORM;
-    } else {
-      const noError = await trigger('data')
-      if (!noError) {
-        throw INVALID_FORM;
-      }
-    }
 
     const payload = { ...formData }
     let imageKey = null;

@@ -19,10 +19,22 @@ import IsPublished from '../common/IsPublished';
 import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
 import { StyledLinearProgress } from '../common/StyledComponents';
 import { dataTypes } from '../../services/data-types-service';
-import { INVALID_FORM } from '../../constants/errors';
 import ErrorMessage from '../common/ErrorMessage';
 
-const Block = ({ block, idx, remove, blocksLength, move, update, element, label, isMainPage }, ref) => {
+const Block = (
+	{
+		block,
+		idx,
+		remove,
+		blocksLength,
+		move,
+		update,
+		element,
+		label,
+		isMainPage,
+		setIdsToDelete
+	},
+	ref) => {
 	const [expanded, setExpanded] = useState(null);
 	const [valid, setValid] = useState(true);
 	const [Element, setElement] = useState(null);
@@ -116,18 +128,16 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 		onSubmit: async () => {
 			let data = null;
 			if (blockRef.current !== null) {
-				try {
-					data = await blockRef.current.getBlockData()
-				} catch (error) {
-					if (error == INVALID_FORM) {
-						setExpanded(true)
-						return null;
-					}
-				}
+				data = await blockRef.current.getBlockData()
 			} else {
 				data = form.getValues()
 			}
 			return await onSubmit(data)
+		},
+		onDeleteBlock: async () => {
+			return blockRef?.current?.onDeleteBlock
+				? await blockRef?.current?.onDeleteBlock
+				: () => { }
 		}
 	}))
 
@@ -203,6 +213,7 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 						<Suspense fallback={<StyledLinearProgress />}>
 							<Element
 								form={form}
+								setIdsToDelete={setIdsToDelete}
 								ref={blockRef}
 							/>
 						</Suspense>

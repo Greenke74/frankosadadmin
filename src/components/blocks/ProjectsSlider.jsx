@@ -16,8 +16,10 @@ const ProjectsSlider = ({ form }, ref) => {
     return () => mounted = false;
   }, [])
 
+
   useImperativeHandle(ref, () => ({
-    getBlockData: () => new Promise((resolve) => resolve(form.getValues()))
+    getBlockData: () => new Promise((resolve) => resolve(form.getValues())),
+    onDeleteBlock: () => new Promise((resolve) => { console.log('delete projects slider'); resolve() })
   }))
   return (
     <Slider options={projects} dataType='projects' form={form} />

@@ -23,6 +23,15 @@ const MainPage = () => {
 			blocks={data}
 			allowedBlocks={blocks}
 			isMainPage={true}
+			onCompositionSubmit={() => Swal.fire({
+				position: 'top-right',
+				icon: 'success',
+				title: 'Головну сторінку збережено',
+				color: 'var(--theme-color)',
+				timer: 3000,
+				showConfirmButton: false,
+				toast: true,
+			})}
 		/>
 	)
 }
