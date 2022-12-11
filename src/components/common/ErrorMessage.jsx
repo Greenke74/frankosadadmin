@@ -6,10 +6,9 @@ const ErrorMessage = ({ type, minLength = null, maxLength = null, min = null, ma
 		color: 'red'
 	}}>
 		{(minLength !== null || maxLength !== null || min !== null || max !== null)
-			? errorMessages[type](minLength !== null || maxLength !== null || min !== null || max !== null)
+			? errorMessages[type](minLength || maxLength || min || max)
 			: errorMessages[type]
 		}
 	</span>
 )
-
 export default ErrorMessage
