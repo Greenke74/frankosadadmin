@@ -1,5 +1,5 @@
-import React from 'react'
-import { useFieldArray } from 'react-hook-form'
+import React, { forwardRef, useImperativeHandle } from 'react'
+import { Controller, useFieldArray } from 'react-hook-form'
 
 import { Box, FormControl, Grid, IconButton, Tooltip, Typography } from '@mui/material';
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
@@ -11,10 +11,11 @@ import ImageUploader from '../common/ImageUploader';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 import { getSrcFromFile } from '../../helpers/file-helpers';
+import { deleteImage, getImageSrc, uploadImage } from '../../services/storage-service';
 
-
-const StepByStep = ({ form }) => {
-  const { register, control } = form
+const IMAGE_ASPECT_RATIO = 2 / 1;
+const StepByStep = ({ form }, ref) => {
+  const { register, control, formState: { errors } } = form;
   const {
     fields,
     append,
@@ -25,6 +26,39 @@ const StepByStep = ({ form }) => {
     name: 'data.steps',
     rules: { maxLength: 5 }
   })
+
+  const getBlockData = async (formData) => {
+    const steps = await Promise.all(
+      (formData?.data?.steps ?? [])
+        .map(async (step) => {
+          const res = { ...step }
+
+          if (step.imageFile) {
+            const image = await uploadImage(step.imageFile)
+            res.image = image;
+            delete res.imageFile;
+          }
+
+          if (step.imageToDelete) {
+            await deleteImage(step.imageToDelete);
+            delete res.imageToDelete;
+          }
+
+          if (res.imageUrl) {
+            delete res.imageUrl;
+          }
+
+          return res;
+        })
+        .filter(r => Boolean(r))
+    )
+
+    const result = { ...formData };
+    result.data.steps = steps;
+    return result;
+  }
+
+  useImperativeHandle(ref, () => ({ getBlockData: async () => await getBlockData(form.getValues()) }))
 
   return (
     <Box>
@@ -77,7 +111,20 @@ const StepByStep = ({ form }) => {
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Заголовок кроку
                   </StyledInputLabel>
-                  <AdornmentTextField id={`step-${c.id}`} adornmentText={`0${idx + 1}`} {...register(`data.steps.${idx}.title`, { required: true })} placeholder='Заголовок кроку' />
+                  <Controller
+                    name={`data.steps.${idx}.title`}
+                    rules={{ required: true }}
+                    control={control}
+                    render={({ field }) => (
+                      <AdornmentTextField
+                        id={`step-${c.id}`}
+                        adornmentText={`0${idx + 1}`}
+                        placeholder='Заголовок кроку'
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    )}
+                  />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth sx={{ mb: 2 }}>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
@@ -90,14 +137,28 @@ const StepByStep = ({ form }) => {
                     Зображення до кроку
                   </StyledInputLabel>
                   <Box margin={'25px 0'} display='flex' flexDirection='column' alignItems='center'>
-                    <ImageUploader id={`step-${c.id}`} onChange={async (file) => {
-                      update(idx, { ...c, image: await getSrcFromFile(file), imageFile: file })
-                    }} />
-                    <img src={c.image} style={{
-                      width: '100%',
-                      marginTop: '15px',
-                      borderRadius: '8px'
-                    }} />
+                    <ImageUploader
+                      id={`step-${c.id}`}
+                      ratio={IMAGE_ASPECT_RATIO}
+                      onChange={async (file) => {
+                        update(
+                          idx,
+                          {
+                            ...c,
+                            image: null,
+                            imageUrl: await getSrcFromFile(file),
+                            imageFile: file,
+                            imageToDelete: c.image ? c.image : undefined
+                          }
+                        )
+                      }} />
+                    {(c.imageUrl || c.image) ? (
+                      <img src={c.imageUrl ?? getImageSrc(c.image)} style={{
+                        width: '100%',
+                        marginTop: '15px',
+                        borderRadius: '8px'
+                      }} />
+                    ) : null}
                   </Box>
                 </FormControl>
               </Box>
@@ -120,4 +181,4 @@ const StepByStep = ({ form }) => {
   )
 }
 
-export default StepByStep
+export default forwardRef(StepByStep);

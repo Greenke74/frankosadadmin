@@ -46,6 +46,7 @@ const Block = ({ block, idx, remove, blocksLength, move, update, element, label,
 			}
 		})
 	}
+
 	const onSubmit = async (formData) => {
 		const payload = {
 			...formData,

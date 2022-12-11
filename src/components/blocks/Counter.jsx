@@ -21,7 +21,7 @@ const Counter = ({ form }, ref) => {
     rules: { maxLength: 4 }
   })
 
-  const getBlockData = async (formData) => new Promise((resolve, reject) => {
+  const getBlockData = (formData) => new Promise((resolve, reject) => {
     resolve(formData)
   })
 
