@@ -111,20 +111,7 @@ const StepByStep = ({ form }, ref) => {
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>
                     Заголовок кроку
                   </StyledInputLabel>
-                  <Controller
-                    name={`data.steps.${idx}.title`}
-                    rules={{ required: true }}
-                    control={control}
-                    render={({ field }) => (
-                      <AdornmentTextField
-                        id={`step-${c.id}`}
-                        adornmentText={`0${idx + 1}`}
-                        placeholder='Заголовок кроку'
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
-                    )}
-                  />
+                  <AdornmentTextField id={`step-${c.id}`} adornmenttext={`0${idx + 1}`} {...register(`data.steps.${idx}.title`, { required: true })} placeholder='Заголовок кроку' />
                 </FormControl>
                 <FormControl variant='standard' required fullWidth sx={{ mb: 2 }}>
                   <StyledInputLabel shrink htmlFor={`step-${c.id}`}>

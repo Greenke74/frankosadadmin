@@ -33,10 +33,10 @@ export const getProject = (id) => new Promise((resolve, reject) => {
 	}
 })
 
-export const getProjectWithBlocks = (value) => new Promise((resolve, reject) => {
+export const getProjectWithBlocksById = (id) => new Promise((resolve, reject) => {
 	try {
 
-		supabase.rpc('get_project_with_blocks', value)
+		supabase.rpc('get_project_with_blocks_by_id', {_id: id})
 		.then(response => {
 			if (response.error) {
 				reject(response.error.message)
@@ -49,6 +49,21 @@ export const getProjectWithBlocks = (value) => new Promise((resolve, reject) => 
 	}
 })
 
+export const getProjectWithBlocksByAlias = (alias) => new Promise((resolve, reject) => {
+	try {
+
+		supabase.rpc('get_project_with_blocks_by_alias', {_alias: alias})
+		.then(response => {
+			if (response.error) {
+				reject(response.error.message)
+			}
+			resolve(response)
+		})
+		.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
 
 
 export const insertProject = (data) => new Promise((resolve, reject) => {

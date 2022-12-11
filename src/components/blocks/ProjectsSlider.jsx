@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { getProjects } from '../../services/portfolio-api-service.js';
 import { getImageSrc } from '../../services/storage-service.js';
 import Slider from '../common/Slider.jsx'
 
-const ProjectsSlider = ({ form }) => {
+const ProjectsSlider = ({ form }, ref) => {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
@@ -15,9 +15,13 @@ const ProjectsSlider = ({ form }) => {
 
     return () => mounted = false;
   }, [])
+
+  useImperativeHandle(ref, () => ({
+    getBlockData: () => new Promise((resolve) => resolve(form.getValues()))
+  }))
   return (
     <Slider options={projects} dataType='projects' form={form} />
   )
 }
 
-export default ProjectsSlider
+export default forwardRef(ProjectsSlider)

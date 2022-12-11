@@ -52,6 +52,10 @@ const Slider = ({ options, dataType, form: { control } }) => {
 
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
+
+  const availableOptions = options
+    .filter(o => !slidesFields.find(slide => slide.value.id == o.id));
+
   return (<div className='slider-block'>
     {(slidesFields ?? []).length == 0
       ? (
@@ -163,56 +167,58 @@ const Slider = ({ options, dataType, form: { control } }) => {
           ))}
 
         </SlickSlider>)}
-    <Box
-      display='flex'
-      justifyContent='space-between'
-      marginTop={3}
-      alignItems='center'
-      position='relative'
-    >
-      <AddButton
-        label='Додати слайд'
-        onClick={handleOpenModal}
-      />
-      <Popover
-        id={id}
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
+    {(availableOptions ?? []).length > 0 && (
+
+      <Box
+        display='flex'
+        justifyContent='space-between'
+        marginTop={3}
+        alignItems='center'
+        position='relative'
       >
-        <Typography sx={{ p: 2 }}>
-          Виберіть послугу
-        </Typography>
-        <Box
-          maxHeight={350}
-          display='flex'
-          flexDirection='column'
-          padding={2}
-          style={{
-            gap: 10,
-            overflowY: 'auto'
+        <AddButton
+          label='Додати слайд'
+          onClick={handleOpenModal}
+        />
+        <Popover
+          id={id}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
           }}
         >
-          {options
-            .filter(o => !slidesFields.find(slide => slide.value.id == o.id))
-            .map((o) => (
-              <Chip
-                key={o.id}
-                className='slide-option'
-                onClick={() => {
-                  handleAddSlide(o);
-                  handleClose()
-                }}
-                label={o.title ?? o.name ?? o.label}
-              />
-            ))}
-        </Box>
-      </Popover>
-    </Box>
+          <Typography sx={{ p: 2 }}>
+            Виберіть {dataType == 'projects' ? 'проєкт' : dataType == 'services' ? 'послугу' : 'сезонну пропозицію'}
+          </Typography>
+          <Box
+            maxHeight={350}
+            display='flex'
+            flexDirection='column'
+            padding={2}
+            style={{
+              gap: 10,
+              overflowY: 'auto'
+            }}
+          >
+            {availableOptions
+              .map((o) => (
+                <Chip
+                  key={o.id}
+                  className='slide-option'
+                  onClick={() => {
+                    handleAddSlide(o);
+                    handleClose()
+                  }}
+                  label={o.title ?? o.name ?? o.label}
+                />
+              ))}
+          </Box>
+        </Popover>
+      </Box>
+    )}
   </div>)
 }
 

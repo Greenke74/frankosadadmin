@@ -14,6 +14,7 @@ import BlockModal from './BlockModal';
 import { deleteBlock } from '../../services/blocks-api-service';
 import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
 import { dataTypes } from '../../services/data-types-service';
+import Swal from 'sweetalert2';
 
 const BlocksComposition = ({
 	blocks,
@@ -80,8 +81,29 @@ const BlocksComposition = ({
 	const onSubmit = async ({ blocks }) => {
 		setSubmitDisabled(true)
 
-		const newBlocks = (await Promise.all((blocksRef.current ?? []).map(async (ref) =>
-			await ref.current.onSubmit()
+		const validations = await Promise.all((blocksRef.current ?? []).map(async (ref) => {
+			return await ref.current.validate()
+		}
+
+		))
+		if (validations.includes(false)) {
+
+			Swal.fire({
+				title: 'Введено некоректні дані',
+				timer: 5000,
+				icon: 'error',
+				showCancelButton: false,
+				toast: true,
+				position: 'top-right',
+				color: 'var(--theme-color)',
+				showConfirmButton: false,
+			})
+			return null;
+		}
+
+		const newBlocks = (await Promise.all((blocksRef.current ?? []).map(async (ref) => {
+			return await ref.current.onSubmit()
+		}
 		))).filter(b => b !== null);
 
 		const newInitialBlocks = [];
@@ -103,7 +125,7 @@ const BlocksComposition = ({
 		setInitialBlocks(currentBlocks);
 
 		setSubmitDisabled(false)
-		return currentBlocks;
+		return currentBlocks ?? [];
 	}
 
 	useImperativeHandle(ref, () => ({
