@@ -16,6 +16,7 @@ import { deleteMainPageBlock } from '../../services/main-page-blocks-service';
 import { dataTypes } from '../../services/data-types-service';
 import Swal from 'sweetalert2';
 import { deleteImage } from '../../services/storage-service';
+import { StyledLinearProgress } from '../common/StyledComponents';
 
 const BlocksComposition = ({
 	blocks,
@@ -23,7 +24,7 @@ const BlocksComposition = ({
 	isMainPage = false,
 	onCompositionSubmit
 }, ref) => {
-	const [submitDisabled, setSubmitDisabled] = useState(false);
+	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [initialBlocks, setInitialBlocks] = useState([]);
 	const [idsToDelete, setIdsToDelete] = useState([]);
@@ -47,6 +48,7 @@ const BlocksComposition = ({
 
 	useEffect(() => {
 		let mounted = true;
+		mounted && setLoading(true)
 		mounted && reset({
 			blocks: (blocks ?? [])
 				.sort((a, b) => {
@@ -70,6 +72,7 @@ const BlocksComposition = ({
 					}
 				})
 		})
+		mounted && setLoading(false)
 		mounted && setInitialBlocks((blocks ?? []).map(b => b.id));
 
 		return () => mounted = false;
@@ -82,7 +85,7 @@ const BlocksComposition = ({
 	}
 
 	const onSubmit = async ({ blocks }) => {
-		setSubmitDisabled(true)
+		setLoading(true)
 
 		// validate blocks
 		const validations = await Promise.all((blocksRef.current ?? []).map(async (ref) => {
@@ -102,7 +105,7 @@ const BlocksComposition = ({
 				showConfirmButton: false,
 			})
 
-			setSubmitDisabled(false);
+			setLoading(false);
 			return null;
 		}
 
@@ -115,21 +118,11 @@ const BlocksComposition = ({
 		const newInitialBlocks = [];
 
 		// delete images from blocks that being deleted on submit
-		await Promise(idsToDelete.map(async (id) => await deleteImage(id)))
+		await Promise.all(idsToDelete.map(async (id) => await deleteImage(id)))
 
 		// save blocks
 		await Promise.all(initialBlocks.map(async (initBlock) => {
 			if (initBlock && !blocks.find(({ block }) => block.id == initBlock)) {
-
-				await Promise.all(
-					(blocksRef.current ?? [])
-						.map(async (ref) => {
-							if (ref.current.isMatchingId(initBlock)) {
-								return await ref.current.onSubmit()
-							}
-						})
-						.filter(p => Boolean(p))
-				)
 
 				const deleteFunc = isMainPage
 					? deleteMainPageBlock
@@ -150,7 +143,7 @@ const BlocksComposition = ({
 			onCompositionSubmit()
 		}
 
-		setSubmitDisabled(false)
+		setLoading(false)
 		return currentBlocks ?? [];
 	}
 
@@ -158,54 +151,62 @@ const BlocksComposition = ({
 		onSubmit: async () => onSubmit(getValues())
 	}))
 
+	console.log(idsToDelete);
+
 	return (
 		<>
 			<Box p={2} component='form' onSubmit={handleSubmit(onSubmit)}>
-				<Box p={2} paddingY={3} border='.13rem #c0c0c0 dashed' borderRadius='8px'>
-					<Grid container spacing={3} direction='column'>
-						{blocksFields.map(({ id }, idx) => {
-							return (
-								<Grid item key={id} xs={12} style={{ maxWidth: '100%' }} >
-									<Grow in={!isNaN(idx)} appear={!isNaN(idx)} timeout={400}>
-										<div>
-											<Controller
-												name={`blocks.${idx}`}
-												control={control}
-												render={({ field }) => {
+				<Box border='.13rem #c0c0c0 dashed' borderRadius='8px' overflow='hidden'>
+					<Box sx={{ mt: '2px' }}>
+						{loading ? (<StyledLinearProgress />) : (<Box sx={{ height: '4px' }} />)}
+					</Box>
+					<Box px={2} py={3}>
+						<Grid container spacing={3} direction='column'>
+							{blocksFields.map(({ id }, idx) => {
+								return (
+									<Grid item key={id} xs={12} style={{ maxWidth: '100%' }} >
+										<Grow in={!isNaN(idx)} appear={!isNaN(idx)} timeout={400}>
+											<div>
+												<Controller
+													name={`blocks.${idx}`}
+													control={control}
+													render={({ field }) => {
 
-													const { element, label } = allowedBlocks.find(b => b.type === field.value.block?.type ?? null);
-													if (element) {
-														return (
-															<Block
-																ref={blocksRef.current[idx]}
-																block={field.value.block}
-																idx={idx}
-																move={moveBlock}
-																remove={removeBlock}
-																update={updateBlock}
-																blocksLength={blocksFields.length}
-																element={element}
-																label={label ?? 'Елемент сторінки'}
-																isMainPage={isMainPage}
-																setIdsToDelete={setIdsToDelete}
-															/>
-														)
-													}
-												}}
-											/>
-										</div>
-									</Grow>
-								</Grid>
-							)
-						})}
-					</Grid>
-					<Box display='flex' justifyContent='end' marginTop={2} style={{ gap: '25px' }}>
+														const { element, label } = allowedBlocks.find(b => b.type === field.value.block?.type ?? null);
+														if (element) {
+															return (
+																<Block
+																	ref={blocksRef.current[idx]}
+																	block={field.value.block}
+																	idx={idx}
+																	move={moveBlock}
+																	remove={removeBlock}
+																	update={updateBlock}
+																	blocksLength={blocksFields.length}
+																	element={element}
+																	label={label ?? 'Елемент сторінки'}
+																	isMainPage={isMainPage}
+																	setIdsToDelete={setIdsToDelete}
+																/>
+															)
+														}
+													}}
+												/>
+											</div>
+										</Grow>
+									</Grid>
+								)
+							})}
+						</Grid>
+					</Box>
+					<Box display='flex' justifyContent='end' p={2} pt={1} style={{ gap: '25px' }}>
 						<AddButton
 							label='Додати блок'
 							onClick={() => setModalOpen(true)}
+							disabled={loading}
 						/>
 						{isMainPage && (
-							<SaveButton type='submit' style={{ height: 'fit-content' }} disabled={submitDisabled} />
+							<SaveButton type='submit' style={{ height: 'fit-content' }} disabled={loading} />
 						)}
 					</Box>
 				</Box>

@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react'
-import { useFieldArray } from 'react-hook-form'
+import { Controller, useFieldArray } from 'react-hook-form'
 
-import { Box, FormControl, Grid, IconButton, InputAdornment, Tooltip, Typography } from '@mui/material';
+import { Box, Card, FormControl, Grid, IconButton, InputAdornment, Tooltip, Typography } from '@mui/material';
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
 
 import AddButton from '../common/AddButton';
@@ -12,6 +12,7 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { getSrcFromFile } from '../../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../../services/storage-service';
 import ErrorMessage from '../common/ErrorMessage';
+import { CameraAlt, Delete } from '@mui/icons-material';
 
 const IMAGE_ASPECT_RATIO = 2 / 1;
 const StepByStep = ({ form, setIdsToDelete }, ref) => {
@@ -29,7 +30,7 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
     rules: { maxLength: 5, minLength: 1 }
   })
 
-  const onDeleteBlock = async () => {
+  const onBlockDelete = () => {
     const idsToDelete = [];
     fields.map(async (step) => {
       if (step.image) {
@@ -69,17 +70,18 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
 
     const result = { ...formData };
     result.data.steps = steps;
+    console.log(result);
     return result;
   }
 
   useImperativeHandle(ref, () => ({
     getBlockData: async () => await getBlockData(form.getValues()),
-    onDeleteBlock: onDeleteBlock
+    onBlockDelete: onBlockDelete
   }))
 
   return (
     <Box>
-      <Box marginBottom={2}>
+      <Box>
         <FormControl variant="standard" fullWidth>
           <StyledInputLabel shrink htmlFor="stepsBlockId">
             Заголовок*
@@ -96,21 +98,17 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
       </Box>
       <Grid container spacing={2}>
         {fields.map((c, idx) => (
-          <Grid item xs={12} sm={12} md={6} lg={4} key={c.id}>
-            <Box
-              bgcolor='#f7f7f7'
-              display='flex'
-              justifyContent='center'
-              flexDirection='column'
-              padding={2}
-              borderRadius={2}
-            >
+          <Grid item xs={12} key={c.id} >
+            <Box sx={{
+              bgcolor: '#f7f7f7',
+              borderRadius: 2,
+              padding: 2
+            }}>
               <Box
                 display='flex'
                 justifyContent='space-between'
                 alignItems='center'
                 width='100%'
-                marginBottom={2}
               >
                 <Typography
                   textAlign='center'
@@ -135,96 +133,117 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                   </IconButton>
                 </Tooltip>
               </Box>
-              <Box marginBottom={2}>
-                <FormControl variant='standard' focused={true} fullWidth sx={{
-                  '& .MuiInputBase-root': {
-                    position: 'relative'
-                  },
-                  '& .MuiInputAdornment-root': {
-                    position: 'absolute',
-                    width: '40px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: '0 10px',
-                    bgcolor: '#cccccc80',
-                    height: 'auto',
-                    lineHeight: '26px',
-                    borderRadius: 1,
-                    margin: '8px !important',
-                    color: 'var(--theme-color)',
-                    fontWeight: 700,
-                    zIndex: 1
-                  },
-                  '& .MuiInputBase-input': {
-                    paddingLeft: '56px'
-                  }
-                }}>
-                  <StyledInputLabel required shrink htmlFor={`step-${c.id}`}>
-                    Заголовок кроку
-                  </StyledInputLabel>
-                  <StyledInputBase
-                    id={`step-${c.id}-title-input`}
-                    startAdornment={
-                      <InputAdornment position="start">
-                        0{idx + 1}
-                      </InputAdornment>
+              <Grid
+                container
+                spacing={2}
+              >
+                <Grid item xs={6} >
+                  <FormControl variant='standard' fullWidth sx={{
+                    '& .MuiInputBase-root': {
+                      position: 'relative'
+                    },
+                    '& .MuiInputAdornment-root': {
+                      position: 'absolute',
+                      width: '40px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0 10px',
+                      bgcolor: '#cccccc80',
+                      height: 'auto',
+                      lineHeight: '26px',
+                      borderRadius: 1,
+                      margin: '8px !important',
+                      color: 'var(--theme-color)',
+                      fontWeight: 700,
+                      zIndex: 1
+                    },
+                    '& .MuiInputBase-input': {
+                      paddingLeft: '56px'
                     }
-                    {...register(`data.steps.${idx}.title`, { required: true, maxLength: 100 })}
-                  />
-                </FormControl>
-                {errors && errors?.data?.steps && errors?.data?.steps[idx]?.title && (
-                  <ErrorMessage
-                    type={errors?.data?.steps[idx]?.title?.type}
-                    maxLength={errors?.data?.steps[idx]?.title?.type == 'maxLength' ? '100' : null} />
-                )}
-                <FormControl variant='standard' focused={false} fullWidth sx={{ mt: 2 }}>
-                  <StyledInputLabel required shrink htmlFor={`step-${c.id}`}>
-                    Опис кроку
-                  </StyledInputLabel>
-                  <StyledInputBase multiline={true} minRows={4} maxRows={16} {...register(`data.steps.${idx}.description`, { required: true })} id={`step-${c.id}`} />
-                </FormControl>
-                {errors && errors?.data?.steps && errors?.data?.steps[idx]?.description && (
-                  <ErrorMessage
-                    type={errors?.data?.steps[idx]?.description?.type}
-                  />
-                )}
-                <FormControl variant='standard' fullWidth sx={{ mt: 2 }} >
-                  <StyledInputLabel required shrink htmlFor={`step-${c.id}`} sx={{ marginBottom: '30px' }}>
-                    Зображення до кроку
-                  </StyledInputLabel>
-                  <Box margin={'25px 0 '} display='flex' flexDirection='column' alignItems='center'>
-                    <Box sx={{ mt: 1 }}>
-                      <ImageUploader
-                        id={`step-${c.id}`}
-                        ratio={IMAGE_ASPECT_RATIO}
-                        onChange={async (file) => {
-                          update(
-                            idx,
-                            {
-                              ...c,
-                              image: null,
-                              imageUrl: await getSrcFromFile(file),
-                              imageFile: file,
-                              imageToDelete: c.image ? c.image : undefined
-                            }
-                          )
-                        }} />
+                  }}>
+                    <StyledInputLabel required shrink htmlFor={`step-${c.id}`}>
+                      Заголовок кроку
+                    </StyledInputLabel>
+                    <StyledInputBase
+                      id={`step-${c.id}-title-input`}
+                      startAdornment={
+                        <InputAdornment position="start">
+                          0{idx + 1}
+                        </InputAdornment>
+                      }
+                      {...register(`data.steps.${idx}.title`, { required: true, maxLength: 100 })}
+                    />
+                  </FormControl>
+                  {errors && errors?.data?.steps && errors?.data?.steps[idx]?.title && (
+                    <ErrorMessage
+                      type={errors?.data?.steps[idx]?.title?.type}
+                      maxLength={errors?.data?.steps[idx]?.title?.type == 'maxLength' ? '100' : null} />
+                  )}
+                  <FormControl variant='standard' fullWidth sx={{ mt: 2 }}>
+                    <StyledInputLabel required shrink htmlFor={`step-${c.id}`}>
+                      Опис кроку
+                    </StyledInputLabel>
+                    <StyledInputBase multiline={true} minRows={5} maxRows={16} {...register(`data.steps.${idx}.description`, { required: true })} id={`step-${c.id}`} />
+                  </FormControl>
+                  {errors && errors?.data?.steps && errors?.data?.steps[idx]?.description && (
+                    <ErrorMessage
+                      type={errors?.data?.steps[idx]?.description?.type}
+                    />
+                  )}
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControl variant='standard' fullWidth sx={{
+                    display: 'flex',
+                    height: '100%',
+                    alignItems: 'center',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    '& .MuiBox-root': {
+                      width: '100%',
+                      justifyContent: 'center'
+                    }
+                  }}>
+                    <StyledInputLabel required shrink htmlFor={`step-${c.id}`} sx={{ marginBottom: '30px' }}>
+                      Зображення до кроку
+                    </StyledInputLabel>
+                    <Box display='flex' flexDirection='column' alignItems='center' height='100%'>
+                      <Controller
+                        name={`data.steps.${idx}`}
+                        control={control}
+                        render={({ field }) => (
+                          <Box sx={{ maxHeight: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100%' }}>
+                            <Card sx={{ height: '100%', width: '100%', mb: 2 }}>
+                              {(field.value.imageUrl || field.value.image)
+                                ? (<>
+                                  <img style={{ height: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
+                                </>)
+                                : (<div><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
+                            </Card>
+                            <ImageUploader
+                              id={`step-${field.value.id}`}
+                              ratio={IMAGE_ASPECT_RATIO}
+                              onChange={async (file) => {
+                                field.onChange({
+                                  ...field.value,
+                                  image: null,
+                                  imageUrl: await getSrcFromFile(file),
+                                  imageFile: file,
+                                  imageToDelete: field.value.image ? field.value.image : undefined
+                                })
+                              }}
+                            />
+                          </Box>
+                        )}
+                      />
                     </Box>
-                    {(c.imageUrl || c.image) ? (
-                      <img src={c.imageUrl ?? getImageSrc(c.image)} style={{
-                        width: '100%',
-                        marginTop: '15px',
-                        borderRadius: '8px'
-                      }} />
-                    ) : null}
-                  </Box>
-                </FormControl>
-              </Box>
+                  </FormControl>
+                </Grid>
+              </Grid>
             </Box>
-          </Grid>
+          </Grid >
         ))}
-      </Grid>
+      </Grid >
       <Box display='flex' justifyContent='center' marginTop={4}>
         {fields.length < 5 && (<AddButton
           onClick={() => fields.length < 5 &&

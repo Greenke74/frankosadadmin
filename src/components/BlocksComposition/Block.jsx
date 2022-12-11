@@ -57,7 +57,10 @@ const Block = (
 			customClass: 'logoutSwal'
 		}).then(result => {
 			if (result.value) {
-				blockRef.current.onBlockDelete();
+				console.log(blockRef.current);
+				if (blockRef?.current?.onBlockDelete) {
+					blockRef.current.onBlockDelete();
+				}
 				remove(idx);
 			}
 		})

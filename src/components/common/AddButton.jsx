@@ -3,7 +3,7 @@ import React from 'react'
 import AddIcon from '@mui/icons-material/Add';
 import { Button } from '@mui/material';
 
-const AddButton = ({ label, onClick }) => {
+const AddButton = (props) => {
   return (
     <Button
       startIcon={<AddIcon />}
@@ -13,9 +13,9 @@ const AddButton = ({ label, onClick }) => {
         padding: '6px 15px !important',
         textTransform: 'none'
       }}
-      onClick={onClick}
+      {...props}
     >
-      {label}
+      {props.label}
     </Button>
   )
 }
