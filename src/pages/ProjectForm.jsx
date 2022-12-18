@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 
 import { Box, Alert, Card, FormControl, FormControlLabel, Grid, IconButton, Typography, Select, MenuItem } from '@mui/material';
 import { CancelButton, StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
@@ -18,6 +18,7 @@ import { deleteImage, getImageSrc, uploadImage } from '../services/storage-servi
 import { slugify, transliterate as tr } from 'transliteration';
 import Swal from 'sweetalert2';
 import { projectBlocks } from '../components/blocks/index.js';
+import BlocksComposition2 from '../components/BlocksComposition2';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 
@@ -30,7 +31,6 @@ const ProjectForm = () => {
   const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState({});
-  const [blocks, setBlocks] = useState([]);
   const [blocksError, setBlocksError] = useState(false);
 
   const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = useForm({
@@ -47,6 +47,9 @@ const ProjectForm = () => {
     mode: 'onSubmit'
   })
 
+  const blocksFieldArray = useFieldArray({ control: control, name: 'blocks' })
+
+
   const is_published = watch('is_published')
   const image = watch('image')
 
@@ -62,8 +65,6 @@ const ProjectForm = () => {
       reset(formData);
       mounted && setInitialValues(formData);
 
-
-      mounted && setBlocks(project?.blocks ?? []);
     })
 
     return () => mounted = false;
@@ -179,6 +180,70 @@ const ProjectForm = () => {
 
       setInitialValues(payload);
     }
+  }
+
+  const onInsertBlock = async (blockId) => {
+    setIsSubmitting(true);
+
+    const formData = getValues();
+
+    const payload = {
+      ...formData,
+      block_ids: formData.blocks.map(b => b.block.id)
+    }
+    delete payload.blocks
+
+    try {
+      if (payload.id) {
+        await updateProject(payload);
+
+        setValue('imageFile', null);
+
+        Swal.fire({
+          position: 'top-right',
+          icon: 'success',
+          title: 'Обєкт успішно ононвлено',
+          color: 'var(--theme-color)',
+          timer: 3000,
+          showConfirmButton: false,
+          toast: true,
+        })
+      } else {
+        const { data: { id } } = await insertProject(payload);
+        setValue('imageFile', null);
+
+        navigate(`/projectform/${id}`);
+        Swal.fire({
+          position: 'top-right',
+          icon: 'success',
+          title: 'Обєкт успішно збережено',
+          color: 'var(--theme-color)',
+          timer: 3000,
+          showConfirmButton: false,
+          toast: true,
+        })
+      }
+    } catch (error) {
+      if (error?.includes('duplicate key value violates unique constraint')) {
+        Swal.fire({
+          position: 'top-right',
+          icon: 'error',
+          title: 'Проєкт з такою назвою уже існує!',
+          color: 'var(--theme-color)',
+          timer: 5000,
+          showConfirmButton: false,
+          toast: true,
+        })
+      }
+      return;
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 3000);
+    }
+  }
+
+  const onDeleteBlock = (blockId) => {
 
   }
 
@@ -303,12 +368,18 @@ const ProjectForm = () => {
           errors: blocksError,
           content: (
             <>
-              <BlocksComposition
+              <BlocksComposition2
+                fieldArray={blocksFieldArray}
+                allowedBlocks={projectBlocks}
+                onInsertBlock={onInsertBlock}
+                onDeleteBlock={onDeleteBlock}
+              />
+              {/* <BlocksComposition
                 ref={compositionRef}
                 blocks={blocks}
                 allowedBlocks={projectBlocks}
                 hideSubmit={true}
-              />
+              /> */}
             </>
           )
         }

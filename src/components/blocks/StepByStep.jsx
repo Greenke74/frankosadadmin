@@ -81,10 +81,10 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
 
   return (
     <Box>
-      <Box>
+      <Box sx={{ mb: 3 }}>
         <FormControl variant="standard" fullWidth>
-          <StyledInputLabel shrink htmlFor="stepsBlockId">
-            Заголовок*
+          <StyledInputLabel required shrink htmlFor="stepsBlockId">
+            Заголовок блоку
           </StyledInputLabel>
           <StyledInputBase {...register('data.stepsBlockTitle', { required: true, maxLength: 100 })} id='stepsBlockId' />
         </FormControl>
@@ -96,7 +96,7 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
           </Box>
         )}
       </Box>
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         {fields.map((c, idx) => (
           <Grid item xs={12} key={c.id} >
             <Box sx={{
@@ -213,12 +213,12 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                         control={control}
                         render={({ field }) => (
                           <Box sx={{ maxHeight: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100%' }}>
-                            <Card sx={{ height: '100%', width: '100%', mb: 2 }}>
+                            <Card sx={{ height: '100%', minHeight: '160px', width: '100%', mb: 2 }}>
                               {(field.value.imageUrl || field.value.image)
                                 ? (<>
                                   <img style={{ height: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
                                 </>)
-                                : (<div><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
+                                : (<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
                             </Card>
                             <ImageUploader
                               id={`step-${field.value.id}`}
