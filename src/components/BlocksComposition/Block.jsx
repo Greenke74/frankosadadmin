@@ -150,7 +150,7 @@ const Block = (
 
     setInitialValues(updatedBlockData);
     update(idx, {
-      block: updatedBlockData
+      value: updatedBlockData
     })
 
     if (onInsertBlock !== null && data?.id !== undefined && data?.id !== null) {

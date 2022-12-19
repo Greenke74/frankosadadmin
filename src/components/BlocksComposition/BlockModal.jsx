@@ -41,10 +41,26 @@ const BlockModal = ({ allowedBlocks, appendBlock, blocksLength, isMainPage = fal
 
   return (
     <>
-      <Box display='flex' justifyContent='end' p={2} pt={1} style={{ gap: '25px' }}>
+      <Box sx={{
+        px: 2,
+        pb: 3
+      }}>
+
         <AddButton
           label='Додати блок'
           onClick={() => setOpen(true)}
+          sx={{
+            display: 'flex',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'nowrap',
+            border: `1px solid #2e7d3290`,
+            borderRadius: '5px',
+            overflow: 'hidden',
+            height: 60,
+            textTransform: 'none'
+          }}
         />
       </Box>
       <Modal
