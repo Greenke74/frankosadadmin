@@ -70,7 +70,6 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
 
     const result = { ...formData };
     result.data.steps = steps;
-    console.log(result);
     return result;
   }
 
@@ -199,44 +198,38 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                     alignItems: 'center',
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    '& .MuiBox-root': {
-                      width: '100%',
-                      justifyContent: 'center'
-                    }
                   }}>
                     <StyledInputLabel required shrink htmlFor={`step-${c.id}`} sx={{ marginBottom: '30px' }}>
                       Зображення до кроку
                     </StyledInputLabel>
-                    <Box display='flex' flexDirection='column' alignItems='center' height='100%'>
-                      <Controller
-                        name={`data.steps.${idx}`}
-                        control={control}
-                        render={({ field }) => (
-                          <Box sx={{ maxHeight: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100%' }}>
-                            <Card sx={{ height: '100%', minHeight: '160px', width: '100%', mb: 2 }}>
-                              {(field.value.imageUrl || field.value.image)
-                                ? (<>
-                                  <img style={{ height: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
-                                </>)
-                                : (<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
-                            </Card>
-                            <ImageUploader
-                              id={`step-${field.value.id}`}
-                              ratio={IMAGE_ASPECT_RATIO}
-                              onChange={async (file) => {
-                                field.onChange({
-                                  ...field.value,
-                                  image: null,
-                                  imageUrl: await getSrcFromFile(file),
-                                  imageFile: file,
-                                  imageToDelete: field.value.image ? field.value.image : undefined
-                                })
-                              }}
-                            />
-                          </Box>
-                        )}
-                      />
-                    </Box>
+                    <Controller
+                      name={`data.steps.${idx}`}
+                      control={control}
+                      render={({ field }) => (
+                        <Box sx={{ maxHeight: '190px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100%', }}>
+                          <Card sx={{ mb: 2 }}>
+                            {(field.value.imageUrl || field.value.image)
+                              ? (<>
+                                <img style={{ height: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
+                              </>)
+                              : (<Box sx={{ width: '315px', height: '155px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
+                          </Card>
+                          <ImageUploader
+                            id={`step-${field.value.id}`}
+                            ratio={IMAGE_ASPECT_RATIO}
+                            onChange={async (file) => {
+                              field.onChange({
+                                ...field.value,
+                                image: null,
+                                imageUrl: await getSrcFromFile(file),
+                                imageFile: file,
+                                imageToDelete: field.value.image ? field.value.image : undefined
+                              })
+                            }}
+                          />
+                        </Box>
+                      )}
+                    />
                   </FormControl>
                 </Grid>
               </Grid>

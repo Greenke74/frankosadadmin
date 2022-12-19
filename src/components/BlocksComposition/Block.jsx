@@ -1,263 +1,312 @@
-import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef, Suspense, useRef } from 'react'
-import { useForm } from 'react-hook-form';
-import { Box, ButtonGroup, Button, Typography, styled, IconButton, Tooltip } from '@mui/material'
-import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import MuiAccordion from '@mui/material/Accordion';
-import MuiAccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { Controller, useForm } from 'react-hook-form';
 
-import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
-import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import { Box, ButtonGroup, Button, Typography, Tooltip, Modal, Fade, Checkbox } from '@mui/material'
+import ErrorMessage from '../common/ErrorMessage';
+import SaveButton from '../common/SaveButton';
+import { StyledLinearProgress } from '../common/StyledComponents';
 
-import Swal from 'sweetalert2';
+import { insertBlock, updateBlock } from '../../services/blocks-api-service';
+import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
+import { dataTypes } from '../../services/data-types-service';
+import { changesSavedAlert, checkErrorsAlert, unsavedChanges } from '../../services/alerts-service';
+
+import {
+  ArrowCircleDown as ArrowCircleDownIcon,
+  ArrowCircleUp as ArrowCircleUpIcon,
+  HighlightOff as HighlightOffIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+} from '@mui/icons-material';
+
 import '../../styles/swal.scss';
 import './block.css';
-import { insertBlock, updateBlock } from '../../services/blocks-api-service';
-
-import IsPublished from '../common/IsPublished';
-import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
-import { StyledLinearProgress } from '../common/StyledComponents';
-import { dataTypes } from '../../services/data-types-service';
-import ErrorMessage from '../common/ErrorMessage';
 
 const Block = (
-	{
-		block,
-		idx,
-		remove,
-		blocksLength,
-		move,
-		update,
-		element,
-		label,
-		isMainPage,
-		setIdsToDelete
-	},
-	ref) => {
-	const [expanded, setExpanded] = useState(null);
-	const [valid, setValid] = useState(true);
-	const [Element, setElement] = useState(null);
-	const blockRef = useRef(null);
+  {
+    data,
+    idx,
+    blocksLength,
+    move,
+    allowedBlocks,
+    isMainPage,
+    update,
+    onInsertBlock = null,
+    onDeleteBlock = null,
+    onMove = null
+  }
+) => {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState('');
+  const [Element, setElement] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialValues, setInitialValues] = useState({ ...data });
 
-	const form = useForm({
-		defaultValues: block,
-		mode: 'onChange'
-	})
-	const is_published = form.watch('is_published');
+  const form = useForm({
+    defaultValues: data,
+    mode: 'onChange'
+  })
 
-	const onDelete = () => {
-		Swal.fire({
-			title: 'Видалити блок',
-			html: 'Ви впевнені, що хочете видалити блок?',
-			showCancelButton: true,
-			cancelButtonText: 'Скасувати',
-			confirmButtonText: 'Так',
-			focusCancel: true,
-			customClass: 'logoutSwal'
-		}).then(result => {
-			if (result.value) {
-				console.log(blockRef.current);
-				if (blockRef?.current?.onBlockDelete) {
-					blockRef.current.onBlockDelete();
-				}
-				remove(idx);
-			}
-		})
-	}
+  useEffect(() => {
+    let mounted = true;
 
-	const onSubmit = async (formData) => {
-		const payload = {
-			...formData,
-			data: formData?.data ?? null,
-			position: idx,
-		};
-		dataTypes.forEach(type => {
-			if (payload[type]) {
-				delete payload[type];
-			}
-			const ids = `${type}_ids`
-			if (payload[ids] && Array.isArray(payload[ids])) {
-				payload[ids] = payload[ids].map((id) => id?.value ?? id ?? undefined).filter(id => Boolean(id))
-			}
-		})
+    const { label: l, element } = allowedBlocks.find(bl => bl.type == data.type)
+    mounted && setElement(lazy(element))
+    mounted && setLabel(l);
 
-		if (!formData.id && block.type) {
-			payload.type = block.type;
-		}
+    return () => mounted = false;
+  }, [])
 
-		const func = isMainPage
-			? payload.id
-				? updateMainPageBlock
-				: insertMainPageBlock
-			: payload.id
-				? updateBlock
-				: insertBlock
+  const validateForm = async () => {
+    let isValid = true;
 
-		const response = await func(payload)
-		const { data } = response;
+    if (Object.keys(form.formState.errors ?? {}).length > 0) {
 
-		update(idx, {
-			block: {
-				...formData,
-				id: data?.id ?? payload.id,
-				type: block.type,
+      isValid = false;
+    } else {
+      isValid = await form.trigger(Object.keys(form.getValues() ?? {}))
+    }
 
-			}
-		})
+    return isValid;
+  }
 
-		if (data?.id) {
-			return data.id;
-		}
+  const onClose = () => {
+    const formData = form.getValues();
+    if (JSON.stringify(formData) !== JSON.stringify(initialValues)) {
+      unsavedChanges()
+        .then((result) => {
+          if (result.isDismissed) {
+            form.reset(initialValues);
 
-		return null;
-	}
+            setOpen(false);
+          } else if (result.value) {
+            onSubmit(formData).then(() => {
 
-	useImperativeHandle(ref, () => ({
-		validate: async () => {
-			let isValid = true;
-			if (Object.keys(form.formState.errors ?? {}).length > 0) {
-				setValid(false)
-				isValid = false;
-			} else {
-				isValid = await form.trigger(Object.keys(form.getValues() ?? {}))
-			}
-			if (!isValid) {
-				setExpanded(true);
-			}
+            })
+          }
+        })
+      return;
 
-			return isValid;
-		},
+    };
+    !isSubmitting && setOpen(false)
+  }
 
-		onSubmit: async () => {
-			let data = null;
-			if (blockRef.current !== null) {
-				data = await blockRef.current.getBlockData()
-			} else {
-				data = form.getValues()
-			}
-			return await onSubmit(data)
-		}
-	}))
 
-	useEffect(() => {
-		let mounted = true;
+  const onSubmit = async (formData) => {
+    if (JSON.stringify(formData) === JSON.stringify(initialValues)) {
+      changesSavedAlert();
+      setOpen(false);
+      return;
 
-		mounted && setElement(lazy(element));
+    }
 
-		return () => mounted = false;
-	}, [element])
+    setIsSubmitting(true);
+    let isValid = await validateForm();
+    if (!isValid) {
+      checkErrorsAlert();
+      setIsSubmitting(false)
+      return null;
+    }
 
-	const invalidForm = !valid || Object.keys(form.formState.errors ?? {}).length > 0;
-	return (
-		<Accordion expanded={expanded} >
-			<Box
-				display='flex'
-				width='100%'
-				justifyContent='space-between'
-				alignItems='center'
-				flexWrap='nowrap'
-			>
-				<AccordionSummary
-					onClick={() => setExpanded(prev => !prev)}
-				>
-					<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-						<Typography
-							component="h3"
-							fontSize='14px'
-							flexGrow={1}
-							flexShrink={0}
-							lineHeight='20px'
-						>
-							{label}
-						</Typography>
-						{invalidForm && (
-							<ErrorMessage type='invalidForm' />
-						)}
-					</Box>
-				</AccordionSummary>
-				<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
-					<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
-						<IconButton
-							size='small'
-							onClick={() => { form.setValue('is_published', !is_published) }}
-						>
-							<IsPublished isPublished={is_published} />
-						</IconButton>
-					</Tooltip>
-					<ButtonGroup>
-						<Button
-							disableRipple={true}
-							onClick={() => move(idx, idx + 1)}
-							disabled={idx + 1 == blocksLength}
-						><ArrowCircleDownIcon />
-						</Button>
-						<Button
-							disableRipple={true}
-							onClick={() => move(idx, idx - 1)}
-							disabled={idx == 0}
-						><ArrowCircleUpIcon />
-						</Button>
-						<Button
-							color='error'
-							onClick={onDelete}
-						><HighlightOffIcon />
-						</Button>
-					</ButtonGroup>
-				</Box>
-			</Box>
-			<AccordionDetails >
-				<Box className='block-settings' marginY={2}>
-					{Element ? (
-						<Suspense fallback={<StyledLinearProgress />}>
-							<Element
-								form={form}
-								setIdsToDelete={setIdsToDelete}
-								ref={blockRef}
-							/>
-						</Suspense>
-					) : null}
-				</Box>
-			</AccordionDetails>
-		</Accordion >
-	)
+    const payload = {
+      ...formData,
+      data: formData?.data ?? null,
+      position: idx,
+    };
+    dataTypes.forEach(type => {
+      if (payload[type]) {
+        delete payload[type];
+      }
+      const ids = `${type}_ids`
+      if (payload[ids] && Array.isArray(payload[ids])) {
+        payload[ids] = payload[ids].map((id) => id?.value ?? id ?? undefined).filter(id => Boolean(id))
+      }
+    })
+
+    if (!formData.id && data.type) {
+      payload.type = data.type;
+    }
+
+    const func = isMainPage
+      ? payload.id
+        ? updateMainPageBlock
+        : insertMainPageBlock
+      : payload.id
+        ? updateBlock
+        : insertBlock
+
+
+    const response = await func(payload)
+    const { data: responseData } = response;
+
+    const updatedBlockData = {
+      ...formData,
+      id: responseData?.id ?? payload.id,
+      type: data?.type
+    }
+
+    changesSavedAlert();
+    setOpen(false);
+
+    setInitialValues(updatedBlockData);
+    update(idx, {
+      block: updatedBlockData
+    })
+
+    if (onInsertBlock !== null && data?.id !== undefined && data?.id !== null) {
+      await onInsertBlock(data?.id)
+    }
+
+    setIsSubmitting(false)
+
+    if (data?.id) {
+      return data.id;
+    }
+
+    return null;
+  }
+
+  return (
+    <>
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'nowrap',
+          border: `1px solid #BABABA`,
+          borderRadius: '5px',
+          overflow: 'hidden',
+          bgcolor: '#f7f7f7',
+        }}
+      >
+        <Box
+          sx={{
+            flexGrow: 1,
+            cursor: 'pointer',
+            pl: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '50px',
+            justifyContent: 'center',
+            '&:hover': {
+              textDecoration: 'underline'
+            }
+          }}
+          onClick={() => setOpen(true)}
+        >
+          <Typography
+            component="h3"
+            fontSize='14px'
+            lineHeight='20px'
+          >
+            {label}
+          </Typography>
+        </Box>
+        <Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' >
+          <Controller
+            name={`is_published`}
+            control={form.control}
+            render={({ field }) => {
+              return (
+                <Tooltip title={field.value ? 'Опубліковано' : 'Приховано'}>
+                  <Checkbox
+                    checked={field.value}
+                    onChange={async (event, value) => {
+                      event.target.disabled = true;
+                      field.onChange(value);
+                      await onSubmit(form.getValues())
+                      event.target.disabled = false;
+                    }}
+                    checkedIcon={<VisibilityIcon style={{ fontSize: '20px', color: '#40a471' }} />}
+                    icon={<VisibilityOffIcon style={{ fontSize: '20px', }} />}
+                  />
+                </Tooltip>
+
+              )
+            }}
+          />
+          <ButtonGroup>
+            <Button
+              disableRipple={true}
+              onClick={() => onMove(idx, idx + 1)}
+              disabled={idx + 1 == blocksLength}
+            ><ArrowCircleDownIcon />
+            </Button>
+            <Button
+              disableRipple={true}
+              onClick={() => onMove(idx, idx - 1)}
+              disabled={idx == 0}
+            ><ArrowCircleUpIcon />
+            </Button>
+            <Button
+              color='error'
+            // onClick={onDelete}
+            ><HighlightOffIcon />
+            </Button>
+          </ButtonGroup>
+        </Box>
+      </Box>
+      <Modal
+        open={open}
+        sx={{
+          '& .MuiBackdrop-root': {
+            backdropFilter: 'blur(3px) !important'
+          },
+          overflow: 'hidden',
+          position: 'absolute',
+          zIndex: 10
+        }}
+      >
+        <Fade in={open} >
+          <Box sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 1100,
+            maxWidth: '90%',
+            maxHeight: '95%',
+            boxShadow: 24,
+            bgcolor: 'white',
+            borderRadius: '8px',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            p: 2,
+          }}>
+            <Box sx={{ display: 'flex', justifyContent: 'end', pb: 1 }}>
+              <Button
+                color='error'
+                onClick={onClose}
+                endIcon={<HighlightOffIcon />}
+                sx={{
+                  textTransform: 'none',
+                  padding: '4px 12px'
+                }}
+              >
+                Закрити
+              </Button>
+            </Box>
+
+            <Suspense fallback={<StyledLinearProgress sx={{ height: '8px', opacity: '0.6' }} />}>
+              <Box sx={{
+                pt: 2,
+                px: 2,
+              }}>
+                <Element
+                  form={form}
+                />
+              </Box>
+            </Suspense>
+            <Box sx={{ width: '100%', bgcolor: 'white', display: 'flex', justifyContent: 'end' }}>
+              <SaveButton disabled={isSubmitting} onClick={async () => await onSubmit(form.getValues())} style={{ height: 'fit-content' }} />
+            </Box>
+          </Box>
+        </Fade>
+      </Modal>
+    </>
+  )
 }
 
-const Accordion = styled((props) => (
-	<MuiAccordion disableGutters elevation={0} {...props} />
-))(({ theme }) => ({
-	border: `1px solid ${theme.palette.divider}`,
-	maxWidth: '100%',
-	'&:not(:last-child)': {
-		borderBottom: 0,
-	},
-	'&:before': {
-		display: 'none',
-	},
-}));
-
-const AccordionSummary = styled((props) => (
-	<MuiAccordionSummary
-		expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: '0.9rem' }} />}
-		{...props}
-	/>
-))(({ theme }) => ({
-	flexGrow: 1,
-	height: '56px',
-	paddingTop: 6,
-	paddingBottom: 6,
-	backgroundColor:
-		theme.palette.mode === 'dark'
-			? 'rgba(255, 255, 255, .05)'
-			: 'rgba(0, 0, 0, .03)',
-	flexDirection: 'row-reverse',
-	'& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-		transform: 'rotate(90deg)',
-	},
-	'& .MuiAccordionSummary-content': {
-		marginLeft: theme.spacing(1),
-	},
-}));
-
-
-export default forwardRef(Block)
+export default Block;

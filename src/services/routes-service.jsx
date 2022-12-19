@@ -15,11 +15,16 @@ export const getRoutes = () => ([
 		element: () => import('../pages/ProjectsPage.jsx'),
 	},
 	{
-		path: '/projectform/:id',
+		path: '/projects/:id',
 		label: 'Проєкт',
 		element: () => import('../pages/ProjectForm.jsx'),
 		hideAsideButton: true
 
+	},
+	{
+		path: '/services',
+		label: 'Послуги',
+		element: () => import('../pages/ServicesPage.jsx'),
 	},
 	{
 		path: '/account-settings',

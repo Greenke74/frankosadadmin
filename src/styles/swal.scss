@@ -1,33 +1,73 @@
 .logoutSwal {
-    background-color: var(--background-color);   
+    background-color: var(--background-color);
+
     .swal2-html-container {
         font-weight: 500;
         margin-top: 15px;
     }
+
     .swal2-confirm {
         background-color: var(--theme-color);
     }
+
     .swal2-confirm:focus {
         box-shadow: 0px 0px 0px 3px #1a2e2245;
     }
+
     .swal2-cancel {
         background-color: rgb(130, 143, 128);
     }
 }
 
 .deleteSwal {
-    background-color: var(--background-color);   
+    background-color: var(--background-color);
+
     .swal2-html-container {
         font-weight: 500;
         margin-top: 15px;
     }
+
     .swal2-confirm {
         background-color: var(--error);
     }
+
     .swal2-confirm:focus {
         box-shadow: 0px 0px 0px 3px #dc35454f;
     }
+
     .swal2-cancel {
         background-color: rgb(130, 143, 128);
     }
+}
+
+.saveChanges {
+    background-color: var(--background-color);
+
+    .swal2-html-container {
+        font-weight: 500;
+        margin-top: 15px;
+    }
+
+    .swal2-cancel {
+        background-color: var(--error);
+        min-width: 61px;
+    }
+
+    .swal2-cancel:focus {
+        box-shadow: 0px 0px 0px 3px #dc35454f;
+    }
+
+    .swal2-confirm {
+        background-color: var(--success);
+        min-width: 61px;
+    }
+
+    .swal2-confirm:focus {
+        box-shadow: 0px 0px 0px 3px #c1ffc44f;
+    }
+}
+
+.wraningIcon .swal2-icon.swal2-warning {
+    color: #ff8f0f;
+    border-color: #ff8f0f;
 }

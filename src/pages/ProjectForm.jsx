@@ -2,7 +2,18 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 
-import { Box, Alert, Card, FormControl, FormControlLabel, Grid, IconButton, Typography, Select, MenuItem } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Card,
+  FormControl,
+  FormControlLabel,
+  Grid, IconButton,
+  Typography,
+  Select,
+  MenuItem
+} from '@mui/material';
+
 import { CancelButton, StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
 import ImageUploader from '../components/common/ImageUploader';
 import SaveButton from '../components/common/SaveButton';
@@ -15,17 +26,16 @@ import { CameraAlt, Delete } from '@mui/icons-material';
 import { getProjectWithBlocksById, insertProject, updateProject } from '../services/portfolio-api-service';
 import { getSrcFromFile } from '../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
-import { slugify, transliterate as tr } from 'transliteration';
+import { slugify } from 'transliteration';
 import Swal from 'sweetalert2';
 import { projectBlocks } from '../components/blocks/index.js';
-import BlocksComposition2 from '../components/BlocksComposition2';
+import { changesSavedAlert } from '../services/alerts-service';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 
 const ProjectForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const compositionRef = useRef(null);
   const tabsRef = useRef(null);
 
   const [imageToDelete, setImageToDelete] = useState(null);
@@ -60,7 +70,8 @@ const ProjectForm = () => {
         ...getValues(),
         ...project,
         completed_at: project.completed_at.substr(0, 10),
-        image: getImageSrc(project.image)
+        image: getImageSrc(project.image),
+        blocks: project.blocks.map(b => ({ value: b }))
       }
       reset(formData);
       mounted && setInitialValues(formData);
@@ -95,7 +106,11 @@ const ProjectForm = () => {
       return;
     }
 
-    payload = { ...initialValues, ...payload }
+    payload = {
+      ...initialValues,
+      ...payload,
+      blocks_ids: payload.blocks.map(b => b.value.id)
+    }
 
     if (data.imageFile) {
 
@@ -105,19 +120,6 @@ const ProjectForm = () => {
       payload.image = imageKey
     } else {
       delete payload.image;
-    }
-
-    const blocks_ids = await compositionRef.current.onSubmit();
-
-    if (!blocks_ids || !Array.isArray(blocks_ids)) {
-      tabsRef.current.setTab(1)
-      setIsSubmitting(false);
-      setBlocksError(true);
-      return;
-    }
-    if (Array.isArray(blocks_ids) && blocks_ids.length > 0) {
-      delete payload.blocks;
-      payload.blocks_ids = blocks_ids;
     }
 
     if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
@@ -130,29 +132,13 @@ const ProjectForm = () => {
 
           setValue('imageFile', null);
 
-          Swal.fire({
-            position: 'top-right',
-            icon: 'success',
-            title: 'Обєкт успішно ононвлено',
-            color: 'var(--theme-color)',
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-          })
+          changesSavedAlert();
         } else {
           const { data: { id } } = await insertProject(payload);
           setValue('imageFile', null);
 
-          navigate(`/projectform/${id}`);
-          Swal.fire({
-            position: 'top-right',
-            icon: 'success',
-            title: 'Обєкт успішно збережено',
-            color: 'var(--theme-color)',
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-          })
+          navigate(`/projects/${id}`);
+          changesSavedAlert();
         }
       } catch (error) {
         if (error?.includes('duplicate key value violates unique constraint')) {
@@ -189,7 +175,7 @@ const ProjectForm = () => {
 
     const payload = {
       ...formData,
-      block_ids: formData.blocks.map(b => b.block.id)
+      blocks_ids: formData.blocks.map(b => b.block.id)
     }
     delete payload.blocks
 
@@ -367,20 +353,12 @@ const ProjectForm = () => {
           label: 'Сторінка проєкту',
           errors: blocksError,
           content: (
-            <>
-              <BlocksComposition2
-                fieldArray={blocksFieldArray}
-                allowedBlocks={projectBlocks}
-                onInsertBlock={onInsertBlock}
-                onDeleteBlock={onDeleteBlock}
-              />
-              {/* <BlocksComposition
-                ref={compositionRef}
-                blocks={blocks}
-                allowedBlocks={projectBlocks}
-                hideSubmit={true}
-              /> */}
-            </>
+            <BlocksComposition
+              fieldArray={blocksFieldArray}
+              allowedBlocks={projectBlocks}
+              onInsertBlock={onInsertBlock}
+              onDeleteBlock={onDeleteBlock}
+            />
           )
         }
       ]} />

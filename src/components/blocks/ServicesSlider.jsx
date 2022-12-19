@@ -7,6 +7,7 @@ const ServicesSlider = ({ form }, ref) => {
 
   useEffect(() => {
     getServices().then(response => {
+      setServices(response);
     })
 
   }, [])

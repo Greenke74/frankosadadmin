@@ -21,6 +21,7 @@ const ProjectsSlider = ({ form }, ref) => {
     getBlockData: () => new Promise((resolve) => resolve(form.getValues())),
     onDeleteBlock: () => new Promise((resolve) => { console.log('delete projects slider'); resolve() })
   }))
+
   return (
     <Slider options={projects} dataType='projects' form={form} />
   )

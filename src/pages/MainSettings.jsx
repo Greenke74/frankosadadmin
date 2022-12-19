@@ -14,6 +14,7 @@ import { Box } from '@mui/system';
 import { CameraAlt, Delete } from '@mui/icons-material';
 import { getSrcFromFile } from '../helpers/file-helpers.js';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
+import { changesSavedAlert } from '../services/alerts-service.js';
 
 const defaultValues = {
 	siteName: '',
@@ -108,15 +109,7 @@ const MainSettings = () => {
 		updateMainSettings(payload)
 			.then(async () => {
 				await fetchData();
-				Swal.fire({
-					position: 'top-right',
-					icon: 'success',
-					title: 'Дані успішно оновлено',
-					color: 'var(--theme-color)',
-					timer: 3000,
-					showConfirmButton: false,
-					toast: true,
-				})
+				changesSavedAlert()
 			})
 			.finally(() => setIsSubmitting(false));
 	}
