@@ -205,7 +205,9 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                     <Controller
                       name={`data.steps.${idx}`}
                       control={control}
-                      render={({ field }) => (
+                      render={({ field }) => {
+                        console.log(field, c);
+                        return (
                         <Box sx={{ maxHeight: '190px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100%', }}>
                           <Card sx={{ mb: 2 }}>
                             {(field.value.imageUrl || field.value.image)
@@ -215,7 +217,7 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                               : (<Box sx={{ width: '315px', height: '155px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
                           </Card>
                           <ImageUploader
-                            id={`step-${field.value.id}`}
+                            id={`step-${c.id}=image-uploader`}
                             ratio={IMAGE_ASPECT_RATIO}
                             onChange={async (file) => {
                               field.onChange({
@@ -228,7 +230,7 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                             }}
                           />
                         </Box>
-                      )}
+                      )}}
                     />
                   </FormControl>
                 </Grid>
