@@ -3,6 +3,7 @@ import { Box, Grid } from '@mui/material';
 import BlockModal from './BlockModal';
 import Block from './Block';
 import { dataTypes } from '../../services/data-types-service';
+import { submitBlock } from '../../helpers/api-helpers';
 
 const BlocksComposition = ({
   fieldArray,
@@ -19,15 +20,18 @@ const BlocksComposition = ({
     update: updateBlock
   } = fieldArray;
 
-  const onBlockMove = (from, to) => {
+  const onBlockMove = async (from, to) => {
     if(from == blocks.length || to < 0){
       return;
     }
 
     // is
     console.log(blocks[from]);
-
     moveBlock(from, to);
+
+    await submitBlock({...blocks[from].value, position: Number(to) }, isMainPage)
+    await submitBlock({...blocks[to].value,  position: Number(from) }, isMainPage)
+
   }
 
   return (
