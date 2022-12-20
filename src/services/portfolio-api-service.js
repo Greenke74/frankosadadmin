@@ -113,3 +113,19 @@ export const deleteProject = (id) => new Promise((resolve, reject) => {
 		reject(e)
 	}
 })
+
+export const selectProjects = (params) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc(params.typeFilter != null ? 'select_projects_with_filters' : 'select_projects', params)
+		.then(response => {
+			if (response.error) {
+				reject(response.error.message)
+			}
+			resolve(response)
+		})
+		.catch(error => reject(error))
+		
+	} catch (e) {
+		reject(e)
+	}
+})
