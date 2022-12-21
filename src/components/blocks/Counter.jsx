@@ -8,7 +8,6 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
 import ErrorMessage from '../common/ErrorMessage';
 import AddButton from '../common/AddButton';
-import { beforeBlockSubmitting } from '../../helpers/blocks-helpers';
 
 const Counter = ({ form }, ref) => {
   const { control, formState: { errors } } = form;
@@ -27,7 +26,7 @@ const Counter = ({ form }, ref) => {
   const getBlockData = (formData) => new Promise((resolve, reject) => {
     resolve(formData)
   })
-  beforeBlockSubmitting(formData).then(res => console.log(res))
+
 
   useImperativeHandle(ref, () => ({ getBlockData: async () => await getBlockData(form.getValues()) }))
 

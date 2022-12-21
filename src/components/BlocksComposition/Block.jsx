@@ -22,6 +22,8 @@ import {
 import '../../styles/swal.scss';
 import './block.css';
 import { blocks } from '../blocks';
+import { beforeBlockSubmitting } from '../../helpers/blocks-helpers';
+import { deleteImage } from '../../services/storage-service';
 
 const Block = (
   {
@@ -41,7 +43,8 @@ const Block = (
   const [label, setLabel] = useState('');
   const [Element, setElement] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialValues, setInitialValues] = useState({ ...data });
+  const [initialValues, setInitialValues] = useState(data);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
 
   const form = useForm({
     defaultValues: data,
@@ -103,10 +106,10 @@ const Block = (
 
   const onSubmit = async (formData) => {
     if (JSON.stringify(formData) === JSON.stringify(initialValues)) {
+      console.log('no changes');
       changesSavedAlert();
       setOpen(false);
       return;
-
     }
 
     setIsSubmitting(true);
@@ -117,11 +120,17 @@ const Block = (
       return null;
     }
 
+    const payloadData = await beforeBlockSubmitting(formData);
+
+    console.log(formData, payloadData);
     const payload = {
       ...formData,
+      ...payloadData,
       data: formData?.data ?? null,
       position: idx,
     };
+
+
     dataTypes.forEach(type => {
       if (payload[type]) {
         delete payload[type];
@@ -144,9 +153,12 @@ const Block = (
         ? updateBlock
         : insertBlock
 
-
     const response = await func(payload)
+
     const { data: responseData } = response;
+
+    await Promise.all(imagesToDelete.map(async (id) => await deleteImage(id)))
+    setImagesToDelete([]);
 
     const updatedBlockData = {
       ...formData,
@@ -174,6 +186,8 @@ const Block = (
 
     return null;
   }
+
+  const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
 
   return (
     <>
@@ -307,6 +321,8 @@ const Block = (
                     }}>
                       <Element
                         form={form}
+                        // imagesToDelete={imagesToDelete}
+                        appendImageToDelete={appendImageToDelete}
                       />
                     </Box>
                   </Suspense>

@@ -50,32 +50,21 @@ export const sortBlocks = (blocks) => blocks.sort((a, b) => {
   }
 })
 
-function isNotModule(module) {
-  return (!Object.keys(module).length) || (!!module.default && typeof module.default === 'object' && !Object.keys(module.default).length)
-}
-
 const blockFunctions = blocks.reduce(async (prev, block) => {
-  let module;
+  let module = null;
   try {
-    module = await import(`./blocksFunctions/${block.type}`)
-  } catch (error) {
-    
-  }
+    module = await import(`./blocksFunctions/${block.type}.js`)
+  } catch { }
 
-  return isNotModule(module)
-    ? {
-      ...prev,
-      [block.type]: {
-        beforeSubmit: (data) => data,
-        beforeDelete: (data) => data
-      }
-    } : {
-      ...prev,
-      [block.type]: module
-    }
+  return {
+    ...prev,
+    [block.type]: module
+  }
 }, {})
 
 
-export const beforeBlockSubmitting = (blockData) => {
-  return blockFunctions[blockData.type];
+export const beforeBlockSubmitting = async (blockData) => {
+  return (blockFunctions[blockData.type] && blockFunctions[blockData.type].beforeSubmit)
+    ? await blockFunctions[blockData.type].beforeSubmit(blockData)
+    : new Promise((resolve) => resolve(blockData));
 }

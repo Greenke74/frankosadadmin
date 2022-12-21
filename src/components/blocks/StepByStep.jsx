@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react'
+import React, { forwardRef, useImperativeHandle } from 'react'
 import { Controller, useFieldArray } from 'react-hook-form'
 
 import { Box, Card, FormControl, Grid, IconButton, InputAdornment, Tooltip, Typography } from '@mui/material';
@@ -15,15 +15,13 @@ import ErrorMessage from '../common/ErrorMessage';
 import { CameraAlt, Delete } from '@mui/icons-material';
 
 const IMAGE_ASPECT_RATIO = 2 / 1;
-const StepByStep = ({ form, setIdsToDelete }, ref) => {
-  const [imagesToDelete, setImagesToDelete] = useState([]);
+const StepByStep = ({ form, appendImageToDelete }, ref) => {
 
-  const { register, control, setValue, formState: { errors } } = form;
+  const { register, control, formState: { errors } } = form;
   const {
     fields,
     append,
     remove,
-    update
   } = useFieldArray({
     control: control,
     name: 'data.steps',
@@ -41,8 +39,6 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
   }
 
   const getBlockData = async (formData) => {
-    await Promise.all(imagesToDelete.map(async (id) => await deleteImage(id)))
-    setImagesToDelete([]);
     const steps = await Promise.all(
       (formData?.data?.steps ?? [])
         .map(async (step) => {
@@ -122,10 +118,11 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                   <IconButton
                     color='error'
                     onClick={() => {
-                      remove(idx);
+                      console.log(c);
                       if (c.image) {
-                        setImagesToDelete(prev => ([...prev, c.image]))
+                        appendImageToDelete(c.iamge)
                       }
+                      remove(idx);
                     }}
                   >
                     <HighlightOffIcon />
@@ -137,35 +134,39 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                 spacing={2}
               >
                 <Grid item xs={6} >
-                  <FormControl variant='standard' fullWidth sx={{
-                    '& .MuiInputBase-root': {
-                      position: 'relative'
-                    },
-                    '& .MuiInputAdornment-root': {
-                      position: 'absolute',
-                      width: '40px',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '0 10px',
-                      bgcolor: '#cccccc80',
-                      height: 'auto',
-                      lineHeight: '26px',
-                      borderRadius: 1,
-                      margin: '8px !important',
-                      color: 'var(--theme-color)',
-                      fontWeight: 700,
-                      zIndex: 1
-                    },
-                    '& .MuiInputBase-input': {
-                      paddingLeft: '56px'
-                    }
-                  }}>
-                    <StyledInputLabel required shrink htmlFor={`step-${c.id}`}>
+                  <FormControl
+                    variant='standard'
+                    fullWidth
+                    sx={{
+                      '& .MuiInputBase-root': {
+                        position: 'relative'
+                      },
+                      '& .MuiInputAdornment-root': {
+                        pointerEvents: 'none',
+                        position: 'absolute',
+                        width: '40px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '0 10px',
+                        bgcolor: '#cccccc80',
+                        height: 'auto',
+                        lineHeight: '26px',
+                        borderRadius: 1,
+                        margin: '8px !important',
+                        color: 'var(--theme-color)',
+                        fontWeight: 700,
+                        zIndex: 1
+                      },
+                      '& .MuiInputBase-input': {
+                        paddingLeft: '56px'
+                      }
+                    }}>
+                    <StyledInputLabel required shrink htmlFor={`step-${idx}-title-input`}>
                       Заголовок кроку
                     </StyledInputLabel>
                     <StyledInputBase
-                      id={`step-${c.id}-title-input`}
+                      id={`step-${idx}-title-input`}
                       startAdornment={
                         <InputAdornment position="start">
                           0{idx + 1}
@@ -180,10 +181,16 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                       maxLength={errors?.data?.steps[idx]?.title?.type == 'maxLength' ? '100' : null} />
                   )}
                   <FormControl variant='standard' fullWidth sx={{ mt: 2 }}>
-                    <StyledInputLabel required shrink htmlFor={`step-${c.id}`}>
+                    <StyledInputLabel required shrink htmlFor={`step-${idx}-description-input`}>
                       Опис кроку
                     </StyledInputLabel>
-                    <StyledInputBase multiline={true} minRows={5} maxRows={16} {...register(`data.steps.${idx}.description`, { required: true })} id={`step-${c.id}`} />
+                    <StyledInputBase
+                      id={`step-${idx}-description-input`}
+                      multiline={true}
+                      minRows={5}
+                      maxRows={16}
+                      {...register(`data.steps.${idx}.description`, { required: true })}
+                    />
                   </FormControl>
                   {errors && errors?.data?.steps && errors?.data?.steps[idx]?.description && (
                     <ErrorMessage
@@ -216,7 +223,7 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
                                 : (<Box sx={{ width: '315px', height: '155px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
                             </Card>
                             <ImageUploader
-                              id={`step-${c.id}=image-uploader`}
+                              id={`step-${c.id}-image-uploader`}
                               ratio={IMAGE_ASPECT_RATIO}
                               onChange={async (file) => {
                                 field.onChange({
@@ -245,7 +252,8 @@ const StepByStep = ({ form, setIdsToDelete }, ref) => {
             append({
               title: '',
               description: '',
-              image: ''
+              image: '',
+              imageFile: null
             })}
           label='Додати крок'
         />)}
