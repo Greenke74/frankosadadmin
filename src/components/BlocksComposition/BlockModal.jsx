@@ -7,6 +7,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddButton from '../common/AddButton';
 import SaveButton from '../common/SaveButton';
 import { dataTypes } from '../../services/data-types-service';
+import { blocks } from '../blocks';
 
 const BlockModal = ({ allowedBlocks, appendBlock, blocksLength, isMainPage = false }) => {
   const [open, setOpen] = useState(false);
@@ -55,7 +56,7 @@ const BlockModal = ({ allowedBlocks, appendBlock, blocksLength, isMainPage = fal
             justifyContent: 'center',
             alignItems: 'center',
             flexWrap: 'nowrap',
-            border: `1px solid #2e7d3290`,
+            border: `1px dashed #2e7d3290`,
             borderRadius: '5px',
             overflow: 'hidden',
             height: 60,
@@ -93,29 +94,32 @@ const BlockModal = ({ allowedBlocks, appendBlock, blocksLength, isMainPage = fal
           <Alert severity='info' sx={{ mb: 2 }}>
             Виберіть блок нижче щоб додати його
           </Alert>
-          {allowedBlocks.map(b => (
-            <Box key={b.label} sx={{ m: 1, width: '100%', '& .MuiButton-root': { width: '100%' } }}>
-              <Button
-                style={{
-                  textTransform: 'none',
-                  color: 'var(--theme-color)',
-                  borderRightColor: 'var(--menu-active-button-color)'
-                }} onClick={() => {
-                  onAdd(b.type)
-                  onClose();
-                }}>
-                <Typography sx={{ flexGrow: 1 }}>
-                  {b.label}
-                </Typography>
-                <ArrowBackIcon style={{
-                  flexBasis: '20%',
-                  color: 'var(--theme-color)',
-                  fontSize: '16px',
-                  marginRight: 16
-                }} />
-              </Button>
-            </Box>
-          ))}
+          {allowedBlocks.map(blockType => {
+            const b = blocks.find(block => block.type == blockType)
+            return (
+              <Box key={b.label} sx={{ m: 1, width: '100%', '& .MuiButton-root': { width: '100%' } }}>
+                <Button
+                  style={{
+                    textTransform: 'none',
+                    color: 'var(--theme-color)',
+                    borderRightColor: 'var(--menu-active-button-color)'
+                  }} onClick={() => {
+                    onAdd(b.type)
+                    onClose();
+                  }}>
+                  <Typography sx={{ flexGrow: 1 }}>
+                    {b.label}
+                  </Typography>
+                  <ArrowBackIcon style={{
+                    flexBasis: '20%',
+                    color: 'var(--theme-color)',
+                    fontSize: '16px',
+                    marginRight: 16
+                  }} />
+                </Button>
+              </Box>
+            )
+          })}
           <Box sx={{ display: 'flex', justifyContent: 'end', mt: 3, gap: '25px' }}>
             <CancelButton onClick={() => {
               onClose()

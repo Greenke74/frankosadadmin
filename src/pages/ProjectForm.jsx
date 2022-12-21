@@ -30,6 +30,7 @@ import { slugify } from 'transliteration';
 import Swal from 'sweetalert2';
 import { projectBlocks } from '../components/blocks/index.js';
 import { changesSavedAlert } from '../services/alerts-service';
+import { sortBlocks } from '../helpers/blocks-helpers';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 
@@ -71,7 +72,7 @@ const ProjectForm = () => {
         ...project,
         completed_at: project.completed_at.substr(0, 10),
         image: getImageSrc(project.image),
-        blocks: project.blocks.map(b => ({ value: b }))
+        blocks: sortBlocks(project.blocks).map(b => ({ value: b }))
       }
       reset(formData);
       mounted && setInitialValues(formData);

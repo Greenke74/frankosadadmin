@@ -21,6 +21,7 @@ import {
 
 import '../../styles/swal.scss';
 import './block.css';
+import { blocks } from '../blocks';
 
 const Block = (
   {
@@ -28,7 +29,6 @@ const Block = (
     idx,
     blocksLength,
     move,
-    allowedBlocks,
     isMainPage,
     update,
     onInsertBlock = null,
@@ -51,13 +51,13 @@ const Block = (
   useEffect(() => {
     let mounted = true;
 
-    const b = allowedBlocks.find(bl => bl.type == data?.type)
-    if(!b?.label ){
+    const b = blocks.find(bl => bl.type == data?.type)
+    if (!b?.label) {
       mounted && setLabel('Блок сторінки')
     } else {
       mounted && setLabel(b?.label);
     }
-    if(!b?.element){
+    if (!b?.element) {
       mounted && setError(true)
     } else {
       mounted && setElement(lazy(b?.element))
@@ -192,139 +192,139 @@ const Block = (
         }}
       >
         {!error ? (
-        <>
-          <Box
-            sx={{
-              flexGrow: 1,
-              cursor: 'pointer',
-              pl: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              height: '50px',
-              justifyContent: 'center',
-              '&:hover': {
-                textDecoration: 'underline'
-              }
-            }}
-            onClick={() => setOpen(true)}
-          >
-            <Typography
-              component="h3"
-              fontSize='14px'
-              lineHeight='20px'
-            >
-              {label}
-            </Typography>
-          </Box>
-          <Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' >
-            <Controller
-              name={`is_published`}
-              control={form.control}
-              render={({ field }) => {
-                return (
-                  <Tooltip title={field.value ? 'Опубліковано' : 'Приховано'}>
-                    <Checkbox
-                      checked={field.value}
-                      onChange={async (event, value) => {
-                        event.target.disabled = true;
-                        field.onChange(value);
-                        await onSubmit(form.getValues())
-                        event.target.disabled = false;
-                      }}
-                      checkedIcon={<VisibilityIcon style={{ fontSize: '20px', color: '#40a471' }} />}
-                      icon={<VisibilityOffIcon style={{ fontSize: '20px', }} />}
-                    />
-                  </Tooltip>
-
-                )
+          <>
+            <Box
+              sx={{
+                flexGrow: 1,
+                cursor: 'pointer',
+                pl: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                height: '50px',
+                justifyContent: 'center',
+                '&:hover': {
+                  textDecoration: 'underline'
+                }
               }}
-            />
-            <ButtonGroup>
-              <Button
-                disableRipple={true}
-                onClick={() => onMove(idx, idx + 1)}
-                disabled={idx + 1 == blocksLength}
-              ><ArrowCircleDownIcon />
-              </Button>
-              <Button
-                disableRipple={true}
-                onClick={() => onMove(idx, idx - 1)}
-                disabled={idx == 0}
-              ><ArrowCircleUpIcon />
-              </Button>
-              <Button
-                color='error'
-              // onClick={onDelete}
-              ><HighlightOffIcon />
-              </Button>
-            </ButtonGroup>
-          </Box>
-          <Modal
-            open={open}
-            sx={{
-              '& .MuiBackdrop-root': {
-                backdropFilter: 'blur(3px) !important'
-              },
-              overflow: 'hidden',
-              position: 'absolute',
-              zIndex: 10
-            }}
-          >
-            <Fade in={open} >
-              <Box sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 1100,
-                maxWidth: '90%',
-                maxHeight: '95%',
-                boxShadow: 24,
-                bgcolor: 'white',
-                borderRadius: '8px',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                p: 2,
-              }}>
-                <Box sx={{ display: 'flex', justifyContent: 'end', pb: 1 }}>
-                  <Button
-                    color='error'
-                    onClick={onClose}
-                    endIcon={<HighlightOffIcon />}
-                    sx={{
-                      textTransform: 'none',
-                      padding: '4px 12px'
-                    }}
-                  >
-                    Закрити
-                  </Button>
-                </Box>
+              onClick={() => setOpen(true)}
+            >
+              <Typography
+                component="h3"
+                fontSize='14px'
+                lineHeight='20px'
+              >
+                {label}
+              </Typography>
+            </Box>
+            <Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' >
+              <Controller
+                name={`is_published`}
+                control={form.control}
+                render={({ field }) => {
+                  return (
+                    <Tooltip title={field.value ? 'Опубліковано' : 'Приховано'}>
+                      <Checkbox
+                        checked={field.value}
+                        onChange={async (event, value) => {
+                          event.target.disabled = true;
+                          field.onChange(value);
+                          await onSubmit(form.getValues())
+                          event.target.disabled = false;
+                        }}
+                        checkedIcon={<VisibilityIcon style={{ fontSize: '20px', color: '#40a471' }} />}
+                        icon={<VisibilityOffIcon style={{ fontSize: '20px', }} />}
+                      />
+                    </Tooltip>
 
-                <Suspense fallback={<StyledLinearProgress sx={{ height: '8px', opacity: '0.6' }} />}>
-                  <Box sx={{
-                    pt: 2,
-                    px: 2,
-                  }}>
-                    <Element
-                      form={form}
-                    />
+                  )
+                }}
+              />
+              <ButtonGroup>
+                <Button
+                  disableRipple={true}
+                  onClick={() => onMove(idx, idx + 1)}
+                  disabled={idx + 1 == blocksLength}
+                ><ArrowCircleDownIcon />
+                </Button>
+                <Button
+                  disableRipple={true}
+                  onClick={() => onMove(idx, idx - 1)}
+                  disabled={idx == 0}
+                ><ArrowCircleUpIcon />
+                </Button>
+                <Button
+                  color='error'
+                // onClick={onDelete}
+                ><HighlightOffIcon />
+                </Button>
+              </ButtonGroup>
+            </Box>
+            <Modal
+              open={open}
+              sx={{
+                '& .MuiBackdrop-root': {
+                  backdropFilter: 'blur(3px) !important'
+                },
+                overflow: 'hidden',
+                position: 'absolute',
+                zIndex: 10
+              }}
+            >
+              <Fade in={open} >
+                <Box sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 1100,
+                  maxWidth: '90%',
+                  maxHeight: '95%',
+                  boxShadow: 24,
+                  bgcolor: 'white',
+                  borderRadius: '8px',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  p: 2,
+                }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'end', pb: 1 }}>
+                    <Button
+                      color='error'
+                      onClick={onClose}
+                      endIcon={<HighlightOffIcon />}
+                      sx={{
+                        textTransform: 'none',
+                        padding: '4px 12px'
+                      }}
+                    >
+                      Закрити
+                    </Button>
                   </Box>
-                </Suspense>
-                <Box sx={{ width: '100%', bgcolor: 'white', display: 'flex', justifyContent: 'end' }}>
-                  <SaveButton disabled={isSubmitting} onClick={async () => await onSubmit(form.getValues())} style={{ height: 'fit-content' }} />
+
+                  <Suspense fallback={<StyledLinearProgress sx={{ height: '8px', opacity: '0.6' }} />}>
+                    <Box sx={{
+                      pt: 2,
+                      px: 2,
+                    }}>
+                      <Element
+                        form={form}
+                      />
+                    </Box>
+                  </Suspense>
+                  <Box sx={{ width: '100%', bgcolor: 'white', display: 'flex', justifyContent: 'end' }}>
+                    <SaveButton disabled={isSubmitting} onClick={async () => await onSubmit(form.getValues())} style={{ height: 'fit-content' }} />
+                  </Box>
                 </Box>
-              </Box>
-            </Fade>
-          </Modal>
-       </>
-      ) : (
-          <Typography 
-          component="h4"
-          fontSize='12px'
-          lineHeight='20px'
-          sx={{
-            pl: 2
-          }}
+              </Fade>
+            </Modal>
+          </>
+        ) : (
+          <Typography
+            component="h4"
+            fontSize='12px'
+            lineHeight='20px'
+            sx={{
+              pl: 2
+            }}
           >Сталася помилка під час завантаження даного блока!
           </Typography>
         )}
