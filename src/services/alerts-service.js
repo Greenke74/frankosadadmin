@@ -28,6 +28,14 @@ export const imageRequiredError = () => Swal.fire({
   title: 'Потрібно додати зображення',
 })
 
+export const tryAgainAlert = () => Swal.fire({
+  ...toastSettings,
+  icon: 'error',
+  title: 'Виникла неочікувана помилка!',
+  text: 'Спробуйте ще раз'
+  
+})
+
 export const unsavedChanges = () => Swal.fire({
   title: 'У вас є незбережені зміни',
   text: 'Зберегти їх?',

@@ -50,21 +50,12 @@ export const sortBlocks = (blocks) => blocks.sort((a, b) => {
   }
 })
 
-const blockFunctions = blocks.reduce(async (prev, block) => {
+export const beforeBlockSubmitting = async (blockData) => {
   let module = null;
   try {
-    module = await import(`./blocksFunctions/${block.type}.js`)
-  } catch { }
-
-  return {
-    ...prev,
-    [block.type]: module
-  }
-}, {})
-
-
-export const beforeBlockSubmitting = async (blockData) => {
-  return (blockFunctions[blockData.type] && blockFunctions[blockData.type].beforeSubmit)
-    ? await blockFunctions[blockData.type].beforeSubmit(blockData)
+    module = await import(`./blocksFunctions/${blockData.type}.js`)
+  } catch {}
+  return (module && module.beforeSubmit)
+    ? await module.beforeSubmit(blockData)
     : new Promise((resolve) => resolve(blockData));
 }

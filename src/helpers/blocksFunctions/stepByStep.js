@@ -1,4 +1,4 @@
-import { uploadImage } from "../../services/storage-service";
+import { deleteImage, uploadImage } from "../../services/storage-service";
 
 export const beforeSubmit = async (data) => {
   const steps = await Promise.all(
@@ -21,7 +21,11 @@ export const beforeSubmit = async (data) => {
       .filter(r => Boolean(r))
   )
 
-  const result = { ...formData };
+  const result = { ...data };
   result.data.steps = steps;
   return result;
+}
+
+export const beforeDelete = async (data) => {
+  await Promise.all((data?.steps ?? []).map(async (s) => await deleteImage(s?.image)))
 }

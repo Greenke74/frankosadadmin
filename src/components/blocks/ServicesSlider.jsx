@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { getServices } from '../../services/services-api-service.js'
 import Slider from '../common/Slider.jsx'
 
@@ -16,4 +16,4 @@ const ServicesSlider = ({ form }, ref) => {
   )
 }
 
-export default forwardRef(ServicesSlider)
+export default ServicesSlider

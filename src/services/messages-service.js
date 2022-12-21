@@ -9,5 +9,6 @@ export const errorMessages = {
     phonePattern: 'Неправильний формат номера телефону',
     'Invalid login credentials': 'Логін або пароль неправильні',
     passwordsNotEqual: 'Паролі не співпадають',
-    invalidForm: 'Некоректні дані!'
+    invalidForm: 'Некоректні дані!',
+    imageRequired: 'Необхідно додати зображення'
 }

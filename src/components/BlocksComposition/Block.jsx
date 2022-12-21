@@ -2,14 +2,10 @@ import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 
 import { Box, ButtonGroup, Button, Typography, Tooltip, Modal, Fade, Checkbox } from '@mui/material'
-import ErrorMessage from '../common/ErrorMessage';
 import SaveButton from '../common/SaveButton';
 import { StyledLinearProgress } from '../common/StyledComponents';
 
-import { insertBlock, updateBlock } from '../../services/blocks-api-service';
-import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
-import { dataTypes } from '../../services/data-types-service';
-import { changesSavedAlert, checkErrorsAlert, unsavedChanges } from '../../services/alerts-service';
+import { changesSavedAlert, checkErrorsAlert, tryAgainAlert, unsavedChanges } from '../../services/alerts-service';
 
 import {
   ArrowCircleDown as ArrowCircleDownIcon,
@@ -22,7 +18,7 @@ import {
 import '../../styles/swal.scss';
 import './block.css';
 import { blocks } from '../blocks';
-import { beforeBlockSubmitting } from '../../helpers/blocks-helpers';
+import { beforeBlockSubmitting, submitBlock } from '../../helpers/blocks-helpers';
 import { deleteImage } from '../../services/storage-service';
 
 const Block = (
@@ -43,7 +39,6 @@ const Block = (
   const [label, setLabel] = useState('');
   const [Element, setElement] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialValues, setInitialValues] = useState(data);
   const [imagesToDelete, setImagesToDelete] = useState([]);
 
   const form = useForm({
@@ -71,11 +66,11 @@ const Block = (
 
   const validateForm = async () => {
     let isValid = true;
-
     if (Object.keys(form.formState.errors ?? {}).length > 0) {
 
       isValid = false;
     } else {
+
       isValid = await form.trigger(Object.keys(form.getValues() ?? {}))
     }
 
@@ -84,11 +79,11 @@ const Block = (
 
   const onClose = () => {
     const formData = form.getValues();
-    if (JSON.stringify(formData) !== JSON.stringify(initialValues)) {
+    if (JSON.stringify(formData) !== JSON.stringify(data)) {
       unsavedChanges()
         .then((result) => {
           if (result.isDismissed) {
-            form.reset(initialValues);
+            form.reset(data);
 
             setOpen(false);
           } else if (result.value) {
@@ -103,10 +98,8 @@ const Block = (
     !isSubmitting && setOpen(false)
   }
 
-
   const onSubmit = async (formData) => {
-    if (JSON.stringify(formData) === JSON.stringify(initialValues)) {
-      console.log('no changes');
+    if (JSON.stringify(formData) === JSON.stringify(data)) {
       changesSavedAlert();
       setOpen(false);
       return;
@@ -119,72 +112,35 @@ const Block = (
       setIsSubmitting(false)
       return null;
     }
+    try {
+      const payloadData = await beforeBlockSubmitting(formData);
 
-    const payloadData = await beforeBlockSubmitting(formData);
+      const responseData = await submitBlock(payloadData, isMainPage);
 
-    console.log(formData, payloadData);
-    const payload = {
-      ...formData,
-      ...payloadData,
-      data: formData?.data ?? null,
-      position: idx,
-    };
+      await Promise.all(imagesToDelete.map(async (id) => await deleteImage(id)))
+      setImagesToDelete([]);
 
-
-    dataTypes.forEach(type => {
-      if (payload[type]) {
-        delete payload[type];
+      const updatedBlockData = {
+        ...formData,
+        id: responseData?.id ?? payload.id,
+        type: data?.type
       }
-      const ids = `${type}_ids`
-      if (payload[ids] && Array.isArray(payload[ids])) {
-        payload[ids] = payload[ids].map((id) => id?.value ?? id ?? undefined).filter(id => Boolean(id))
+
+      changesSavedAlert();
+      setOpen(false);
+
+      update(idx, {
+        value: updatedBlockData
+      })
+
+      if (onInsertBlock !== null && data?.id !== undefined && data?.id !== null) {
+        await onInsertBlock(data?.id)
       }
-    })
 
-    if (!formData.id && data.type) {
-      payload.type = data.type;
+    } catch {
+      tryAgainAlert();
     }
-
-    const func = isMainPage
-      ? payload.id
-        ? updateMainPageBlock
-        : insertMainPageBlock
-      : payload.id
-        ? updateBlock
-        : insertBlock
-
-    const response = await func(payload)
-
-    const { data: responseData } = response;
-
-    await Promise.all(imagesToDelete.map(async (id) => await deleteImage(id)))
-    setImagesToDelete([]);
-
-    const updatedBlockData = {
-      ...formData,
-      id: responseData?.id ?? payload.id,
-      type: data?.type
-    }
-
-    changesSavedAlert();
-    setOpen(false);
-
-    setInitialValues(updatedBlockData);
-    update(idx, {
-      value: updatedBlockData
-    })
-
-    if (onInsertBlock !== null && data?.id !== undefined && data?.id !== null) {
-      await onInsertBlock(data?.id)
-    }
-
     setIsSubmitting(false)
-
-    if (data?.id) {
-      return data.id;
-    }
-
-    return null;
   }
 
   const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
@@ -321,7 +277,6 @@ const Block = (
                     }}>
                       <Element
                         form={form}
-                        // imagesToDelete={imagesToDelete}
                         appendImageToDelete={appendImageToDelete}
                       />
                     </Box>
