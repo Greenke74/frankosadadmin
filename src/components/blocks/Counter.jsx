@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, forwardRef } from 'react'
+import React from 'react'
 import { useFieldArray, Controller } from 'react-hook-form';
 
 import { FormControl, Grid, Grow, IconButton, Tooltip, Typography } from '@mui/material';
@@ -22,12 +22,6 @@ const Counter = ({ form }, ref) => {
       maxLength: 4
     }
   })
-
-  const getBlockData = (formData) => new Promise((resolve, reject) => {
-    resolve(formData)
-  })
-
-  useImperativeHandle(ref, () => ({ getBlockData: async () => await getBlockData(form.getValues()) }))
 
   return (
     <Box>
@@ -94,7 +88,7 @@ const Counter = ({ form }, ref) => {
                     )}
                   </FormControl>
                 </Box>
-                <FormControl variant="standard"  fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <StyledInputLabel required shrink htmlFor={`counter-${c.id}`}>
                     Лічильник
                   </StyledInputLabel>
@@ -102,7 +96,7 @@ const Counter = ({ form }, ref) => {
                     name={`data.counters.${idx}.counter`}
                     control={control}
                     rules={{ min: 0, required: true }}
-                    render={({ field, fieldState: { error } }) => (
+                    render={({ field }) => (
                       <StyledInputBase
                         type='number'
                         value={field.value}
@@ -136,4 +130,4 @@ const Counter = ({ form }, ref) => {
   )
 }
 
-export default forwardRef(Counter)
+export default Counter
