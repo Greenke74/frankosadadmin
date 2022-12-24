@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form';
 
-import BlocksComposition from '../components/BlocksComposition/index.jsx';
-
-import { blocks, mainPageBlocks } from '../components/blocks/index.js';
-import { deleteMainPageBlock, getMainPageBlocks } from '../services/main-page-blocks-service.js';
-import { Box } from '@mui/material';
-import { beforeBlockDeleting, beforeBlockSubmitting, sortBlocks, submitBlock } from '../helpers/blocks-helpers.js';
 import PageHeader from '../components/common/PageHeader.jsx';
 import Page from '../components/common/Page.jsx';
-import { changesSavedAlert, checkErrorsAlert } from '../services/alerts-service.js';
+import BlocksComposition from '../components/BlocksComposition/index.jsx';
+import { Box } from '@mui/material';
+
+import { mainPageBlocks } from '../components/blocks/index.js';
+
+import { getMainPageBlocks } from '../services/main-page-blocks-service.js';
 import { dataTypes } from '../constants/dataTypes.js';
+import { sortBlocks, submitBlocks } from '../helpers/blocks-helpers.js';
+import { changesSavedAlert, checkErrorsAlert } from '../services/alerts-service.js';
 
 const MainPage = () => {
 
@@ -48,25 +49,12 @@ const MainPage = () => {
 
 	const onDeleteBlock = (block) => setBlocksToDelete(prev => [...prev, block])
 
-	const onSubmit = async ({ blocks }) => {
+	const onSubmit = async ({ blocks: formBlocks }) => {
 		setIsLoading(true)
 
-		const newBlocksValue = []
-		await Promise.all((blocks ?? []).map(async ({ value: block }) => {
-			const submitPayload = await beforeBlockSubmitting(block);
-			const response = await submitBlock(submitPayload, true);
+		const blocks = await submitBlocks(formBlocks, blocksToDelete, true)
 
-			newBlocksValue.push({ value: response })
-		}))
-
-		await Promise.all((blocksToDelete ?? []).map(async block => {
-			if (block.id) {
-				await beforeBlockDeleting(block)
-				await deleteMainPageBlock(block.id)
-			}
-		}))
-
-		form.reset({ blocks: sortBlocks(newBlocksValue) })
+		form.reset({ blocks: blocks })
 		setBlocksToDelete([]);
 		setIsLoading(false);
 
@@ -77,7 +65,7 @@ const MainPage = () => {
 		<>
 			<PageHeader
 				title='Головна сторінка'
-				onSubmit={form.handleSubmit(onSubmit, (e) => {console.log(e); checkErrorsAlert()})}
+				onSubmit={form.handleSubmit(onSubmit, (e) => { checkErrorsAlert() })}
 				submitDisabled={isLoading}
 			/>
 			<Page>

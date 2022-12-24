@@ -52,7 +52,7 @@ const Tabs = ({ tabs }, ref) => {
           key={uuid()}
           role='tabpanel'
           paddingTop={1}
-          hidden={currentTab !== index}
+          display={currentTab !== index ? 'none' : 'unset'}
         >
           {tab.content}
         </Box>

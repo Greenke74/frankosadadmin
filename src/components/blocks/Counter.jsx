@@ -64,7 +64,7 @@ const Counter = ({
       ) : (
         <Grid container spacing={2}>
           {fields.map((c, idx) => (
-            <Grid item xs={6} lg={3} key={c.id} >
+            <Grid item xs={6} lg={4} key={c.id} >
               <Grow in={idx !== null}>
                 <Box
                   bgcolor='#f7f7f7'

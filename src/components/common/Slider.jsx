@@ -1,17 +1,13 @@
 import React, { useState } from 'react'
-
+import { useFieldArray } from 'react-hook-form';
 
 import AddButton from './AddButton.jsx';
-import { Box, Popover, IconButton, Tooltip, Typography, Chip } from '@mui/material';
-
-import { default as SlickSlider } from 'react-slick';
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import '../../styles/slider.scss';
+import OptionsPicker from './OptionsPicker.jsx';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+
 import { getImageSrc } from '../../services/storage-service.js';
-import { useFieldArray } from 'react-hook-form';
 
 const Slider = (props) => {
   const {
@@ -63,13 +59,14 @@ const Slider = (props) => {
     .filter(o => !slidesFields.find(slide => slide.value.id == o.id));
   return (
     <Box sx={{ maxWidth: '100%' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'start', position: 'relative', overflowX: 'scroll' }}>
         {(errors && errors[dataType] && errors[dataType].root?.type == 'minLength')
           ? (
             <Box sx={{
               bgcolor: 'white',
               borderRadius: 2,
-
+              width: '100%',
+              minHeight: '215px',
               display: 'flex',
               justifyContent: 'center',
               flexDirection: 'column'
@@ -95,96 +92,62 @@ const Slider = (props) => {
               </Typography>
             </Box>
           ) : (
-            <SlickSlider
-              slidesToShow={2}
-              infinite={false}
-              dots={true}
-              draggable={false}
-              responsive={[
-                {
-                  breakpoint: 2100,
-                  settings: {
-                    slidesToShow: 2,
-                    slidesToScroll: 2
-                  }
-                },
-                {
-                  breakpoint: 1100,
-                  settings: {
-                    slidesToShow: 3,
-                    slidesToScroll: 3
-                  }
-                },
-                {
-                  breakpoint: 850,
-                  settings: {
-                    slidesToShow: 2,
-                    slidesToScroll: 2
-                  }
-                },
-                {
-                  breakpoint: 600,
-                  settings: {
-                    slidesToShow: 1,
-                    slidesToScroll: 1
-                  }
-                }
-              ]}
-            >
-              {(slidesFields ?? []).map(({ value: s, id }, idx) => {
-                return (
-                  <Box
-                    key={s.id}
-                    sx={{
-                      bgcolor: 'white',
-                      maxWidth: '200px'
+            (slidesFields ?? []).map(({ value: s, id }, idx) => {
+              return (
+                <Box
+                  key={s.id}
+                  sx={{
+                    bgcolor: 'white',
+                    flexBasis: '30%',
+                    maxWidth: '30%',
+                    flexGrow: 1,
+                    flexShrink: 0,
+                    margin: 1
+                  }}
+                >
+                  <img
+                    src={getImageSrc(s.image)}
+                    alt={s.title}
+                    style={{
+                      borderRadius: 5,
+                      width: '100%',
+                      backgroundColor: '#BABABA',
+                      minHeight: '103px'
                     }}
-                  >
-                    <img
-                      src={getImageSrc(s.image)}
-                      alt={s.title}
+                  />
+                  <Box marginTop={1} display='flex' flexWrap='nowrap' justifyContent='space-between' alignItems='center'>
+                    <Typography
+                      fontSize='16px'
+                      fontWeight={500}
+                      color='var(--theme-color)'
+                      textAlign='center'
+                      lineHeight='30px'
+                      marginLeft={1}
+                      component={'h3'}
+
                       style={{
-                        borderRadius: 5,
-                        width: '100%',
-                        backgroundColor: '#BABABA',
-                        minHeight: '103px'
+                        WebkitLineClamp: 1,
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        cursor: 'default'
                       }}
-                    />
-                    <Box marginTop={1} display='flex' flexWrap='nowrap' justifyContent='space-between' alignItems='center'>
-                      <Typography
-                        fontSize='16px'
-                        fontWeight={500}
-                        color='var(--theme-color)'
-                        textAlign='center'
-                        lineHeight='30px'
-                        marginLeft={1}
-                        component={'h3'}
-
-                        style={{
-                          WebkitLineClamp: 1,
-                          display: '-webkit-box',
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          cursor: 'default'
+                    >
+                      {s.title}
+                    </Typography>
+                    <Tooltip disableFocusListener title='Видалити слайд'>
+                      <IconButton
+                        color='error'
+                        onClick={() => {
+                          handleDeleteSlide(idx)
                         }}
-                      >
-                        {s.title}
-                      </Typography>
-                      <Tooltip disableFocusListener title='Видалити слайд'>
-                        <IconButton
-                          color='error'
-                          onClick={() => {
-                            handleDeleteSlide(idx)
-                          }}
-                        ><HighlightOffIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                      ><HighlightOffIcon />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
-                )
-              })}
-
-            </SlickSlider>
+                </Box>
+              )
+            })
           )}
       </Box>
       {(availableOptions ?? []).length > 0 && (
@@ -200,43 +163,15 @@ const Slider = (props) => {
             label='Додати слайд'
             onClick={handleOpenModal}
           />
-          <Popover
+          <OptionsPicker
             id={id}
             open={open}
             anchorEl={anchorEl}
+            options={availableOptions}
+            onAdd={handleAddSlide}
             onClose={handleClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <Typography sx={{ p: 2 }}>
-              Виберіть {dataType == 'projects' ? 'проєкт' : dataType == 'services' ? 'послугу' : 'сезонну пропозицію'}
-            </Typography>
-            <Box
-              maxHeight={350}
-              display='flex'
-              flexDirection='column'
-              padding={2}
-              style={{
-                gap: 10,
-                overflowY: 'auto'
-              }}
-            >
-              {availableOptions
-                .map((o) => (
-                  <Chip
-                    key={o.id}
-                    className='slide-option'
-                    onClick={() => {
-                      handleAddSlide(o);
-                      handleClose()
-                    }}
-                    label={o.title ?? o.name ?? o.label}
-                  />
-                ))}
-            </Box>
-          </Popover>
+            dataType={dataType}
+          />
         </Box>
       )}
     </Box>

@@ -6,6 +6,7 @@ import AddButton from '../common/AddButton';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { getImageSrc } from '../../services/storage-service';
 import ErrorMessage from '../common/ErrorMessage';
+import OptionsPicker from '../common/OptionsPicker';
 
 const OurWorks = ({
   registerName,
@@ -38,6 +39,7 @@ const OurWorks = ({
     if (project.id) {
       append({ value: project })
     }
+    setAnchorEl(null);
   }
 
   const open = Boolean(anchorEl);
@@ -46,7 +48,6 @@ const OurWorks = ({
   const availableOptions = projects
     .filter(p => !fields.find(project => project.value.id == p.id));
 
-  console.log(errors);
   return (
     <>
       <Grid container>
@@ -109,49 +110,21 @@ const OurWorks = ({
         alignItems='center'
         position='relative'
       >
-        {(availableOptions ?? []).length > 0 && fields.length < 4 && (
+        {(availableOptions ?? []).length > 0 && fields.length < 3 && (
           <>
             <AddButton
               label='Додати проєкт'
               onClick={handleOpenModal}
             />
-            <Popover
+            <OptionsPicker
               id={id}
               open={open}
               anchorEl={anchorEl}
+              options={availableOptions}
+              onAdd={handleAddProject}
               onClose={handleClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-            >
-              <Typography sx={{ p: 2 }}>
-                Виберіть проєкт
-              </Typography>
-              <Box
-                maxHeight={350}
-                display='flex'
-                flexDirection='column'
-                padding={2}
-                style={{
-                  gap: 10,
-                  overflowY: 'auto'
-                }}
-              >
-                {availableOptions
-                  .map((o) => (
-                    <Chip
-                      key={o.id}
-                      className='slide-option'
-                      onClick={() => {
-                        handleAddProject(o);
-                        handleClose()
-                      }}
-                      label={o.title ?? o.name ?? o.label}
-                    />
-                  ))}
-              </Box>
-            </Popover>
+              dataType={'projects'}
+            />
           </>
         )}
 

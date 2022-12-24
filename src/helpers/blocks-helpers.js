@@ -38,12 +38,11 @@ export const submitBlock = async (formData, isMainPage) => {
   }
 }
 
-export const removeBlock = (id, isMainPage) => isMainPage ? deleteMainPageBlock(id) : deleteBlock(id)
 
 export const sortBlocks = (blocks) => blocks.sort((a, b) => {
   const aPosition = a?.value?.position ?? a?.position ?? 0
   const bPosition = b?.value?.position ?? b?.position ?? 0
-  
+
   if (aPosition < bPosition) {
     return -1;
   } else if (aPosition > bPosition) {
@@ -53,7 +52,7 @@ export const sortBlocks = (blocks) => blocks.sort((a, b) => {
   }
 })
 
-export const beforeBlockSubmitting = async (blockData) => {
+const beforeBlockSubmitting = async (blockData) => {
   let module = null;
   try {
     module = await import(`./blocksFunctions/${blockData.type}.js`)
@@ -63,7 +62,7 @@ export const beforeBlockSubmitting = async (blockData) => {
     : new Promise((resolve) => resolve(blockData));
 }
 
-export const beforeBlockDeleting = async (blockData) => {
+const beforeBlockDeleting = async (blockData) => {
   let module = null;
   try {
     module = await import(`./blocksFunctions/${blockData.type}.js`)
@@ -71,4 +70,24 @@ export const beforeBlockDeleting = async (blockData) => {
   return (module && module.beforeSubmit)
     ? await module.beforeDelete(blockData)
     : new Promise((resolve) => resolve());
+}
+
+export const submitBlocks = async (blocks, blocksToDelete, isMainPage = false) => {
+  const newBlocksValue = []
+  await Promise.all((blocks ?? []).map(async ({ value: block }) => {
+    const submitPayload = await beforeBlockSubmitting(block);
+    const response = await submitBlock(submitPayload, isMainPage);
+
+    newBlocksValue.push({ value: response })
+  }))
+
+  const deleteFunc = isMainPage ? deleteMainPageBlock : deleteBlock
+  await Promise.all((blocksToDelete ?? []).map(async block => {
+    if (block.id) {
+      await beforeBlockDeleting(block)
+      await deleteFunc(block.id)
+    }
+  }))
+
+  return sortBlocks(newBlocksValue);
 }
