@@ -68,120 +68,120 @@ const Block = (
 
   const invalidData = Object.keys(errors ?? {}).length > 0;
   return (
-        <Accordion expanded={invalidData || expanded}>
-          <AccordionSummary>
-            <Box
-              sx={{
-                flexGrow: 1,
-                display: 'flex',
-                alignItems: 'center',
-                cursor: invalidData ? 'initial' : 'pointer'
-              }}
-              onClick={() => setExpanded(prev => {
-                if (prev) {
-                  return invalidData
-                } else {
-                  return !prev
-                }
-              })}
-            >
-              {!error ? (
-                <Box sx={{
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
-                  <Typography
-                    component="h3"
-                    fontSize='14px'
-                    lineHeight='20px'
-                  >
-                    {label}
-                  </Typography>
-                  {invalidData && (
-                    <ErrorMessage type={'invalidForm'} />
-                  )}
-                </Box>
-              ) : (
-                <Typography
-                  component="h4"
-                  fontSize='12px'
-                  lineHeight='20px'
-                  sx={{
-                    pl: 2
-                  }}
-                >Сталася помилка під час завантаження даного блока!
-                </Typography>
+    <Accordion expanded={invalidData || expanded}>
+      <AccordionSummary>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            alignItems: 'center',
+            cursor: invalidData ? 'initial' : 'pointer'
+          }}
+          onClick={() => setExpanded(prev => {
+            if (prev) {
+              return invalidData
+            } else {
+              return !prev
+            }
+          })}
+        >
+          {!error ? (
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <Typography
+                component="h3"
+                fontSize='14px'
+                lineHeight='20px'
+              >
+                {label}
+              </Typography>
+              {invalidData && (
+                <ErrorMessage type={'invalidForm'} />
               )}
             </Box>
-            <Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' >
-              <Controller
-                name={`${registerName}.is_published`}
+          ) : (
+            <Typography
+              component="h4"
+              fontSize='12px'
+              lineHeight='20px'
+              sx={{
+                pl: 2
+              }}
+            >Сталася помилка під час завантаження даного блока!
+            </Typography>
+          )}
+        </Box>
+        <Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' >
+          <Controller
+            name={`${registerName}.is_published`}
+            control={control}
+            render={({ field }) => {
+              return (
+                <Tooltip title={field.value ? 'Опубліковано' : 'Приховано'}>
+                  <Checkbox
+                    checked={field.value}
+                    onChange={async (event, value) => {
+                      field.onChange(value);
+                    }}
+                    checkedIcon={<VisibilityIcon style={{ fontSize: '20px', color: '#40a471' }} />}
+                    icon={<VisibilityOffIcon style={{ fontSize: '20px', }} />}
+                  />
+                </Tooltip>
+              )
+            }}
+          />
+          <ButtonGroup>
+            <Button
+              disableRipple={true}
+              onClick={() => onMove(idx, idx + 1)}
+              disabled={idx + 1 == blocksLength}
+            >
+              <Tooltip title={'Перемістит вниз'}>
+                <ArrowCircleDownIcon />
+              </Tooltip>
+            </Button>
+            <Button
+              disableRipple={true}
+              onClick={() => onMove(idx, idx - 1)}
+              disabled={idx == 0}
+            >
+              <Tooltip title={'Перемістит вверх'}>
+                <ArrowCircleUpIcon />
+              </Tooltip>
+            </Button>
+            <Button
+              color='error'
+              onClick={() => onDeleteBlock(data)}
+            >
+              <Tooltip title={'Видалити блок'}>
+                <HighlightOffIcon />
+              </Tooltip>
+            </Button>
+          </ButtonGroup>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Suspense fallback={<StyledLinearProgress sx={{ height: '8px', opacity: '0.6' }} />}>
+          <Box sx={{
+            pt: 2,
+            px: 2,
+          }}>
+            {Element && (
+              <Element
+                registerName={registerName}
+                register={register}
                 control={control}
-                render={({ field }) => {
-                  return (
-                    <Tooltip title={field.value ? 'Опубліковано' : 'Приховано'}>
-                      <Checkbox
-                        checked={field.value}
-                        onChange={async (event, value) => {
-                          field.onChange(value);
-                        }}
-                        checkedIcon={<VisibilityIcon style={{ fontSize: '20px', color: '#40a471' }} />}
-                        icon={<VisibilityOffIcon style={{ fontSize: '20px', }} />}
-                      />
-                    </Tooltip>
-                  )
-                }}
-              />
-              <ButtonGroup>
-                <Button
-                  disableRipple={true}
-                  onClick={() => onMove(idx, idx + 1)}
-                  disabled={idx + 1 == blocksLength}
-                >
-                  <Tooltip title={'Перемістит вниз'}>
-                    <ArrowCircleDownIcon />
-                  </Tooltip>
-                </Button>
-                <Button
-                  disableRipple={true}
-                  onClick={() => onMove(idx, idx - 1)}
-                  disabled={idx == 0}
-                >
-                  <Tooltip title={'Перемістит вверх'}>
-                    <ArrowCircleUpIcon />
-                  </Tooltip>
-                </Button>
-                <Button
-                  color='error'
-                  onClick={() => onDeleteBlock(data)}
-                >
-                  <Tooltip title={'Видалити блок'}>
-                    <HighlightOffIcon />
-                  </Tooltip>
-                </Button>
-              </ButtonGroup>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Suspense fallback={<StyledLinearProgress sx={{ height: '8px', opacity: '0.6' }} />}>
-              <Box sx={{
-                pt: 2,
-                px: 2,
-              }}>
-                {Element && (
-                  <Element
-                    registerName={registerName}
-                    register={register}
-                    control={control}
-                    errors={errors}
-                    appendImageToDelete={appendImageToDelete}
-                    projects={projects}
-                    services={services}
-                  />)}
-              </Box>
-            </Suspense>
-          </AccordionDetails>
-        </Accordion >
+                errors={errors}
+                appendImageToDelete={appendImageToDelete}
+                projects={projects}
+                services={services}
+              />)}
+          </Box>
+        </Suspense>
+      </AccordionDetails>
+    </Accordion >
   )
 }
 

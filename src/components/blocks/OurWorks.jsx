@@ -5,17 +5,25 @@ import AddButton from '../common/AddButton';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { getImageSrc } from '../../services/storage-service';
+import ErrorMessage from '../common/ErrorMessage';
 
 const OurWorks = ({
   registerName,
   control,
-  projects
+  projects,
+  errors
 }) => {
   const {
     fields,
     append,
     remove,
-  } = useFieldArray({ name: `${registerName}.projects`, control: control, rules: { minLength: 3, maxLength: 3 } })
+  } = useFieldArray({
+    name: `${registerName}.projects`, control: control, rules: {
+      validate: {
+        length: (value) => value.length == 3
+      }
+    }
+  })
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleOpenModal = (event) => {
@@ -38,6 +46,7 @@ const OurWorks = ({
   const availableOptions = projects
     .filter(p => !fields.find(project => project.value.id == p.id));
 
+  console.log(errors);
   return (
     <>
       <Grid container>
@@ -93,58 +102,63 @@ const OurWorks = ({
           )
         })}
       </Grid>
-      {(availableOptions ?? []).length > 0 && fields.length<4 && (
-
-        <Box
-          display='flex'
-          justifyContent='space-between'
-          marginTop={3}
-          alignItems='center'
-          position='relative'
-        >
-          <AddButton
-            label='Додати проєкт'
-            onClick={handleOpenModal}
-          />
-          <Popover
-            id={id}
-            open={open}
-            anchorEl={anchorEl}
-            onClose={handleClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <Typography sx={{ p: 2 }}>
-              Виберіть проєкт
-            </Typography>
-            <Box
-              maxHeight={350}
-              display='flex'
-              flexDirection='column'
-              padding={2}
-              style={{
-                gap: 10,
-                overflowY: 'auto'
+      <Box
+        display='flex'
+        justifyContent='center'
+        marginTop={3}
+        alignItems='center'
+        position='relative'
+      >
+        {(availableOptions ?? []).length > 0 && fields.length < 4 && (
+          <>
+            <AddButton
+              label='Додати проєкт'
+              onClick={handleOpenModal}
+            />
+            <Popover
+              id={id}
+              open={open}
+              anchorEl={anchorEl}
+              onClose={handleClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
               }}
             >
-              {availableOptions
-                .map((o) => (
-                  <Chip
-                    key={o.id}
-                    className='slide-option'
-                    onClick={() => {
-                      handleAddProject(o);
-                      handleClose()
-                    }}
-                    label={o.title ?? o.name ?? o.label}
-                  />
-                ))}
-            </Box>
-          </Popover>
-        </Box>
-      )}
+              <Typography sx={{ p: 2 }}>
+                Виберіть проєкт
+              </Typography>
+              <Box
+                maxHeight={350}
+                display='flex'
+                flexDirection='column'
+                padding={2}
+                style={{
+                  gap: 10,
+                  overflowY: 'auto'
+                }}
+              >
+                {availableOptions
+                  .map((o) => (
+                    <Chip
+                      key={o.id}
+                      className='slide-option'
+                      onClick={() => {
+                        handleAddProject(o);
+                        handleClose()
+                      }}
+                      label={o.title ?? o.name ?? o.label}
+                    />
+                  ))}
+              </Box>
+            </Popover>
+          </>
+        )}
+
+        {errors?.projects?.root?.type == 'length' && (
+          <ErrorMessage type='projectsLength' length={3} />
+        )}
+      </Box>
     </>
   )
 }

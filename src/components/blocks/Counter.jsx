@@ -24,109 +24,141 @@ const Counter = ({
     rules: {
       maxLength: 3,
       minLength: 1,
-      validate: (value) => {
-        return value.length > 0
+      validate: {
+        minLength: (value) => value.length > 0,
+        maxLength: (value) => value.length < 4
       }
     }
   })
 
   return (
     <Box>
-      <Grid container spacing={2}>
-        {fields.map((c, idx) => (
-          <Grid item xs={6} lg={3} key={c.id} >
-            <Grow in={idx !== null}>
-              <Box
-                bgcolor='#f7f7f7'
-                borderRadius={2}
-                display='flex'
-                justifyContent='center'
-                flexDirection='column'
-                padding={2}
-              >
+      {errors?.data?.counters?.root?.type == 'minLength' ? (
+        <Box sx={{
+          bgcolor: 'white',
+          borderRadius: 2,
+          display: 'flex',
+          justifyContent: 'center',
+          flexDirection: 'column'
+        }}>
+          <Typography
+            color='#BABABA'
+            textAlign='center'
+            fontSize='22px'
+            fontWeight={600}
+          >
+            Лічильників немає
+          </Typography>
+          <Typography
+            sx={{
+              color: 'red',
+              fontSize: '14px',
+              fontWeight: 400,
+              mt: 1,
+              textAlign: 'center'
+            }}
+          >
+            Додайте щонайменше 1 лічильник до блока
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={2}>
+          {fields.map((c, idx) => (
+            <Grid item xs={6} lg={3} key={c.id} >
+              <Grow in={idx !== null}>
                 <Box
-                  marginBottom={2}
+                  bgcolor='#f7f7f7'
+                  borderRadius={2}
                   display='flex'
-                  width='100%'
-                  justifyContent='space-between'
-                  alignItems='center'
+                  justifyContent='center'
+                  flexDirection='column'
+                  padding={2}
                 >
-                  <Typography
-                    fontSize={18}
-                    textAlign='center'
-                    color='var(--theme-color)'
-                    fontWeight={500}
-                    flexGrow={1}
+                  <Box
+                    marginBottom={2}
+                    display='flex'
+                    width='100%'
+                    justifyContent='space-between'
+                    alignItems='center'
                   >
-                    Лічильник №{idx + 1}
-                  </Typography>
-                  <Tooltip disableFocusListener title='Видалити лічильник'>
-                    <IconButton
-                      color='error'
-                      onClick={() => remove(idx)}
-                    ><HighlightOffIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Box marginBottom={2}>
-                  <FormControl variant="standard" fullWidth >
+                    <Typography
+                      fontSize={18}
+                      textAlign='center'
+                      color='var(--theme-color)'
+                      fontWeight={500}
+                      flexGrow={1}
+                    >
+                      Лічильник №{idx + 1}
+                    </Typography>
+                    <Tooltip disableFocusListener title='Видалити лічильник'>
+                      <IconButton
+                        color='error'
+                        onClick={() => remove(idx)}
+                      ><HighlightOffIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                  <Box marginBottom={2}>
+                    <FormControl variant="standard" fullWidth >
+                      <StyledInputLabel required shrink htmlFor={`counter-${c.id}`}>
+                        Заголовок лічильника
+                      </StyledInputLabel>
+                      <Controller
+                        name={`${registerName}.data.counters.${idx}.title`}
+                        control={control}
+                        rules={{ maxLength: 100, required: true }}
+                        render={({ field }) => (
+                          <StyledInputBase
+                            value={field.value}
+                            onChange={field.onChange}
+                            id={`counter-${c.id}`}
+                            name={`data-counters${idx}-title`}
+                          />
+                        )}
+                      />
+                      {errors && errors?.data?.counters && errors?.data?.counters[idx]?.title && (
+                        <Box sx={{ mt: 1 }}>
+                          <ErrorMessage
+                            type={errors.data.counters[idx]?.title?.type}
+                            maxLength={errors.data.counters[idx]?.title?.type == 'maxLength' ? 100 : null} />
+                        </Box>
+                      )}
+                    </FormControl>
+                  </Box>
+                  <FormControl variant="standard" fullWidth>
                     <StyledInputLabel required shrink htmlFor={`counter-${c.id}`}>
-                      Заголовок лічильника
+                      Лічильник
                     </StyledInputLabel>
                     <Controller
-                      name={`${registerName}.data.counters.${idx}.title`}
+                      name={`${registerName}.data.counters.${idx}.counter`}
                       control={control}
-                      rules={{ maxLength: 100, required: true }}
+                      rules={{ min: 0, required: true }}
                       render={({ field }) => (
                         <StyledInputBase
+                          type='number'
                           value={field.value}
                           onChange={field.onChange}
+                          name={`data-counters${idx}-counter`}
                           id={`counter-${c.id}`}
-                          name={`data-counters${idx}-title`}
                         />
                       )}
                     />
-                    {errors && errors?.data?.counters && errors?.data?.counters[idx]?.title && (
+                    {errors && errors?.data?.counters && errors?.data?.counters[idx]?.counter && (
                       <Box sx={{ mt: 1 }}>
                         <ErrorMessage
-                          type={errors.data.counters[idx]?.title?.type}
-                          maxLength={errors.data.counters[idx]?.title?.type == 'maxLength' ? 100 : null} />
+                          type={errors.data.counters[idx]?.counter?.type}
+                          min={errors.data.counters[idx]?.counter?.type == 'min' ? 0 : null} />
                       </Box>
                     )}
                   </FormControl>
                 </Box>
-                <FormControl variant="standard" fullWidth>
-                  <StyledInputLabel required shrink htmlFor={`counter-${c.id}`}>
-                    Лічильник
-                  </StyledInputLabel>
-                  <Controller
-                    name={`${registerName}.data.counters.${idx}.counter`}
-                    control={control}
-                    rules={{ min: 0, required: true }}
-                    render={({ field }) => (
-                      <StyledInputBase
-                        type='number'
-                        value={field.value}
-                        onChange={field.onChange}
-                        name={`data-counters${idx}-counter`}
-                        id={`counter-${c.id}`}
-                      />
-                    )}
-                  />
-                  {errors && errors?.data?.counters && errors?.data?.counters[idx]?.counter && (
-                    <Box sx={{ mt: 1 }}>
-                      <ErrorMessage
-                        type={errors.data.counters[idx]?.counter?.type}
-                        min={errors.data.counters[idx]?.counter?.type == 'min' ? 0 : null} />
-                    </Box>
-                  )}
-                </FormControl>
-              </Box>
-            </Grow>
-          </Grid>
-        )
-        )}
-      </Grid>
+              </Grow>
+            </Grid>
+          )
+          )}
+        </Grid>
+      )
+      }
       <Box display='flex' justifyContent='center' marginTop={4}>
         {fields.length < 3 && (<AddButton
           label='Додати лічильник'

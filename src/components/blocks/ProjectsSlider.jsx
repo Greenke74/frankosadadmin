@@ -3,21 +3,10 @@ import { getProjects } from '../../services/portfolio-api-service.js';
 import { getImageSrc } from '../../services/storage-service.js';
 import Slider from '../common/Slider.jsx'
 
-const ProjectsSlider = ({ form }, ref) => {
-  const [projects, setProjects] = useState([]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    getProjects().then(response => {
-      mounted && setProjects(response)
-    })
-
-    return () => mounted = false;
-  }, [])
+const ProjectsSlider = (props) => {
 
   return (
-    <Slider options={projects} dataType='projects' form={form} />
+    <Slider options={props.projects} dataType='projects' {...props} />
   )
 }
 

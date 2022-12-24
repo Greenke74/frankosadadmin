@@ -10,5 +10,6 @@ export const errorMessages = {
     'Invalid login credentials': 'Логін або пароль неправильні',
     passwordsNotEqual: 'Паролі не співпадають',
     invalidForm: 'Некоректні дані!',
-    imageRequired: 'Необхідно додати зображення'
+    imageRequired: 'Необхідно додати зображення',
+    projectsLength: (length) => `Необхідно вибрати ${length} проєкти(-ів)`
 }
