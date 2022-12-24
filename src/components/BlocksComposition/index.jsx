@@ -1,7 +1,9 @@
-import React from 'react'
-import { Box, Grid } from '@mui/material';
+import React, { useState, useEffect } from 'react'
+import { Box, Grid, Grow } from '@mui/material';
 import BlockModal from './BlockModal';
 import Block from './Block';
+import { getProjects } from '../../services/portfolio-api-service';
+import { getServices } from '../../services/services-api-service';
 
 const BlocksComposition = ({
   fieldArray,
@@ -18,6 +20,17 @@ const BlocksComposition = ({
     move: moveBlock,
     update: updateBlock
   } = fieldArray;
+
+  const [projects, setProjects] = useState([]);
+  const [services, setServices] = useState([]);
+  const [offers, setOffers] = useState([]);
+
+  useEffect(() => {
+    getProjects().then(data => setProjects(data))
+    getServices().then(data => setServices(data))
+    // getOffers().then(data => setOffers(data))
+
+  }, [])
 
   const onBlockMove = (from, to) => {
     if (from == blocks.length || to < 0) {
@@ -39,27 +52,33 @@ const BlocksComposition = ({
           {blocks.map(({ value, id }, idx) => {
             return (
               <Grid item key={id ?? value.id} >
-                <Block
-                  data={value}
-                  blocksLength={blocks.length}
-                  idx={idx}
-                  isMainPage={isMainPage}
-                  update={updateBlock}
-                  move={moveBlock}
-                  onMove={onBlockMove}
-                  remove={removeBlock}
-                  onInsertBlock={onInsertBlock}
-                  onDeleteBlock={(block) => {
-                    if (block.id !== undefined) {
-                      onDeleteBlock(block);
-                    }
-                    removeBlock(idx);
-                  }}
-                  registerName={`blocks.${idx}.value`}
-                  register={form.register}
-                  control={form.control}
-                  formState={form.formState}
-                />
+                <Grow in={true}>
+                  <div>
+                    <Block
+                      data={value}
+                      blocksLength={blocks.length}
+                      idx={idx}
+                      isMainPage={isMainPage}
+                      update={updateBlock}
+                      move={moveBlock}
+                      onMove={onBlockMove}
+                      remove={removeBlock}
+                      onInsertBlock={onInsertBlock}
+                      onDeleteBlock={(block) => {
+                        if (block.id !== undefined) {
+                          onDeleteBlock(block);
+                        }
+                        removeBlock(idx);
+                      }}
+                      registerName={`blocks.${idx}.value`}
+                      register={form.register}
+                      control={form.control}
+                      formState={form.formState}
+                      projects={projects}
+                      services={services}
+                    />
+                  </div>
+                </Grow>
               </Grid>
             )
           })}

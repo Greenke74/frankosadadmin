@@ -66,7 +66,7 @@ const MainPage = () => {
 			}
 		}))
 
-		form.reset({ blocks: newBlocksValue })
+		form.reset({ blocks: sortBlocks(newBlocksValue) })
 		setBlocksToDelete([]);
 		setIsLoading(false);
 
@@ -77,7 +77,7 @@ const MainPage = () => {
 		<>
 			<PageHeader
 				title='Головна сторінка'
-				onSubmit={form.handleSubmit(onSubmit, checkErrorsAlert)}
+				onSubmit={form.handleSubmit(onSubmit, (e) => {console.log(e); checkErrorsAlert()})}
 				submitDisabled={isLoading}
 			/>
 			<Page>

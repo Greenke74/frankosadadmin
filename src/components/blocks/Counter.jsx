@@ -22,7 +22,11 @@ const Counter = ({
     control: control,
     name: `${registerName}.data.counters`,
     rules: {
-      maxLength: 4
+      maxLength: 3,
+      minLength: 1,
+      validate: (value) => {
+        return value.length > 0
+      }
     }
   })
 
@@ -124,9 +128,9 @@ const Counter = ({
         )}
       </Grid>
       <Box display='flex' justifyContent='center' marginTop={4}>
-        {fields.length < 4 && (<AddButton
+        {fields.length < 3 && (<AddButton
           label='Додати лічильник'
-          onClick={() => fields.length < 4 && append({ title: '', counter: 0 })}
+          onClick={() => fields.length < 3 && append({ title: '', counter: 0 })}
         />)}
       </Box>
     </Box >

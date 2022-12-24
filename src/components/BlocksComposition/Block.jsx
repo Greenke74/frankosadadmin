@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { Controller } from 'react-hook-form';
 
-import { Box, ButtonGroup, Button, Typography, Tooltip, Checkbox, Grow } from '@mui/material'
+import { Box, ButtonGroup, Button, Typography, Tooltip, Checkbox } from '@mui/material'
 import { Accordion, AccordionSummary } from './BlockAccordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import { StyledLinearProgress } from '../common/StyledComponents';
@@ -29,7 +29,9 @@ const Block = (
     registerName,
     register,
     control,
-    formState
+    formState,
+    projects,
+    services
   }
 ) => {
   const [expanded, setExpanded] = useState(false);
@@ -66,8 +68,6 @@ const Block = (
 
   const invalidData = Object.keys(errors ?? {}).length > 0;
   return (
-    <Grow in={true}>
-      <div>
         <Accordion expanded={invalidData || expanded}>
           <AccordionSummary>
             <Box
@@ -175,13 +175,13 @@ const Block = (
                     control={control}
                     errors={errors}
                     appendImageToDelete={appendImageToDelete}
+                    projects={projects}
+                    services={services}
                   />)}
               </Box>
             </Suspense>
           </AccordionDetails>
         </Accordion >
-      </div>
-    </Grow>
   )
 }
 

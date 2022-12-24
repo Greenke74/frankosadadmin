@@ -38,11 +38,16 @@ export const blocks = [
 		label: 'Редактор контенту',
 		type: 'htmlContent',
 		element: () => import('./HtmlContent.jsx')
+	},
+	{
+		label: 'Наші роботи',
+		type: 'ourWorks',
+		element: () => import('./OurWorks.jsx')
 	}
 ]
 
 export const mainPageBlocks = [
-	'counter', 'stepByStep', 'servicesSlider', 'projectsSlider'
+	'counter', 'stepByStep', 'servicesSlider', 'projectsSlider', 'ourWorks'
 ]
 
 export const projectBlocks = [
