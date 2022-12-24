@@ -53,14 +53,19 @@ const BlockModal = ({ allowedBlocks, appendBlock, blocksLength, isMainPage = fal
           sx={{
             display: 'flex',
             width: '100%',
-            justifyContent: 'center',
+            justifyContent: 'start',
             alignItems: 'center',
             flexWrap: 'nowrap',
             border: `1px dashed #2e7d3290`,
+            bgcolor: '#edffee',
             borderRadius: '5px',
             overflow: 'hidden',
-            height: 60,
-            textTransform: 'none'
+            height: 58,
+            textTransform: 'none',
+            pl: 2,
+            '&:hover': {
+              bgcolor: '#dcf0dd'
+            }
           }}
         />
       </Box>
@@ -99,7 +104,7 @@ const BlockModal = ({ allowedBlocks, appendBlock, blocksLength, isMainPage = fal
             return (
               <Box key={b.label} sx={{ m: 1, width: '100%', '& .MuiButton-root': { width: '100%' } }}>
                 <Button
-                  style={{
+                  sx={{
                     textTransform: 'none',
                     color: 'var(--theme-color)',
                     borderRightColor: 'var(--menu-active-button-color)'

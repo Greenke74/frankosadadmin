@@ -12,21 +12,18 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import { getImageSrc } from '../../services/storage-service.js';
 import { useFieldArray } from 'react-hook-form';
 
-const Slider = ({ options, dataType, form: { control, formState } }) => {
-  const slideIds = dataType + '_ids';
-
+const Slider = ({
+  options, dataType,
+  registerName,
+  control
+}) => {
+  
   const {
     fields: slidesFields,
     append: appendSlide,
     remove: removeSlide,
-  } = useFieldArray({ name: dataType, control: control, rules: { minLength: 1 } })
-
-  const {
-    fields: slidesIdsFields,
-    append: appendSlideId,
-    remove: removeSlideId
-  } = useFieldArray({ name: slideIds, control: control, rules: { minLength: 1 } })
-
+  } = useFieldArray({ name: `${registerName}.${dataType}`, control: control, rules: { minLength: 1 } })
+  
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleOpenModal = (event) => {
@@ -39,15 +36,12 @@ const Slider = ({ options, dataType, form: { control, formState } }) => {
 
   const handleAddSlide = (slide) => {
     if (slide.id) {
-      appendSlideId({ value: slide.id })
       appendSlide({ value: slide })
     }
   }
 
   const handleDeleteSlide = (idx) => {
-
     removeSlide(idx);
-    removeSlideId(idx)
   }
 
   const open = Boolean(anchorEl);
@@ -121,6 +115,7 @@ const Slider = ({ options, dataType, form: { control, formState } }) => {
                 key={s.id}
                 flexGrow='1'
                 padding={1}
+                margin={1}
                 bgcolor='white'
                 flexShrink='0'
               >

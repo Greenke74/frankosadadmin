@@ -10,25 +10,29 @@ import ImageUploader from '../common/ImageUploader';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 import { getSrcFromFile } from '../../helpers/file-helpers';
-import { deleteImage, getImageSrc, uploadImage } from '../../services/storage-service';
+import { getImageSrc } from '../../services/storage-service';
 import ErrorMessage from '../common/ErrorMessage';
-import { CameraAlt, Delete } from '@mui/icons-material';
+import { CameraAlt } from '@mui/icons-material';
 
 const IMAGE_ASPECT_RATIO = 2 / 1;
-const StepByStep = ({ form, appendImageToDelete }) => {
+const StepByStep = ({
+  registerName,
+  register,
+  control,
+  errors,
+  appendImageToDelete
+}) => {
 
-  const { register, control, formState: { errors } } = form;
   const {
     fields,
     append,
     remove,
   } = useFieldArray({
     control: control,
-    name: 'data.steps',
+    name: `${registerName}.data.steps`,
     rules: { maxLength: 5, minLength: 1 }
   })
 
-  console.log(errors);
   return (
     <Box>
       <Box sx={{ mb: 3 }}>
@@ -36,7 +40,7 @@ const StepByStep = ({ form, appendImageToDelete }) => {
           <StyledInputLabel required shrink htmlFor="stepsBlockId">
             Заголовок блоку
           </StyledInputLabel>
-          <StyledInputBase {...register('data.stepsBlockTitle', { required: true, maxLength: 100 })} id='stepsBlockId' />
+          <StyledInputBase {...register(`${registerName}.data.stepsBlockTitle`, { required: true, maxLength: 100 })} id='stepsBlockId' />
         </FormControl>
         {errors && errors?.data?.stepsBlockTitle && (
           <Box sx={{ mt: 1 }}>
@@ -120,7 +124,7 @@ const StepByStep = ({ form, appendImageToDelete }) => {
                       Заголовок кроку
                     </StyledInputLabel>
                     <Controller
-                      name={`data.steps.${idx}.title`}
+                      name={`${registerName}.data.steps.${idx}.title`}
                       control={control}
                       rules={{ required: true, maxLength: 100 }}
                       render={({ field }) => (
@@ -147,7 +151,7 @@ const StepByStep = ({ form, appendImageToDelete }) => {
                       Опис кроку
                     </StyledInputLabel>
                     <Controller
-                      name={`data.steps.${idx}.description`}
+                      name={`${registerName}.data.steps.${idx}.description`}
                       control={control}
                       rules={{ required: true, maxLength: 500 }}
                       render={({ field }) => (
@@ -165,7 +169,7 @@ const StepByStep = ({ form, appendImageToDelete }) => {
                   {errors && errors?.data?.steps && errors?.data?.steps[idx]?.description && (
                     <ErrorMessage
                       type={errors?.data?.steps[idx]?.description?.type}
-                      maxLength={errors?.data?.steps[idx]?.description?.type=='maxLength' ?500 : undefined}
+                      maxLength={errors?.data?.steps[idx]?.description?.type == 'maxLength' ? 500 : undefined}
                     />
                   )}
                 </Grid>
@@ -188,13 +192,13 @@ const StepByStep = ({ form, appendImageToDelete }) => {
                           Зображення до кроку
                         </StyledInputLabel>
                         <Controller
-                          name={`data.steps.${idx}`}
+                          name={`${registerName}.data.steps.${idx}`}
                           control={control}
                           rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
                           render={({ field }) => {
                             return (
                               <Box sx={{ mt: 3, maxWidth: '100%', maxHeight: '170px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
-                                <Card sx={{ mb: 2}}>
+                                <Card sx={{ mb: 2 }}>
                                   {(field.value.imageUrl || field.value.image)
                                     ? (<>
                                       <img style={{ height: '135.5px' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />

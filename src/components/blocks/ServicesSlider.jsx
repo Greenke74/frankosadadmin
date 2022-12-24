@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { getServices } from '../../services/services-api-service.js'
 import Slider from '../common/Slider.jsx'
 
-const ServicesSlider = ({ form }, ref) => {
+const ServicesSlider = (props) => {
   const [services, setServices] = useState([]);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ const ServicesSlider = ({ form }, ref) => {
 
   }, [])
   return (
-    <Slider options={services} dataType='services' form={form} />
+    <Slider options={services} dataType='services' {...props} />
   )
 }
 

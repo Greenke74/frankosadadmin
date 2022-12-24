@@ -47,9 +47,19 @@ const Sidebar = () => {
       height: '100%',
       width: 'auto',
       position: 'sticky',
-      top: 0
+      top: 0,
+      borderRight: '1px solid var(--menu-active-button-color)'
     }}>
-      <Box padding='30px 20px' marginBottom='10px' display='flex' flexWrap='nowrap' alignItems='center' backgroundColor='var(--menu-button-color)' justifyContent='space-between'>
+      <Box
+        padding='30px 20px'
+        marginBottom='10px'
+        display='flex'
+        flexWrap='nowrap'
+        alignItems='center'
+        backgroundColor='var(--menu-button-color)'
+        justifyContent='space-between'
+        borderBottom='1px solid var(--menu-active-button-color)'
+      >
         <Link to='/account-settings' style={{
           textDecoration: 'none'
         }}>

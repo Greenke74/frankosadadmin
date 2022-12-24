@@ -2,11 +2,10 @@ import React from 'react'
 import { Box, Grid } from '@mui/material';
 import BlockModal from './BlockModal';
 import Block from './Block';
-import { dataTypes } from '../../services/data-types-service';
-import { submitBlock } from '../../helpers/blocks-helpers';
 
 const BlocksComposition = ({
   fieldArray,
+  form,
   allowedBlocks,
   isMainPage = false,
   onInsertBlock,
@@ -20,16 +19,14 @@ const BlocksComposition = ({
     update: updateBlock
   } = fieldArray;
 
-  const onBlockMove = async (from, to) => {
+  const onBlockMove = (from, to) => {
     if (from == blocks.length || to < 0) {
       return;
     }
 
+    form.setValue(`blocks.${to}.value.position`, from);
+    form.setValue(`blocks.${from}.value.position`, to);
     moveBlock(from, to);
-
-    await submitBlock({ ...blocks[from].value, position: Number(to) }, isMainPage)
-    await submitBlock({ ...blocks[to].value, position: Number(from) }, isMainPage)
-
   }
 
   return (
@@ -39,23 +36,11 @@ const BlocksComposition = ({
         </Box> */}
       <Box px={2} py={3}>
         <Grid container spacing={3} direction='column'>
-          {blocks.map(({ value }, idx) => {
-
-            const initialBlockState = {
-              ...value,
-              position: idx
-            }
-            dataTypes.forEach(type => {
-              if (value[type] && Array.isArray(value[type])) {
-                initialBlockState[type] = value[type].map(i => ({ value: i }))
-                initialBlockState[`${type}_ids`] = []
-              }
-            })
-
+          {blocks.map(({ value, id }, idx) => {
             return (
-              <Grid item key={initialBlockState.id} >
+              <Grid item key={id ?? value.id} >
                 <Block
-                  data={initialBlockState}
+                  data={value}
                   blocksLength={blocks.length}
                   idx={idx}
                   isMainPage={isMainPage}
@@ -64,7 +49,16 @@ const BlocksComposition = ({
                   onMove={onBlockMove}
                   remove={removeBlock}
                   onInsertBlock={onInsertBlock}
-                  onDeleteBlock={onDeleteBlock}
+                  onDeleteBlock={(block) => {
+                    if (block.id !== undefined) {
+                      onDeleteBlock(block);
+                    }
+                    removeBlock(idx);
+                  }}
+                  registerName={`blocks.${idx}.value`}
+                  register={form.register}
+                  control={form.control}
+                  formState={form.formState}
                 />
               </Grid>
             )

@@ -26,6 +26,6 @@ export const beforeSubmit = async (data) => {
   return result;
 }
 
-export const beforeDelete = async (data) => {
-  await Promise.all((data?.steps ?? []).map(async (s) => await deleteImage(s?.image)))
+export const beforeDelete = async (blockData) => {
+  return await Promise.all((blockData?.data?.steps ?? []).map(async (s) => await deleteImage(s?.image)))
 }

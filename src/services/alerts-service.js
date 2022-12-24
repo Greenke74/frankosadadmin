@@ -19,6 +19,7 @@ export const checkErrorsAlert = () => Swal.fire({
   ...toastSettings,
   icon: 'warning',
   title: 'Перевірте введені дані',
+  timer: 2500,
   customClass: 'wraningIcon'
 })
 
@@ -32,8 +33,13 @@ export const tryAgainAlert = () => Swal.fire({
   ...toastSettings,
   icon: 'error',
   title: 'Виникла неочікувана помилка!',
-  text: 'Спробуйте ще раз'
-  
+  text: 'Спробуйте ще раз',
+})
+
+export const blockDeletedAlert = () => Swal.fire({
+  ...toastSettings,
+  icon: 'success',
+  title: 'Блок успішно видалено',
 })
 
 export const unsavedChanges = () => Swal.fire({

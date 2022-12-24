@@ -9,15 +9,18 @@ import { StyledInputBase, StyledInputLabel } from '../common/StyledComponents';
 import ErrorMessage from '../common/ErrorMessage';
 import AddButton from '../common/AddButton';
 
-const Counter = ({ form }, ref) => {
-  const { control, formState: { errors } } = form;
+const Counter = ({
+  registerName,
+  control,
+  errors
+}) => {
   const {
     fields,
     append,
     remove
   } = useFieldArray({
-    control: form.control,
-    name: 'data.counters',
+    control: control,
+    name: `${registerName}.data.counters`,
     rules: {
       maxLength: 4
     }
@@ -67,7 +70,7 @@ const Counter = ({ form }, ref) => {
                       Заголовок лічильника
                     </StyledInputLabel>
                     <Controller
-                      name={`data.counters.${idx}.title`}
+                      name={`${registerName}.data.counters.${idx}.title`}
                       control={control}
                       rules={{ maxLength: 100, required: true }}
                       render={({ field }) => (
@@ -93,7 +96,7 @@ const Counter = ({ form }, ref) => {
                     Лічильник
                   </StyledInputLabel>
                   <Controller
-                    name={`data.counters.${idx}.counter`}
+                    name={`${registerName}.data.counters.${idx}.counter`}
                     control={control}
                     rules={{ min: 0, required: true }}
                     render={({ field }) => (
