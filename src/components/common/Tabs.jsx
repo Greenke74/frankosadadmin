@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react'
+import React from 'react'
 import { Tabs as MuiTabs, Tab, styled, Box } from '@mui/material'
 import { v1 as uuid } from 'uuid'
 
@@ -11,14 +11,7 @@ const StyledTabs = styled(MuiTabs)({
   }
 })
 
-const Tabs = ({ tabs = [], children }, ref) => {
-  const [currentTab, setCurrentTab] = useState(0);
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      setTab: (value) => setCurrentTab(value)
-    }))
+const Tabs = ({ tabs = [], children, currentTab, setCurrentTab }) => {
 
   const tabsWithErrors = tabs.map(t => ({ ...t, hasError: t.errors == true || Object.keys(t.errors ?? {}).length > 0 }))
 
@@ -51,8 +44,8 @@ const Tabs = ({ tabs = [], children }, ref) => {
         <Box sx={{
           display: 'flex',
           flexWrap: 'nowrap',
-          transition: '0.3s transform cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-          transform: `translate(calc(-100% * ${currentTab}), 0px)`
+          transition: '0.3s translate cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+          translate: `calc(-100% * ${currentTab})`
         }}>
           {children}
         </Box>
@@ -61,4 +54,4 @@ const Tabs = ({ tabs = [], children }, ref) => {
   )
 }
 
-export default forwardRef(Tabs);
+export default Tabs;

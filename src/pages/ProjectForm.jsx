@@ -11,12 +11,12 @@ import {
   Grid, IconButton,
   Typography,
   Select,
-  MenuItem
+  MenuItem,
+  Tooltip
 } from '@mui/material';
 
-import { CancelButton, StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
+import { StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
 import ImageUploader from '../components/common/ImageUploader';
-import SaveButton from '../components/common/SaveButton';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Tabs from '../components/common/Tabs';
 import BlocksComposition from '../components/BlocksComposition';
@@ -34,18 +34,22 @@ import { sortBlocks, submitBlocks } from '../helpers/blocks-helpers';
 import Page from '../components/common/Page';
 import PageHeader from '../components/common/PageHeader';
 import TabPanel from '../components/common/TabPanel';
+import { v1 as uuid } from 'uuid'
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
+const IMAGE_ASPECT_RATIO = 2 / 1;
 
 const ProjectForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const tabsRef = useRef(null);
 
-  const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState({});
+  const [currentTab, setCurrentTab] = useState(0);
+
+  const [imageToDelete, setImageToDelete] = useState(null);
   const [blocksToDelete, setBlocksToDelete] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
 
   const form = useForm({
     defaultValues: {
@@ -53,8 +57,11 @@ const ProjectForm = () => {
       location: '',
       type: '',
       alias: '',
-      image: '',
-      imageFile: null,
+      image: {
+        image: '',
+        imageSrc: '',
+        imageFile: null
+      },
       is_published: true,
       completed_at: new Date().toISOString().substr(0, 10),
       blocks: []
@@ -67,7 +74,6 @@ const ProjectForm = () => {
 
 
   const is_published = watch('is_published')
-  const image = watch('image')
 
   useEffect(() => {
     let mounted = true;
@@ -76,7 +82,11 @@ const ProjectForm = () => {
         ...getValues(),
         ...project,
         completed_at: project.completed_at.substr(0, 10),
-        image: getImageSrc(project.image),
+        image: {
+          image: project.image,
+          imageSrc: '',
+          imageFile: null
+        },
         blocks: sortBlocks(project.blocks ?? []).map(b => ({ value: b }))
       }
       reset(formData);
@@ -92,9 +102,7 @@ const ProjectForm = () => {
     const { blocks: formBlocks } = data;
     setIsSubmitting(true)
 
-    const blocks = await submitBlocks(formBlocks, blocksToDelete)
-
-    let imageKey = null;
+    const blocks = await submitBlocks(formBlocks, blocksToDelete, imagesToDelete)
 
     const { title } = data;
 
@@ -105,18 +113,19 @@ const ProjectForm = () => {
       blocks_ids: blocks.map(b => b.value.id)
     }
 
-    if (data.imageFile) {
+    let imageKey = null;
+    if (data?.image?.imageFile) {
+      imageKey = await uploadImage(data.image?.imageFile)
+      await deleteImage(imageToDelete)
 
-      imageKey = await uploadImage(data.imageFile)
-      setValue('image', getImageSrc(imageKey));
-      setValue('imageFile', null);
-      payload.image = imageKey
+      delete payload.imageFile;
+      payload.image = imageKey;
     } else {
-      delete payload.image;
+      payload.image = payload.image.image;
     }
 
     if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
-      delete payload.imageFile;
+      delete payload.blocks
 
       try {
         if (payload.id) {
@@ -153,16 +162,28 @@ const ProjectForm = () => {
           setIsSubmitting(false);
         }, 3000);
       }
-      await deleteImage(imageToDelete);
-      setImageToDelete(null);
+      if (imageToDelete) {
+        await deleteImage(imageToDelete);
+        setImageToDelete(null);
+      }
 
-      setInitialValues(payload);
+      delete payload.blocks_ids;
+      const newFormData = {
+        ...payload,
+        image: {
+          image: payload.image ?? data.image,
+          imageSrc: '',
+          imageFile: null
+        },
+        blocks: blocks
+      }
+      setInitialValues(newFormData);
+      form.reset(newFormData);
 
-      form.reset({ ...payload, blocks: blocks })
       setBlocksToDelete([]);
-      setIsSubmitting(false);
+      setImagesToDelete([]);
 
-      changesSavedAlert();
+      setIsSubmitting(false);
     }
   }
 
@@ -171,14 +192,17 @@ const ProjectForm = () => {
     if (generalInfoErrors?.blocks) {
       delete generalInfoErrors.blocks;
     }
-    tabsRef.current.setTab(Object.keys(generalInfoErrors).length > 0 ? 0 : 1)
+    setCurrentTab(Object.keys(generalInfoErrors).length > 0 ? 0 : 1)
     checkErrorsAlert()
   }
+
+  const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
 
   const generalInfoErrors = { ...errors };
   if (generalInfoErrors?.blocks) {
     delete generalInfoErrors.blocks;
   }
+
 
   return (
     <>
@@ -187,10 +211,12 @@ const ProjectForm = () => {
           ? 'Створення нового об\'єкта портфоліо'
           : 'Редагування об\'єкта портфоліо'}
         onSubmit={handleSubmit(onSubmit, onError)}
+        submitDisabled={isSubmitting}
+        onGoBack={() => navigate('/projects')}
       />
       <Page>
         <Box padding={2}>
-          <Tabs ref={tabsRef} tabs={[
+          <Tabs currentTab={currentTab} setCurrentTab={setCurrentTab} tabs={[
             {
               label: 'Загальна інформація',
               errors: generalInfoErrors
@@ -200,7 +226,7 @@ const ProjectForm = () => {
               errors: errors?.blocks
             }
           ]} >
-            <TabPanel>
+            <TabPanel index={0}>
               <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
                 <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
                   <FormControlLabel
@@ -270,43 +296,92 @@ const ProjectForm = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={12} lg={5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: '20px', pb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', pb: 1 }}>
                     <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
                       Зображення
                     </StyledInputLabel>
-                    <Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible', borderRadius: '5px' }}>
-                      {image
-                        ? (<>
-                          <IconButton size='small' onClick={() => {
-                            // setImageToDelete(image);
-                            setValue('image', null)
-                          }
-                          } sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
-                            <Delete sx={{ color: 'red' }} />
-                          </IconButton>
-                          <img src={image} style={{ width: '250px', borderRadius: '5px' }} />
-                        </>)
-                        : (<div style={{ width: 250, height: 125, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
-                    </Card>
-                    <ImageUploader
-                      id='imageUploader'
-                      ratio={2 / 1}
-                      onChange={async (file) => {
-                        setImageToDelete(image);
-                        setValue('imageFile', file);
-                        setValue('image', await getSrcFromFile(file))
+                    <Controller
+                      name={`image`}
+                      control={control}
+                      rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
+                      render={({ field }) => {
+                        return (
+                          <>
+                            <Box sx={{
+                              mt: 3,
+                              maxWidth: '100%',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              flexDirection: 'column',
+                              position: 'relative'
+                            }}>
+                              {(field.value.imageUrl || field.value.image) && (
+                                <Tooltip title='Видалити зображення'>
+                                  <IconButton
+                                    sx={{
+                                      position: 'absolute',
+                                      top: -18,
+                                      right: -18,
+                                    }}
+                                    onClick={() => {
+                                      console.log(field.value);
+                                      field.value.image && setImageToDelete(field.value.image)
+                                      field.onChange({
+                                        imageFile: null,
+                                        imageSrc: '',
+                                        image: ''
+                                      })
+                                    }}
+                                  >
+                                    <Delete sx={{ color: 'var(--error)' }} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '315px', display: 'flex' }}>
+                                {(field.value.imageUrl || field.value.image)
+                                  ? (<>
+                                    <img style={{ maxWidth: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
+                                  </>)
+                                  : (<Box sx={{ width: '315px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
+                              </Card>
+                            </Box>
+                            <Box sx={{ mb: 2, mt: 1, width: '315px' }}>
+                              {errors && errors.image && (
+                                <ErrorMessage type='imageRequired' />
+                              )}
+                            </Box>
+                            <ImageUploader
+                              id={`${uuid()}-image-uploader`}
+                              ratio={IMAGE_ASPECT_RATIO}
+                              onChange={async (file) => {
+                                field.onChange({
+                                  ...field.value,
+                                  image: null,
+                                  imageUrl: await getSrcFromFile(file),
+                                  imageFile: file,
+                                })
+
+
+                              }}
+                              buttonDisabled={field.value.imageUrl || field.value.image}
+                            />
+                          </>
+                        )
                       }}
                     />
+
                   </Box>
                 </Grid>
               </Grid>
             </TabPanel>
-            <TabPanel>
+            <TabPanel index={1}>
               <BlocksComposition
                 fieldArray={blocksFieldArray}
                 allowedBlocks={projectBlocks}
                 form={form}
                 onDeleteBlock={onDeleteBlock}
+                appendImageToDelete={appendImageToDelete}
               />
             </TabPanel>
           </Tabs>

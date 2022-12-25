@@ -6,7 +6,8 @@ const PageHeader = ({
   title,
   onSubmit,
   submitLabel = 'Зберегти',
-  submitDisabled
+  submitDisabled,
+  onGoBack
 }) => {
   return (
     <header style={{
@@ -29,17 +30,35 @@ const PageHeader = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 1
       }}>
         <Typography sx={{
           fontSize: '20px',
           fontWeight: 500,
-          textShadow: '0px 0px 11px rgb(60 113 47 / 70%)'
+          textShadow: '0px 0px 11px rgb(60 113 47 / 70%)',
+          flex: '1 0 auto'
         }}>
           {title ?? ''}
         </Typography>
+        {onGoBack && (
+          <Button
+            onClick={onGoBack}
+            sx={{
+              textTransform: 'none',
+              bgcolor: 'var(--white)',
+              padding: '4px 20px',
+              color: 'var(--theme-color)',
+              '&:hover': {
+                bgcolor: '#fff'
+              }
+            }}
+          >Повернутися
+          </Button>
+        )}
         {onSubmit && (
           <Button disabled={submitDisabled} sx={{ textTransform: 'none', bgcolor: 'var(--theme-color)', padding: '4px 20px', color: 'var(--white)', '&:hover': { bgcolor: '#2c4c39' } }} onClick={onSubmit}>{submitLabel}</Button>
         )}
+
       </Box>
     </header>
   )
