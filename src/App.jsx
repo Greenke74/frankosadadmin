@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { getRoutes } from "./services/routes-service.jsx";
 import { useSelector } from "react-redux";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import AuthWrapper from "./supabase/AuthWrapper.jsx";
 
 import Layout from "./components/layout/Layout.jsx";
@@ -26,6 +26,11 @@ function App() {
                 key={path} />
             )
           })}
+          <Route
+            path='*'
+            element={<div style={{ textAlign: 'center', padding: '15px', fontWeight: 500 }}>Цієї сторінки не існує! <Link to='/'>Головна</Link></div>}
+          >
+          </Route>
         </Routes>
       </Layout>
     ) : (

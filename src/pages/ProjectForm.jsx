@@ -1,172 +1,232 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 
-import { Box, Alert, Card, FormControl, FormControlLabel, Grid, IconButton, Typography, Select, MenuItem } from '@mui/material';
-import { CancelButton, StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
+import {
+  Box,
+  Alert,
+  Card,
+  FormControl,
+  FormControlLabel,
+  Grid, IconButton,
+  Typography,
+  Select,
+  MenuItem,
+  Tooltip
+} from '@mui/material';
+
+import { StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
 import ImageUploader from '../components/common/ImageUploader';
-import SaveButton from '../components/common/SaveButton';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Tabs from '../components/common/Tabs';
 import BlocksComposition from '../components/BlocksComposition';
 
 import { CameraAlt, Delete } from '@mui/icons-material';
 
-import { getProjectWithBlocks, insertProject, updateProject } from '../services/portfolio-api-service';
+import { getProjectPage, insertProject, updateProject } from '../services/portfolio-api-service';
 import { getSrcFromFile } from '../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
-import { slugify, transliterate as tr } from 'transliteration';
+import { slugify } from 'transliteration';
 import Swal from 'sweetalert2';
 import { projectBlocks } from '../components/blocks/index.js';
+import { changesSavedAlert, checkErrorsAlert } from '../services/alerts-service';
+import { sortBlocks, submitBlocks } from '../helpers/blocks-helpers';
+import Page from '../components/common/Page';
+import PageHeader from '../components/common/PageHeader';
+import TabPanel from '../components/common/TabPanel';
+import { v1 as uuid } from 'uuid'
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
+const IMAGE_ASPECT_RATIO = 2 / 1;
 
 const ProjectForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const compositionRef = useRef(null);
 
-  const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState({});
-  const [blocks, setBlocks] = useState([]);
-  const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = useForm({
+  const [currentTab, setCurrentTab] = useState(0);
+
+  const [imageToDelete, setImageToDelete] = useState(null);
+  const [blocksToDelete, setBlocksToDelete] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
+
+  const form = useForm({
     defaultValues: {
       title: '',
       location: '',
       type: '',
       alias: '',
-      image: '',
-      imageFile: null,
+      image: {
+        image: '',
+        imageSrc: '',
+        imageFile: null
+      },
       is_published: true,
-      completed_at: new Date().toISOString().substr(0, 10)
+      completed_at: new Date().toISOString().substr(0, 10),
+      blocks: []
     },
     mode: 'onSubmit'
   })
+  const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = form;
+
+  const blocksFieldArray = useFieldArray({ control: control, name: 'blocks' })
+
 
   const is_published = watch('is_published')
-  const image = watch('image')
 
   useEffect(() => {
     let mounted = true;
-    !isNaN(id) && getProjectWithBlocks(id).then(({ data: project }) => {
+    !isNaN(id) && getProjectPage(id).then(({ data: project }) => {
       const formData = {
         ...getValues(),
         ...project,
         completed_at: project.completed_at.substr(0, 10),
-        image: getImageSrc(project.image)
+        image: {
+          image: project.image,
+          imageSrc: '',
+          imageFile: null
+        },
+        blocks: sortBlocks(project.blocks ?? []).map(b => ({ value: b }))
       }
       reset(formData);
       mounted && setInitialValues(formData);
-
-
-      mounted && setBlocks(project?.blocks ?? []);
     })
 
     return () => mounted = false;
   }, [id])
 
+  const onDeleteBlock = (block) => setBlocksToDelete(prev => [...prev, block])
+
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
+    const { blocks: formBlocks } = data;
+    setIsSubmitting(true)
 
-    try {
-      const { title } = data;
+    const blocks = await submitBlocks(formBlocks, blocksToDelete, imagesToDelete)
 
-      let payload = {
-        ...data,
-        alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] })
-      }
+    const { title } = data;
 
+    const payload = {
+      ...initialValues,
+      ...data,
+      alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] }),
+      blocks_ids: blocks.map(b => b.value.id)
+    }
 
-      if (!payload.image) {
-        Swal.fire({
-          position: 'top-right',
-          icon: 'error',
-          title: 'Потрібно додати зображення',
-          color: 'var(--theme-color)',
-          timer: 3000,
-          showConfirmButton: false,
-          toast: true,
-        })
-        return;
-      }
+    let imageKey = null;
+    if (data?.image?.imageFile) {
+      imageKey = await uploadImage(data.image?.imageFile)
+      await deleteImage(imageToDelete)
 
-      payload = { ...initialValues, ...payload }
+      delete payload.imageFile;
+      payload.image = imageKey;
+    } else {
+      payload.image = payload.image.image;
+    }
 
-      if (data.imageFile) {
-        await deleteImage(imageToDelete);
-        const imageKey = await uploadImage(data.imageFile)
-        setValue('image', getImageSrc(imageKey));
-        setValue('imageFile', null);
-        payload.image = imageKey
-      } else {
-        delete payload.image;
-      }
+    if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
+      delete payload.blocks
 
-      const blocks_ids = await compositionRef.current.onSubmit();
-      if (Array.isArray(blocks_ids) && blocks_ids.length > 0) {
-        delete payload.blocks;
-        payload.blocks_ids = blocks_ids;
-      }
-
-      if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
-        delete payload.imageFile;
-
-
+      try {
         if (payload.id) {
           await updateProject(payload);
+
           setValue('imageFile', null);
 
-          Swal.fire({
-            position: 'top-right',
-            icon: 'success',
-            title: 'Обєкт успішно ононвлено',
-            color: 'var(--theme-color)',
-            timer: 3000,
-            showConfirmButton: false,
-            toast: true,
-          })
+          changesSavedAlert();
         } else {
           const { data: { id } } = await insertProject(payload);
           setValue('imageFile', null);
 
-          navigate(`/projectform/${id}`);
+          navigate(`/projects/${id}`);
+          changesSavedAlert();
+        }
+      } catch (error) {
+        if (error?.includes('duplicate key value violates unique constraint')) {
           Swal.fire({
             position: 'top-right',
-            icon: 'success',
-            title: 'Обєкт успішно збережено',
+            icon: 'error',
+            title: 'Проєкт з такою назвою уже існує!',
             color: 'var(--theme-color)',
-            timer: 3000,
+            timer: 5000,
             showConfirmButton: false,
             toast: true,
           })
         }
-        setInitialValues(payload);
+        if (imageKey) {
+          await deleteImage(imageKey);
+        }
+        return;
+      } finally {
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 3000);
       }
-    }
-    catch (error) {
-      console.error(error)
-    } finally {
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 3000);
+      if (imageToDelete) {
+        await deleteImage(imageToDelete);
+        setImageToDelete(null);
+      }
+
+      delete payload.blocks_ids;
+      const newFormData = {
+        ...payload,
+        image: {
+          image: payload.image ?? data.image,
+          imageSrc: '',
+          imageFile: null
+        },
+        blocks: blocks
+      }
+      setInitialValues(newFormData);
+      form.reset(newFormData);
+
+      setBlocksToDelete([]);
+      setImagesToDelete([]);
+
+      setIsSubmitting(false);
     }
   }
 
+  const onError = (errors) => {
+    const generalInfoErrors = { ...errors };
+    if (generalInfoErrors?.blocks) {
+      delete generalInfoErrors.blocks;
+    }
+    setCurrentTab(Object.keys(generalInfoErrors).length > 0 ? 0 : 1)
+    checkErrorsAlert()
+  }
+
+  const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
+
+  const generalInfoErrors = { ...errors };
+  if (generalInfoErrors?.blocks) {
+    delete generalInfoErrors.blocks;
+  }
+
+
   return (
-    <Box padding={2}>
-      <Typography padding={2} marginBottom={1} fontSize='24px' fontWeight={500} color='var(--theme-color)'>
-        {isNaN(id)
+    <>
+      <PageHeader
+        title={isNaN(id)
           ? 'Створення нового об\'єкта портфоліо'
           : 'Редагування об\'єкта портфоліо'}
-      </Typography>
-
-      <Tabs tabs={[
-        {
-          label: 'Загальна інформація',
-          errors: errors,
-          content: (
-            <>
+        onSubmit={handleSubmit(onSubmit, onError)}
+        submitDisabled={isSubmitting}
+        onGoBack={() => navigate('/projects')}
+      />
+      <Page>
+        <Box padding={2}>
+          <Tabs currentTab={currentTab} setCurrentTab={setCurrentTab} tabs={[
+            {
+              label: 'Загальна інформація',
+              errors: generalInfoErrors
+            },
+            {
+              label: 'Сторінка проєкту',
+              errors: errors?.blocks
+            }
+          ]} >
+            <TabPanel index={0}>
               <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
                 <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
                   <FormControlLabel
@@ -236,57 +296,98 @@ const ProjectForm = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={12} lg={5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: '20px' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', pb: 1 }}>
                     <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
                       Зображення
                     </StyledInputLabel>
-                    <Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible', borderRadius: '5px' }}>
-                      {image
-                        ? (<>
-                          <IconButton size='small' onClick={() => {
-                            // setImageToDelete(image);
-                            setValue('image', null)
-                          }
-                          } sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
-                            <Delete sx={{ color: 'red' }} />
-                          </IconButton>
-                          <img src={image} style={{ width: '250px', borderRadius: '5px' }} />
-                        </>)
-                        : (<div style={{ width: 250, height: 125, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
-                    </Card>
-                    <ImageUploader
-                      id='imageUploader'
-                      ratio={2 / 1}
-                      onChange={async (file) => {
-                        setImageToDelete(image);
-                        setValue('imageFile', file);
-                        setValue('image', await getSrcFromFile(file))
+                    <Controller
+                      name={`image`}
+                      control={control}
+                      rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
+                      render={({ field }) => {
+                        return (
+                          <>
+                            <Box sx={{
+                              mt: 3,
+                              maxWidth: '100%',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              flexDirection: 'column',
+                              position: 'relative'
+                            }}>
+                              {(field.value.imageUrl || field.value.image) && (
+                                <Tooltip title='Видалити зображення'>
+                                  <IconButton
+                                    sx={{
+                                      position: 'absolute',
+                                      top: -18,
+                                      right: -18,
+                                    }}
+                                    onClick={() => {
+                                      console.log(field.value);
+                                      field.value.image && setImageToDelete(field.value.image)
+                                      field.onChange({
+                                        imageFile: null,
+                                        imageSrc: '',
+                                        image: ''
+                                      })
+                                    }}
+                                  >
+                                    <Delete sx={{ color: 'var(--error)' }} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '315px', display: 'flex' }}>
+                                {(field.value.imageUrl || field.value.image)
+                                  ? (<>
+                                    <img style={{ maxWidth: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
+                                  </>)
+                                  : (<Box sx={{ width: '315px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
+                              </Card>
+                            </Box>
+                            <Box sx={{ mb: 2, mt: 1, width: '315px' }}>
+                              {errors && errors.image && (
+                                <ErrorMessage type='imageRequired' />
+                              )}
+                            </Box>
+                            <ImageUploader
+                              id={`${uuid()}-image-uploader`}
+                              ratio={IMAGE_ASPECT_RATIO}
+                              onChange={async (file) => {
+                                field.onChange({
+                                  ...field.value,
+                                  image: null,
+                                  imageUrl: await getSrcFromFile(file),
+                                  imageFile: file,
+                                })
+
+
+                              }}
+                              buttonDisabled={field.value.imageUrl || field.value.image}
+                            />
+                          </>
+                        )
                       }}
                     />
+
                   </Box>
                 </Grid>
               </Grid>
-            </>
-          )
-        },
-        {
-          label: 'Сторінка проєкту',
-          content: (
-            <><BlocksComposition
-              ref={compositionRef}
-              blocks={blocks}
-              allowedBlocks={projectBlocks}
-              hideSubmit={true}
-            />
-            </>
-          )
-        }
-      ]} />
-      <Box display='flex' justifyContent='end' alignItems='center' marginTop={4} style={{ gap: 20 }}>
-        <CancelButton onClick={() => navigate('/projects')}>Скасувати</CancelButton>
-        <SaveButton onClick={handleSubmit(onSubmit)} disabled={isSubmitting} />
-      </Box>
-    </Box>
+            </TabPanel>
+            <TabPanel index={1}>
+              <BlocksComposition
+                fieldArray={blocksFieldArray}
+                allowedBlocks={projectBlocks}
+                form={form}
+                onDeleteBlock={onDeleteBlock}
+                appendImageToDelete={appendImageToDelete}
+              />
+            </TabPanel>
+          </Tabs>
+        </Box>
+      </Page>
+    </>
   )
 }
 

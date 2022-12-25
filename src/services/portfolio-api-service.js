@@ -33,10 +33,12 @@ export const getProject = (id) => new Promise((resolve, reject) => {
 	}
 })
 
-export const getProjectWithBlocksById = (id) => new Promise((resolve, reject) => {
+export const getProjectPage = (value) => new Promise((resolve, reject) => {
 	try {
-
-		supabase.rpc('get_project_with_blocks_by_id', {_id: id})
+		supabase
+		.rpc(
+			isNaN(value) && typeof(value) == 'string' ? 'get_project_page_by_alias' : 'get_project_page_by_id', 
+			isNaN(value) && typeof(value) == 'string' ? {_alias: value} : {_id: value})
 		.then(response => {
 			if (response.error) {
 				reject(response.error.message)
@@ -48,23 +50,6 @@ export const getProjectWithBlocksById = (id) => new Promise((resolve, reject) =>
 		reject(e)
 	}
 })
-
-export const getProjectWithBlocksByAlias = (alias) => new Promise((resolve, reject) => {
-	try {
-
-		supabase.rpc('get_project_with_blocks_by_alias', {_alias: alias})
-		.then(response => {
-			if (response.error) {
-				reject(response.error.message)
-			}
-			resolve(response)
-		})
-		.catch(error => reject(error))
-	} catch (e) {
-		reject(e)
-	}
-})
-
 
 export const insertProject = (data) => new Promise((resolve, reject) => {
 	try {
@@ -109,6 +94,22 @@ export const deleteProject = (id) => new Promise((resolve, reject) => {
 				resolve(response)
 			})
 			.catch(error => reject(error))
+	} catch (e) {
+		reject(e)
+	}
+})
+
+export const selectProjects = (params) => new Promise((resolve, reject) => {
+	try {
+		supabase.rpc(params.typeFilter != null ? 'select_projects_with_filters' : 'select_projects', params)
+		.then(response => {
+			if (response.error) {
+				reject(response.error.message)
+			}
+			resolve(response)
+		})
+		.catch(error => reject(error))
+		
 	} catch (e) {
 		reject(e)
 	}

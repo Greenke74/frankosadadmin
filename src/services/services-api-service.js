@@ -36,16 +36,19 @@ export const getServices = () => new Promise((resolve, reject) => {
 	}
 })
 
-export const getServiceWithBlocks = (id) => new Promise((resolve, reject) => {
+export const getServicePage = (value) => new Promise((resolve, reject) => {
 	try {
-		supabase.rpc('get_service_with_blocks', {_id:id})
-			.then(({ data, error }) => {
-				if (error) {
-					reject(error);
-				}
-				resolve(data);
-			})
-			.catch(error => reject(error))
+		supabase
+		.rpc(
+			isNaN(value) && typeof(value) == 'string' ? 'get_service_page_by_alias' : 'get_service_page_by_id', 
+			isNaN(value) && typeof(value) == 'string' ? {_alias: value} : {_id: value})
+		.then(response => {
+			if (response.error) {
+				reject(response.error.message)
+			}
+			resolve(response)
+		})
+		.catch(error => reject(error))
 	} catch (e) {
 		reject(e)
 	}

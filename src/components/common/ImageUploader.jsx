@@ -6,9 +6,9 @@ import { getSrcFromFile, compressImage } from '../../helpers/file-helpers.js';
 
 import { Cropper } from 'react-cropper';
 import "cropperjs/dist/cropper.css";
+import { StyledInputLabel } from './StyledComponents.jsx';
 
-const ImageUploader = (props) => {
-	const { ratio, onChange, id } = props;
+const ImageUploader = ({ ratio, onChange, id, buttonDisabled = false }) => {
 	const cropperRef = useRef(null);
 	const [fileUrl, setFileUrl] = useState('');
 	const [file, setFile] = useState(null);
@@ -29,10 +29,10 @@ const ImageUploader = (props) => {
 
 	return (
 		<div>
-			<label
-				style={{
+			<StyledInputLabel
+				sx={{
 					color: 'var(--white)',
-					backgroundColor: 'var(--active-color)',
+					bgcolor: buttonDisabled ? 'var(--disabled-color)' : 'var(--active-color)',
 					textTransform: 'none',
 					padding: '8.5px 20px',
 					borderRadius: '4px',
@@ -41,10 +41,11 @@ const ImageUploader = (props) => {
 					fontFamily: 'Roboto'
 				}}
 				htmlFor={id ? `fileUploader-${id}` : 'fileUploader'}
-			>Завантажити зображення</label>
+			>Завантажити зображення
+			</StyledInputLabel>
 			<input
-				{...props}
 				type='file'
+				disabled={buttonDisabled}
 				id={id ? `fileUploader-${id}` : 'fileUploader'}
 				multiple={false}
 				onChange={event => {

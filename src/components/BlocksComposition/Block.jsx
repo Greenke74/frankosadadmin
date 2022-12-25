@@ -1,221 +1,186 @@
-import React, { useState, useEffect, lazy, useImperativeHandle, forwardRef, Suspense, useRef } from 'react'
-import { useForm } from 'react-hook-form';
-import { Box, ButtonGroup, Button, Typography, styled, IconButton, Tooltip } from '@mui/material'
-import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import MuiAccordion from '@mui/material/Accordion';
-import MuiAccordionSummary from '@mui/material/AccordionSummary';
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { Controller } from 'react-hook-form';
+
+import { Box, ButtonGroup, Button, Typography, Tooltip, Checkbox } from '@mui/material'
+import { Accordion, AccordionSummary } from './BlockAccordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
+import { StyledLinearProgress } from '../common/StyledComponents';
 
-import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
-import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import {
+  ArrowCircleDown as ArrowCircleDownIcon,
+  ArrowCircleUp as ArrowCircleUpIcon,
+  HighlightOff as HighlightOffIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+} from '@mui/icons-material';
 
-import Swal from 'sweetalert2';
 import '../../styles/swal.scss';
 import './block.css';
-import { insertBlock, updateBlock } from '../../services/blocks-api-service';
+import { blocks } from '../blocks';
+import ErrorMessage from '../common/ErrorMessage';
 
-import IsPublished from '../common/IsPublished';
-import { insertMainPageBlock, updateMainPageBlock } from '../../services/main-page-blocks-service';
-import { StyledLinearProgress } from '../common/StyledComponents';
-import { dataTypes } from '../../services/data-types-service';
+const Block = (
+  {
+    data,
+    idx,
+    blocksLength,
+    onMoveBlock = null,
+    onDeleteBlock = null,
+    appendImageToDelete,
+    registerName,
+    register,
+    control,
+    formState,
+    projects,
+    services
+  }
+) => {
+  const [expanded, setExpanded] = useState(false);
+  const [error, setError] = useState(false);
 
-const Block = ({ block, idx, remove, blocksLength, move, update, element, label, isMainPage }, ref) => {
-	const [expanded, setExpanded] = useState(null);
-	const [Element, setElement] = useState(null);
-	const blockRef = useRef(null);
+  const [label, setLabel] = useState('');
+  const [Element, setElement] = useState(null);
 
-	const form = useForm({
-		defaultValues: block,
-		mode: 'onChange'
-	})
-	const is_published = form.watch('is_published');
+  useEffect(() => {
+    let mounted = true;
 
-	const onDelete = () => {
-		Swal.fire({
-			title: 'Видалити блок',
-			html: 'Ви впевнені, що хочете видалити блок?',
-			showCancelButton: true,
-			cancelButtonText: 'Скасувати',
-			confirmButtonText: 'Так',
-			focusCancel: true,
-			customClass: 'logoutSwal'
-		}).then(result => {
-			if (result.value) {
-				remove(idx);
-			}
-		})
-	}
-	const onSubmit = async (formData) => {
-		const payload = {
-			...formData,
-			data: formData?.data ?? null,
-			position: idx,
-		};
-		dataTypes.forEach(type => {
-			if (payload[type]) {
-				delete payload[type];
-			}
-			const ids = `${type}_ids`
-			if (payload[ids] && Array.isArray(payload[ids])) {
-				payload[ids] = payload[ids].map((id) => id?.value ?? id ?? undefined).filter(id => Boolean(id))
-			}
-		})
+    const b = blocks.find(bl => bl.type == data?.type)
+    if (!b?.label) {
+      mounted && setLabel('Блок сторінки')
+    } else {
+      mounted && setLabel(b?.label);
+    }
+    if (!b?.element) {
+      mounted && setError(true)
+    } else {
+      mounted && setElement(lazy(b?.element))
+    }
 
-		if (!formData.id && block.type) {
-			payload.type = block.type;
-		}
+    return () => mounted = false;
+  }, [])
 
-		const func = isMainPage
-			? payload.id
-				? updateMainPageBlock
-				: insertMainPageBlock
-			: payload.id
-				? updateBlock
-				: insertBlock
+  const errors = formState?.errors &&
+    formState?.errors?.blocks &&
+    formState?.errors?.blocks[idx] &&
+    formState?.errors?.blocks[idx].value
 
-		const response = await func(payload)
-		const { data } = response;
-
-		update(idx, {
-			block: {
-				...formData,
-				id: data?.id ?? payload.id,
-				type: block.type,
-
-			}
-		})
-
-		if (data?.id) {
-			return data.id;
-		}
-
-		return null;
-	}
-
-	useImperativeHandle(ref, () => ({
-		onSubmit: async () => {
-			let data = null;
-			if (blockRef.current !== null) {
-				data = await blockRef.current.getBlockData()
-			} else {
-				data = form.getValues()
-			}
-			return await onSubmit(data)
-		}
-	}))
-
-	useEffect(() => {
-		let mounted = true;
-
-		mounted && setElement(lazy(element));
-
-		return () => mounted = false;
-	}, [element])
-
-	return (
-		<Accordion expanded={expanded} >
-			<Box
-				display='flex'
-				width='100%'
-				justifyContent='space-between'
-				alignItems='center'
-				flexWrap='nowrap'
-			>
-				<AccordionSummary
-					onClick={() => setExpanded(prev => !prev)}
-				>
-					<Typography
-						component="h3"
-						fontSize='14px'
-						flexGrow={1}
-						flexShrink={0}
-						lineHeight='20px'
-					>
-						{label}
-					</Typography>
-				</AccordionSummary>
-				<Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' bgcolor='#f7f7f7'>
-					<Tooltip title={is_published ? 'Опубліковано' : 'Приховано'}>
-						<IconButton
-							size='small'
-							onClick={() => { form.setValue('is_published', !is_published) }}
-						>
-							<IsPublished isPublished={is_published} />
-						</IconButton>
-					</Tooltip>
-					<ButtonGroup>
-						<Button
-							disableRipple={true}
-							onClick={() => move(idx, idx + 1)}
-							disabled={idx + 1 == blocksLength}
-						><ArrowCircleDownIcon />
-						</Button>
-						<Button
-							disableRipple={true}
-							onClick={() => move(idx, idx - 1)}
-							disabled={idx == 0}
-						><ArrowCircleUpIcon />
-						</Button>
-						<Button
-							color='error'
-							onClick={onDelete}
-						><HighlightOffIcon />
-						</Button>
-					</ButtonGroup>
-				</Box>
-			</Box>
-			<AccordionDetails >
-				<Box className='block-settings' marginY={2}>
-					{Element ? (
-						<Suspense fallback={<StyledLinearProgress />}>
-							<Element
-								form={form}
-								ref={blockRef}
-							/>
-						</Suspense>
-					) : null}
-				</Box>
-			</AccordionDetails>
-		</Accordion >
-	)
+  const invalidData = Object.keys(errors ?? {}).length > 0;
+  return (
+    <Accordion expanded={invalidData || expanded}>
+      <AccordionSummary>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            alignItems: 'center',
+            cursor: invalidData ? 'initial' : 'pointer'
+          }}
+          onClick={() => setExpanded(prev => {
+            if (prev) {
+              return invalidData
+            } else {
+              return !prev
+            }
+          })}
+        >
+          {!error ? (
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <Typography
+                component="h3"
+                fontSize='14px'
+                lineHeight='20px'
+              >
+                {label}
+              </Typography>
+              {invalidData && (
+                <ErrorMessage type={'invalidForm'} />
+              )}
+            </Box>
+          ) : (
+            <Typography
+              component="h4"
+              fontSize='12px'
+              lineHeight='20px'
+              sx={{
+                pl: 2
+              }}
+            >Сталася помилка під час завантаження даного блока!
+            </Typography>
+          )}
+        </Box>
+        <Box display='flex' flexWrap='nowrap' style={{ gap: '10px' }} alignItems='center' padding='10px' >
+          <Controller
+            name={`${registerName}.is_published`}
+            control={control}
+            render={({ field }) => {
+              return (
+                <Tooltip title={field.value ? 'Опубліковано' : 'Приховано'}>
+                  <Checkbox
+                    checked={field.value}
+                    onChange={async (event, value) => {
+                      field.onChange(value);
+                    }}
+                    checkedIcon={<VisibilityIcon style={{ fontSize: '20px', color: '#40a471' }} />}
+                    icon={<VisibilityOffIcon style={{ fontSize: '20px', }} />}
+                  />
+                </Tooltip>
+              )
+            }}
+          />
+          <ButtonGroup>
+            <Button
+              disableRipple={true}
+              onClick={() => onMoveBlock(idx, idx + 1)}
+              disabled={idx + 1 == blocksLength}
+            >
+              <Tooltip title={'Перемістит вниз'}>
+                <ArrowCircleDownIcon />
+              </Tooltip>
+            </Button>
+            <Button
+              disableRipple={true}
+              onClick={() => onMoveBlock(idx, idx - 1)}
+              disabled={idx == 0}
+            >
+              <Tooltip title={'Перемістит вверх'}>
+                <ArrowCircleUpIcon />
+              </Tooltip>
+            </Button>
+            <Button
+              color='error'
+              onClick={() => onDeleteBlock(data)}
+            >
+              <Tooltip title={'Видалити блок'}>
+                <HighlightOffIcon />
+              </Tooltip>
+            </Button>
+          </ButtonGroup>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Suspense fallback={<StyledLinearProgress sx={{ height: '8px', opacity: '0.6' }} />}>
+          <Box sx={{
+            pt: 2,
+            px: 2,
+          }}>
+            {Element && (
+              <Element
+                registerName={registerName}
+                register={register}
+                control={control}
+                errors={errors}
+                appendImageToDelete={appendImageToDelete}
+                projects={projects}
+                services={services}
+              />)}
+          </Box>
+        </Suspense>
+      </AccordionDetails>
+    </Accordion >
+  )
 }
 
-const Accordion = styled((props) => (
-	<MuiAccordion disableGutters elevation={0} {...props} />
-))(({ theme }) => ({
-	border: `1px solid ${theme.palette.divider}`,
-	maxWidth: '100%',
-	'&:not(:last-child)': {
-		borderBottom: 0,
-	},
-	'&:before': {
-		display: 'none',
-	},
-}));
-
-const AccordionSummary = styled((props) => (
-	<MuiAccordionSummary
-		expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: '0.9rem' }} />}
-		{...props}
-	/>
-))(({ theme }) => ({
-	flexGrow: 1,
-	height: '56px',
-	paddingTop: 6,
-	paddingBottom: 6,
-	backgroundColor:
-		theme.palette.mode === 'dark'
-			? 'rgba(255, 255, 255, .05)'
-			: 'rgba(0, 0, 0, .03)',
-	flexDirection: 'row-reverse',
-	'& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-		transform: 'rotate(90deg)',
-	},
-	'& .MuiAccordionSummary-content': {
-		marginLeft: theme.spacing(1),
-	},
-}));
-
-
-export default forwardRef(Block)
+export default Block;

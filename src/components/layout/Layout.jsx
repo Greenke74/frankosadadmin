@@ -10,21 +10,8 @@ const Layout = ({ children }) =>
 			<Sidebar />
 		</Grid>
 		<Grid item xs={15} lg={16} xl={17} >
-			<Header />
 			<Suspense fallback={<StyledLinearProgress />}>
-				<Box
-					padding={2}
-					component="section"
-				>
-					<Box
-						bgcolor='white'
-						borderRadius='var(--page-border-radius)'
-						boxShadow='0px 2px 24px rgb(0 0 25 / 15%)'
-						maxWidth='1200px'
-					>
-						{children}
-					</Box>
-				</Box>
+				{children}
 			</Suspense>
 		</Grid>
 	</Grid >

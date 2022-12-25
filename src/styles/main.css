@@ -20,7 +20,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-
 }
 
 *:focus {
@@ -31,6 +30,7 @@ body {
     font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--background-color);
     overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 input[type="file"] {

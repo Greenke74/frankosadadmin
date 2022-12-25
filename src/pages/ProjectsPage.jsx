@@ -13,6 +13,8 @@ import { deleteProject, getProjects } from '../services/portfolio-api-service';
 import Swal from 'sweetalert2';
 import '../styles/swal.scss';
 import { getImageSrc } from '../services/storage-service';
+import Page from '../components/common/Page';
+import PageHeader from '../components/common/PageHeader';
 
 const ITEMS_PER_PAGE = 8;
 const ROW_HEIGHT = 82;
@@ -91,7 +93,7 @@ const ProjectsPage = () => {
 			getActions: (params) => [
 				<GridActionsCellItem
 					icon={<EditRoundedIcon color='success' />}
-					onClick={() => { navigate(`/projectform/${params.row.id}`) }}
+					onClick={() => { navigate(`/projects/${params.row.id}`) }}
 					label="Print"
 					title={'Редагувати об\'єкт'}
 				/>,
@@ -115,39 +117,45 @@ const ProjectsPage = () => {
 	}, [])
 
 	return (
-
-		<Box padding={2} >
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #e0e0e0', borderRadius: 1, marginBottom: 2, padding: 1 }}>
-				<AddButton
-					label='Додати проєкт'
-					onClick={() => navigate('/projectform/new')}
-				/>
-				<Alert sx={{ height: '36.5px', overflow: 'hidden', padding: '0 10px' }} severity='info'>
-					Ви можете додати нові проєкти
-				</Alert>
-			</Box>
-			<Box height={`calc((${ITEMS_PER_PAGE} * ${ROW_HEIGHT}px) + 111px)`}>
-				<DataGrid
-					rows={data}
-					columns={columns}
-					disableColumnFilter
-					disableColumnMenu
-					rowHeight={ROW_HEIGHT}
-					pageSize={ITEMS_PER_PAGE}
-					disableSelectionOnClick={true}
-					columnVisibilityModel={{
-						id: false
-					}}
-					sortModel={[{ field: 'id', sort: 'desc' }]}
-					sx={{
-						'div:last-child > div': {
-							borderBottom: 'none !important'
-						}
-					}}
-				>
-				</DataGrid>
-			</Box>
-		</Box >
+		<>
+			<PageHeader
+				title={'Список проєктів'}
+			/>
+			<Page>
+				<Box padding={2} >
+					<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #e0e0e0', borderRadius: 1, marginBottom: 2, padding: 1 }}>
+						<AddButton
+							label='Додати проєкт'
+							onClick={() => navigate('/projects/new')}
+						/>
+						<Alert sx={{ height: '36.5px', overflow: 'hidden', padding: '0 10px' }} severity='info'>
+							Ви можете додати нові проєкти
+						</Alert>
+					</Box>
+					<Box height={`calc((${ITEMS_PER_PAGE} * ${ROW_HEIGHT}px) + 111px)`}>
+						<DataGrid
+							rows={data}
+							columns={columns}
+							disableColumnFilter
+							disableColumnMenu
+							rowHeight={ROW_HEIGHT}
+							pageSize={ITEMS_PER_PAGE}
+							disableSelectionOnClick={true}
+							columnVisibilityModel={{
+								id: false
+							}}
+							sortModel={[{ field: 'id', sort: 'desc' }]}
+							sx={{
+								'div:last-child > div': {
+									borderBottom: 'none !important'
+								}
+							}}
+						>
+						</DataGrid>
+					</Box>
+				</Box >
+			</Page>
+		</>
 	)
 }
 

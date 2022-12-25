@@ -73,11 +73,14 @@ const PictureParagraph = ({ form: { setValue, getValues, watch, register, trigge
         <Box sx={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%'
         }}>
           <Card
             sx={{
-              height: '150px',
+              maxHeight: '150px',
+              height: 'fit-content',
               maxWidth: '100%',
               position: 'relative',
               overflow: 'visible',

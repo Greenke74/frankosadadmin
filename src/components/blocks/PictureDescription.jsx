@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
+import React, { useState } from 'react'
+import { Controller } from 'react-hook-form';
 
 import { Box, Card, FormControl, IconButton } from '@mui/material'
 import ImageUploader from '../common/ImageUploader'
@@ -7,117 +8,73 @@ import { CameraAlt, Delete } from '@mui/icons-material'
 
 import { getSrcFromFile } from '../../helpers/file-helpers'
 import { StyledInputBase } from '../common/StyledComponents'
-import { deleteImage, getImageSrc, uploadImage } from '../../services/storage-service'
+import { getImageSrc } from '../../services/storage-service'
 import { v1 as uuid } from 'uuid'
+import ErrorMessage from '../common/ErrorMessage'
 
 const IMAGE_ASPECT_RATIO = 4 / 1;
 
 const PictureDescription = ({
-  form: { setValue, getValues, register, watch } },
-  ref) => {
-  const [imageToDelete, setImageToDelete] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [initialValue, setInitialValue] = useState(null);
-
-  const imageKey = watch('data.image');
-
-  const getBlockData = async (formData) => {
-
-    const payload = { ...formData }
-    let imageKey = null;
-    if (formData?.data?.imageFile) {
-      imageKey = await uploadImage(formData.data.imageFile)
-      await deleteImage(imageToDelete)
-
-      setValue('data.image', getImageSrc(imageKey));
-      setValue('data.imageFile', null);
-
-      delete payload.data.imageFile;
-      payload.data.image = imageKey;
-    }
-
-    if (JSON.stringify(payload) != JSON.stringify(initialValue)) {
-      setInitialValue(payload);
-
-      return payload;
-    }
-    return null;
-  }
-
-  useImperativeHandle(ref, () => ({ getBlockData: async () => await getBlockData(getValues()) }))
-
-  useEffect(() => {
-    let mounted = true;
-    if (mounted && imageKey) {
-      setImageUrl(getImageSrc(imageKey))
-    }
-    return () => mounted = false;
-  }, [])
-
+  registerName,
+  register,
+  control,
+  errors,
+  appendImageToDelete
+}) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Card sx={{
-        width: 'fit-content',
-        position: 'relative',
-        overflow: 'visible',
-        borderRadius: '5px',
-        height: '200px',
-        maxWidth: '80%',
-        aspectRatio: `${IMAGE_ASPECT_RATIO}`
-      }}>
-        {imageUrl
-          ? (<>
-            <IconButton size='small' onClick={() => {
-              setImageToDelete(imageUrl);
-              setValue('data.imageFile', null)
-              setValue('data.image', null)
-              setImageUrl(null);
-            }
-            } sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
-              <Delete sx={{ color: 'red' }} />
-            </IconButton>
-            <img
-              src={imageUrl ?? null}
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '5px'
-              }}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ height: '200px' }} />
+          <Controller
+            name={`${registerName}.data`}
+            control={control}
+            rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
+            render={({ field }) => {
+              return (
+                <Box sx={{ mt: 3, maxWidth: '100%', maxHeight: '170px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
+                  <Card sx={{ mb: 2 }}>
+                    {(field.value.imageUrl || field.value.image)
+                      ? (<>
+                        <img style={{ height: '135.5px' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
+                      </>)
+                      : (<Box sx={{ width: '315px', height: '155px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
+                  </Card>
+                  <ImageUploader
+                    id={`${uuid()}-image-uploader`}
+                    ratio={IMAGE_ASPECT_RATIO}
+                    onChange={async (file) => {
+                      field.onChange({
+                        ...field.value,
+                        image: null,
+                        imageUrl: await getSrcFromFile(file),
+                        imageFile: file,
+                      })
+                    }}
+                  />
+                </Box>
+              )
+            }}
+          />
+        </Box>
+        {errors && errors?.data && errors?.data?.type === 'validate' && errors?.data?.message === 'imageRequired' && (
+          <Box sx={{ width: '100%', mt: 1 }}>
+            <ErrorMessage
+              type={'imageRequired'}
             />
-          </>)
-          : (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#f7eeee',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}
-            >
-              <CameraAlt sx={{ fontSize: 36, color: '#dedede' }} />
-            </div>
-          )}
-      </Card>
-      <Box paddingTop={2} >
-        <ImageUploader
-          id={`picture-description-${uuid()}`}
-          ratio={IMAGE_ASPECT_RATIO}
-          onChange={async (file) => {
-            setImageToDelete(imageUrl)
-            setValue('data.imageFile', file)
-            const src = await getSrcFromFile(file)
-            setImageUrl(src);
-
-          }}
-        />
+          </Box>
+        )}
+        <FormControl sx={{ pt: 3 }} variant="standard" fullWidth >
+          <StyledInputBase placeholder='Підпис до зображення' id='description-input' {...register(`${registerName}.data.description`, { required: true, maxLength: 100 })} />
+        </FormControl>
+        {errors && errors?.data?.description && (
+          <Box sx={{ alignSelf: 'start', mt: 1 }}>
+            <ErrorMessage
+              type={errors?.data?.description?.type}
+              maxLength={errors?.data?.description?.type == 'maxLength' ? 2000 : null} />
+          </Box>
+        )}
       </Box>
-      <FormControl sx={{ pt: 3 }} variant="standard" fullWidth >
-        <StyledInputBase placeholder='Підпис до зображення' id='description-input' {...register('data.description', { maxLength: 100 })} />
-      </FormControl>
-    </Box>
   )
 }
 
-export default forwardRef(PictureDescription);
+export default PictureDescription;

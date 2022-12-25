@@ -18,19 +18,6 @@ export const blocks = [
 		label: 'Карусель проєктів',
 		type: 'projectsSlider',
 		element: () => import('./ProjectsSlider.jsx')
-	}
-]
-
-export const projectBlocks = [
-	{
-		label: 'Лічильники',
-		type: "counter",
-		element: () => import('./Counter.jsx'),
-	},
-	{
-		label: 'Покрокова інформація',
-		type: "stepByStep",
-		element: () => import('./StepByStep.jsx')
 	},
 	{
 		label: 'Зображення з підписом',
@@ -51,6 +38,19 @@ export const projectBlocks = [
 		label: 'Редактор контенту',
 		type: 'htmlContent',
 		element: () => import('./HtmlContent.jsx')
+	},
+	{
+		label: 'Наші роботи',
+		type: 'ourWorks',
+		element: () => import('./OurWorks.jsx')
 	}
+]
+
+export const mainPageBlocks = [
+	'counter', 'stepByStep', 'servicesSlider', 'projectsSlider', 'ourWorks'
+]
+
+export const projectBlocks = [
+	'counter', 'stepByStep', 'pictureDescription', 'pictureParagraph', 'simpleText', 'htmlContent'
 ]
 
