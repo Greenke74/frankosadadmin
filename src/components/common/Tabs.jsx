@@ -11,7 +11,7 @@ const StyledTabs = styled(MuiTabs)({
   }
 })
 
-const Tabs = ({ tabs }, ref) => {
+const Tabs = ({ tabs = [], children }, ref) => {
   const [currentTab, setCurrentTab] = useState(0);
 
   useImperativeHandle(
@@ -47,18 +47,18 @@ const Tabs = ({ tabs }, ref) => {
         }
         )}
       </StyledTabs>
-      {tabsWithErrors.map((tab, index) => (
-        <Box
-          key={uuid()}
-          role='tabpanel'
-          paddingTop={1}
-          display={currentTab !== index ? 'none' : 'unset'}
-        >
-          {tab.content}
+      <Box sx={{ overflow: 'hidden' }}>
+        <Box sx={{
+          display: 'flex',
+          flexWrap: 'nowrap',
+          transition: '0.3s transform cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+          transform: `translate(calc(-100% * ${currentTab}), 0px)`
+        }}>
+          {children}
         </Box>
-      ))}
+      </Box>
     </>
   )
 }
 
-export default forwardRef(Tabs)
+export default forwardRef(Tabs);

@@ -37,13 +37,13 @@ const OurWorks = ({
 
   const handleAddProject = (project) => {
     if (project.id) {
+      if (fields.length + 1 == projects.length) {
+        setAnchorEl(null);
+      }
       append({ value: project })
     }
     setAnchorEl(null);
   }
-
-  const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
 
   const availableOptions = projects
     .filter(p => !fields.find(project => project.value.id == p.id));
@@ -117,8 +117,6 @@ const OurWorks = ({
               onClick={handleOpenModal}
             />
             <OptionsPicker
-              id={id}
-              open={open}
               anchorEl={anchorEl}
               options={availableOptions}
               onAdd={handleAddProject}

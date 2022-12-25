@@ -24,8 +24,9 @@ const Block = (
     data,
     idx,
     blocksLength,
+    onMoveBlock = null,
     onDeleteBlock = null,
-    onMove = null,
+    appendImageToDelete,
     registerName,
     register,
     control,
@@ -39,7 +40,6 @@ const Block = (
 
   const [label, setLabel] = useState('');
   const [Element, setElement] = useState(null);
-  const [imagesToDelete, setImagesToDelete] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -58,8 +58,6 @@ const Block = (
 
     return () => mounted = false;
   }, [])
-
-  const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
 
   const errors = formState?.errors &&
     formState?.errors?.blocks &&
@@ -135,7 +133,7 @@ const Block = (
           <ButtonGroup>
             <Button
               disableRipple={true}
-              onClick={() => onMove(idx, idx + 1)}
+              onClick={() => onMoveBlock(idx, idx + 1)}
               disabled={idx + 1 == blocksLength}
             >
               <Tooltip title={'Перемістит вниз'}>
@@ -144,7 +142,7 @@ const Block = (
             </Button>
             <Button
               disableRipple={true}
-              onClick={() => onMove(idx, idx - 1)}
+              onClick={() => onMoveBlock(idx, idx - 1)}
               disabled={idx == 0}
             >
               <Tooltip title={'Перемістит вверх'}>

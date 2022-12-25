@@ -4,17 +4,19 @@ import { Box, Button, Popover, Typography, Tooltip } from '@mui/material';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 import { getImageSrc } from '../../services/storage-service';
+import { v1 as uuid } from 'uuid'
 
 const OptionsPicker = ({
-  id,
-  open,
-  anchorEl,
+  anchorEl = null,
   options,
   onAdd,
   onClose,
   dataType
 }) => {
-  return (
+  const open = Boolean(anchorEl);
+  const id = open ? 'simple-popover' : undefined
+
+  return open ? (
     <Popover
       id={id}
       open={open}
@@ -58,6 +60,7 @@ const OptionsPicker = ({
         {options
           .map((o) => (
             <Button
+              key={o?.id ?? uuid()}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -83,7 +86,7 @@ const OptionsPicker = ({
           ))}
       </Box>
     </Popover>
-  )
+  ) : null
 }
 
 export default OptionsPicker

@@ -17,6 +17,7 @@ const MainPage = () => {
 
 	const [blocksToDelete, setBlocksToDelete] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [imagesToDelete, setImagesToDelete] = useState([]);
 	const form = useForm({ blocks: [] });
 
 	const blocksFieldArray = useFieldArray({ name: 'blocks', control: form.control });
@@ -52,14 +53,17 @@ const MainPage = () => {
 	const onSubmit = async ({ blocks: formBlocks }) => {
 		setIsLoading(true)
 
-		const blocks = await submitBlocks(formBlocks, blocksToDelete, true)
+		const blocks = await submitBlocks(formBlocks, blocksToDelete, imagesToDelete, true)
 
 		form.reset({ blocks: blocks })
 		setBlocksToDelete([]);
+		setImagesToDelete([]);
 		setIsLoading(false);
 
 		changesSavedAlert();
 	}
+
+	const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
 
 	return (
 		<>
@@ -75,6 +79,7 @@ const MainPage = () => {
 						form={form}
 						onDeleteBlock={onDeleteBlock}
 						allowedBlocks={mainPageBlocks}
+						appendImageToDelete={appendImageToDelete}
 						isMainPage={true}
 					/>
 					<Box display='flex' justifyContent='end' alignItems='center' marginTop={4} >

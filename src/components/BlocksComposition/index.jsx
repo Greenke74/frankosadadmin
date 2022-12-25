@@ -10,8 +10,8 @@ const BlocksComposition = ({
   form,
   allowedBlocks,
   isMainPage = false,
-  onInsertBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  appendImageToDelete = () => {}
 }) => {
   const {
     fields: blocks,
@@ -32,7 +32,7 @@ const BlocksComposition = ({
 
   }, [])
 
-  const onBlockMove = (from, to) => {
+  const onMoveBlock = (from, to) => {
     if (from == blocks.length || to < 0) {
       return;
     }
@@ -51,25 +51,21 @@ const BlocksComposition = ({
         <Grid container spacing={3} direction='column'>
           {blocks.map(({ value, id }, idx) => {
             return (
-              <Grid item key={id ?? value.id} >
+              <Grid item key={id ?? value.id} sx={{overflow: 'hidden !important', maxWidth: '100% !important'}}>
                 <Grow in={true}>
-                  <div>
+                  <div style={{maxWidth: '100%'}}>
                     <Block
                       data={value}
-                      blocksLength={blocks.length}
                       idx={idx}
-                      isMainPage={isMainPage}
-                      update={updateBlock}
-                      move={moveBlock}
-                      onMove={onBlockMove}
-                      remove={removeBlock}
-                      onInsertBlock={onInsertBlock}
+                      blocksLength={blocks.length}
+                      onMoveBlock={onMoveBlock}
                       onDeleteBlock={(block) => {
                         if (block.id !== undefined) {
                           onDeleteBlock(block);
                         }
                         removeBlock(idx);
                       }}
+                      appendImageToDelete={appendImageToDelete}
                       registerName={`blocks.${idx}.value`}
                       register={form.register}
                       control={form.control}

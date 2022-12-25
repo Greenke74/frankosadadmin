@@ -44,6 +44,9 @@ const Slider = (props) => {
 
   const handleAddSlide = (slide) => {
     if (slide.id) {
+      if (slidesFields.length + 1 == options.length) {
+        setAnchorEl(null);
+      }
       appendSlide({ value: slide })
     }
   }
@@ -51,9 +54,6 @@ const Slider = (props) => {
   const handleDeleteSlide = (idx) => {
     removeSlide(idx);
   }
-
-  const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
 
   const availableOptions = options
     .filter(o => !slidesFields.find(slide => slide.value.id == o.id));
@@ -99,7 +99,7 @@ const Slider = (props) => {
                   sx={{
                     bgcolor: 'white',
                     flexBasis: '30%',
-                    maxWidth: '30%',
+                    maxWidth: '15vw',
                     flexGrow: 1,
                     flexShrink: 0,
                     margin: 1
@@ -138,6 +138,7 @@ const Slider = (props) => {
                     <Tooltip disableFocusListener title='Видалити слайд'>
                       <IconButton
                         color='error'
+                        id={`${id}-slide-delete-button`}
                         onClick={() => {
                           handleDeleteSlide(idx)
                         }}
@@ -151,28 +152,27 @@ const Slider = (props) => {
           )}
       </Box>
       {(availableOptions ?? []).length > 0 && (
-
-        <Box
-          display='flex'
-          justifyContent='space-between'
-          marginTop={3}
-          alignItems='center'
-          position='relative'
-        >
-          <AddButton
-            label='Додати слайд'
-            onClick={handleOpenModal}
-          />
+        <>
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            marginTop={3}
+            alignItems='center'
+            position='relative'
+          >
+            <AddButton
+              label='Додати слайд'
+              onClick={handleOpenModal}
+            />
+          </Box>
           <OptionsPicker
-            id={id}
-            open={open}
             anchorEl={anchorEl}
             options={availableOptions}
             onAdd={handleAddSlide}
             onClose={handleClose}
             dataType={dataType}
           />
-        </Box>
+        </>
       )}
     </Box>
   )

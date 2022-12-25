@@ -33,6 +33,7 @@ import { changesSavedAlert, checkErrorsAlert } from '../services/alerts-service'
 import { sortBlocks, submitBlocks } from '../helpers/blocks-helpers';
 import Page from '../components/common/Page';
 import PageHeader from '../components/common/PageHeader';
+import TabPanel from '../components/common/TabPanel';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 
@@ -44,7 +45,6 @@ const ProjectForm = () => {
   const [imageToDelete, setImageToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initialValues, setInitialValues] = useState({});
-  const [blocksError, setBlocksError] = useState(false);
   const [blocksToDelete, setBlocksToDelete] = useState([]);
 
   const form = useForm({
@@ -166,124 +166,150 @@ const ProjectForm = () => {
     }
   }
 
+  const onError = (errors) => {
+    const generalInfoErrors = { ...errors };
+    if (generalInfoErrors?.blocks) {
+      delete generalInfoErrors.blocks;
+    }
+    tabsRef.current.setTab(Object.keys(generalInfoErrors).length > 0 ? 0 : 1)
+    checkErrorsAlert()
+  }
+
+  const generalInfoErrors = { ...errors };
+  if (generalInfoErrors?.blocks) {
+    delete generalInfoErrors.blocks;
+  }
+
   return (
     <>
       <PageHeader
         title={isNaN(id)
           ? 'Створення нового об\'єкта портфоліо'
           : 'Редагування об\'єкта портфоліо'}
-        onSubmit={handleSubmit(onSubmit, () => { checkErrorsAlert() })}
+        onSubmit={handleSubmit(onSubmit, onError)}
       />
       <Page>
         <Box padding={2}>
-          <Typography sx={{ p: 1, fontWeight: 500, fontSize: '16px', mt: 2, textDecoration: 'underline' }}>Загальна інформація</Typography>
-          <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
-            <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
-              <FormControlLabel
-                control={
-                  <StyledCheckbox checked={is_published} onChange={((e) => setValue('is_published', e.target.checked))} />
-                }
-                label={'Опублікувати'}
-              />
-              {is_published
-                ? <Alert severity='success'>
-                  Цей об'єкт відображатиметься на сторінці "Потрфоліо"
-                </Alert>
-                : <Alert severity='info'>
-                  Цей об'єкт буде збережено як чернетку
-                </Alert>}
-            </Box>
-          </Box>
-          <Grid container spacing={2} marginTop={1}>
-            <Grid item xs={12} lg={7}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <FormControl variant="standard" fullWidth>
-                  <StyledInputLabel shrink htmlFor="titleInput">
-                    Заголовок об'єкта
-                  </StyledInputLabel>
-                  <StyledInputBase error={!!(errors?.title)} placeholder={'Заголовок об\'єкта'} id='titleInput' {...register('title', { required: true, maxLength: 50 })} />
-                </FormControl>
-                {errors.title && <ErrorMessage type={errors?.title?.type} maxLength={errors?.title?.type === 'maxLength' ? 50 : undefined} />}
-                <FormControl variant="standard" fullWidth>
-                  <StyledInputLabel shrink htmlFor="locationInput">
-                    Локація
-                  </StyledInputLabel>
-                  <StyledInputBase error={!!(errors?.location)} placeholder={'Локація'} id='locationInput' {...register('location', { required: true, maxLength: 50 })} />
-                </FormControl>
-                {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 50 : undefined} />}
-                <FormControl variant="standard" fullWidth>
-                  <StyledInputLabel shrink htmlFor="completedAtInput">
-                    Дата здачі
-                  </StyledInputLabel>
-                  <StyledInputBase type='date' error={!!(errors?.completed_at)} placeholder={'Дата здачі'} id='completedAtInput' {...register('completed_at', { required: true })} />
-                </FormControl>
-                {errors.completed_at && <ErrorMessage type={errors?.completed_at?.type} />}
-                <Controller
-                  name='type'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-                      <StyledInputLabel id='projectTypeSelectLabel' htmlFor="projectTypeSelect" >
-                        Тип проєкту
+          <Tabs ref={tabsRef} tabs={[
+            {
+              label: 'Загальна інформація',
+              errors: generalInfoErrors
+            },
+            {
+              label: 'Сторінка проєкту',
+              errors: errors?.blocks
+            }
+          ]} >
+            <TabPanel>
+              <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
+                <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
+                  <FormControlLabel
+                    control={
+                      <StyledCheckbox checked={is_published} onChange={((e) => setValue('is_published', e.target.checked))} />
+                    }
+                    label={'Опублікувати'}
+                  />
+                  {is_published
+                    ? <Alert severity='success'>
+                      Цей об'єкт відображатиметься на сторінці "Потрфоліо"
+                    </Alert>
+                    : <Alert severity='info'>
+                      Цей об'єкт буде збережено як чернетку
+                    </Alert>}
+                </Box>
+              </Box>
+              <Grid container spacing={2} marginTop={1}>
+                <Grid item xs={12} lg={7}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <FormControl variant="standard" fullWidth>
+                      <StyledInputLabel shrink htmlFor="titleInput">
+                        Заголовок об'єкта
                       </StyledInputLabel>
-                      <Select
-                        error={!!(errors?.completed_at)}
-                        labelId="projectTypeSelectLabel"
-                        label='Тип проєкту'
-                        id='projectTypeSelect'
-                        value={field.value}
-                        onChange={(e) => field.onChange(e)}
-                      >
-                        {projectTypes.map(t => (
-                          <MenuItem key={t} value={t} >{t}</MenuItem>
-                        ))}
-                      </Select>
+                      <StyledInputBase error={!!(errors?.title)} placeholder={'Заголовок об\'єкта'} id='titleInput' {...register('title', { required: true, maxLength: 50 })} />
                     </FormControl>
-                  )}
-                />
-                {errors.type && <ErrorMessage type={errors?.type?.type} />}
-              </Box>
-            </Grid>
-            <Grid item xs={12} lg={5}>
-              <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: '20px' }}>
-                <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
-                  Зображення
-                </StyledInputLabel>
-                <Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible', borderRadius: '5px' }}>
-                  {image
-                    ? (<>
-                      <IconButton size='small' onClick={() => {
-                        // setImageToDelete(image);
-                        setValue('image', null)
-                      }
-                      } sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
-                        <Delete sx={{ color: 'red' }} />
-                      </IconButton>
-                      <img src={image} style={{ width: '250px', borderRadius: '5px' }} />
-                    </>)
-                    : (<div style={{ width: 250, height: 125, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
-                </Card>
-                <ImageUploader
-                  id='imageUploader'
-                  ratio={2 / 1}
-                  onChange={async (file) => {
-                    setImageToDelete(image);
-                    setValue('imageFile', file);
-                    setValue('image', await getSrcFromFile(file))
-                  }}
-                />
-              </Box>
-            </Grid>
-          </Grid>
-
-          <Typography sx={{ p: 1, fontWeight: 500, fontSize: '16px', mt: 2, textDecoration: 'underline' }}>Сторінка проєкту</Typography>
-          <BlocksComposition
-            fieldArray={blocksFieldArray}
-            allowedBlocks={projectBlocks}
-            form={form}
-            onDeleteBlock={onDeleteBlock}
-          />
+                    {errors.title && <ErrorMessage type={errors?.title?.type} maxLength={errors?.title?.type === 'maxLength' ? 50 : undefined} />}
+                    <FormControl variant="standard" fullWidth>
+                      <StyledInputLabel shrink htmlFor="locationInput">
+                        Локація
+                      </StyledInputLabel>
+                      <StyledInputBase error={!!(errors?.location)} placeholder={'Локація'} id='locationInput' {...register('location', { required: true, maxLength: 50 })} />
+                    </FormControl>
+                    {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 50 : undefined} />}
+                    <FormControl variant="standard" fullWidth>
+                      <StyledInputLabel shrink htmlFor="completedAtInput">
+                        Дата здачі
+                      </StyledInputLabel>
+                      <StyledInputBase type='date' error={!!(errors?.completed_at)} placeholder={'Дата здачі'} id='completedAtInput' {...register('completed_at', { required: true })} />
+                    </FormControl>
+                    {errors.completed_at && <ErrorMessage type={errors?.completed_at?.type} />}
+                    <Controller
+                      name='type'
+                      control={control}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        <FormControl fullWidth size='small' sx={{ mt: 1 }}>
+                          <StyledInputLabel id='projectTypeSelectLabel' htmlFor="projectTypeSelect" >
+                            Тип проєкту
+                          </StyledInputLabel>
+                          <Select
+                            error={!!(errors?.completed_at)}
+                            labelId="projectTypeSelectLabel"
+                            label='Тип проєкту'
+                            id='projectTypeSelect'
+                            value={field.value}
+                            onChange={(e) => field.onChange(e)}
+                          >
+                            {projectTypes.map(t => (
+                              <MenuItem key={t} value={t} >{t}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      )}
+                    />
+                    {errors.type && <ErrorMessage type={errors?.type?.type} />}
+                  </Box>
+                </Grid>
+                <Grid item xs={12} lg={5}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: '20px', pb: 1 }}>
+                    <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
+                      Зображення
+                    </StyledInputLabel>
+                    <Card sx={{ width: 'fit-content', position: 'relative', overflow: 'visible', borderRadius: '5px' }}>
+                      {image
+                        ? (<>
+                          <IconButton size='small' onClick={() => {
+                            // setImageToDelete(image);
+                            setValue('image', null)
+                          }
+                          } sx={{ position: 'absolute', top: -17, right: -17, bgcolor: 'white', "&:hover": { bgcolor: '#dedede' } }}>
+                            <Delete sx={{ color: 'red' }} />
+                          </IconButton>
+                          <img src={image} style={{ width: '250px', borderRadius: '5px' }} />
+                        </>)
+                        : (<div style={{ width: 250, height: 125, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
+                    </Card>
+                    <ImageUploader
+                      id='imageUploader'
+                      ratio={2 / 1}
+                      onChange={async (file) => {
+                        setImageToDelete(image);
+                        setValue('imageFile', file);
+                        setValue('image', await getSrcFromFile(file))
+                      }}
+                    />
+                  </Box>
+                </Grid>
+              </Grid>
+            </TabPanel>
+            <TabPanel>
+              <BlocksComposition
+                fieldArray={blocksFieldArray}
+                allowedBlocks={projectBlocks}
+                form={form}
+                onDeleteBlock={onDeleteBlock}
+              />
+            </TabPanel>
+          </Tabs>
         </Box>
       </Page>
     </>

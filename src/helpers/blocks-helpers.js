@@ -1,6 +1,7 @@
 import { updateMainPageBlock, insertMainPageBlock, deleteMainPageBlock } from "../services/main-page-blocks-service";
 import { updateBlock, insertBlock, deleteBlock } from '../services/blocks-api-service.js';
 import { dataTypes } from "../constants/dataTypes";
+import { deleteImage } from "../services/storage-service";
 
 export const submitBlock = async (formData, isMainPage) => {
   const payload = {
@@ -72,7 +73,7 @@ const beforeBlockDeleting = async (blockData) => {
     : new Promise((resolve) => resolve());
 }
 
-export const submitBlocks = async (blocks, blocksToDelete, isMainPage = false) => {
+export const submitBlocks = async (blocks, blocksToDelete, imagesToDelete, isMainPage = false) => {
   const newBlocksValue = []
   await Promise.all((blocks ?? []).map(async ({ value: block }) => {
     const submitPayload = await beforeBlockSubmitting(block);
@@ -88,6 +89,8 @@ export const submitBlocks = async (blocks, blocksToDelete, isMainPage = false) =
       await deleteFunc(block.id)
     }
   }))
+
+  await Promise.all(imagesToDelete.map(async (id) => await deleteImage(id)))
 
   return sortBlocks(newBlocksValue);
 }
