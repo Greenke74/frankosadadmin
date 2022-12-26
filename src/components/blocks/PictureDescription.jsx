@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Controller } from 'react-hook-form';
 
-import { Box, Card, FormControl, IconButton, Tooltip } from '@mui/material'
+import { Box, Card, FormControl } from '@mui/material'
 import ImageUploader from '../common/ImageUploader'
 
-import { CameraAlt, Delete } from '@mui/icons-material'
+import { CameraAlt } from '@mui/icons-material'
 
 import { getSrcFromFile } from '../../helpers/file-helpers'
 import { StyledInputBase } from '../common/StyledComponents'
@@ -26,7 +26,7 @@ const PictureDescription = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', pb: 1 }}>
         <Controller
-          name={`image`}
+          name={`${registerName}.data`}
           control={control}
           rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
           render={({ field }) => {
@@ -41,24 +41,25 @@ const PictureDescription = ({
                   flexDirection: 'column',
                   position: 'relative'
                 }}>
-                  {(field.value.imageUrl || field.value.image) && (
+                  {(field.value?.imageUrl || field.value?.image) && (
                     <ImageDeleteButton
                       onClick={() => {
-                        field.value.image && setImageToDelete(field.value.image)
+                        field.value?.image && appendImageToDelete(field.value?.image)
                         field.onChange({
+                          ...field.value,
                           imageFile: null,
-                          imageSrc: '',
+                          imageUrl: '',
                           image: ''
                         })
                       }}
                     />
                   )}
                   <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '415px', display: 'flex' }}>
-                    {(field.value.imageUrl || field.value.image)
+                    {(field.value?.imageUrl || field.value?.image)
                       ? (<>
-                        <img style={{ maxWidth: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
+                        <img style={{ width: '100%' }} src={field.value?.imageUrl ?? getImageSrc(field.value?.image)} />
                       </>)
-                      : (<Box sx={{ width: '315px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
+                      : (<Box sx={{ width: '415px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
                   </Card>
                 </Box>
                 <Box sx={{ mb: 2, mt: 1, width: '315px' }}>
@@ -79,7 +80,7 @@ const PictureDescription = ({
 
 
                   }}
-                  buttonDisabled={field.value.imageUrl || field.value.image}
+                  buttonDisabled={field.value?.imageUrl || field.value?.image}
                 />
               </>
             )

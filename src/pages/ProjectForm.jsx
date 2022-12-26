@@ -35,6 +35,7 @@ import Page from '../components/common/Page';
 import PageHeader from '../components/common/PageHeader';
 import TabPanel from '../components/common/TabPanel';
 import { v1 as uuid } from 'uuid'
+import ImageDeleteButton from '../components/common/ImageDeleteButton';
 
 const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 const IMAGE_ASPECT_RATIO = 2 / 1;
@@ -317,25 +318,34 @@ const ProjectForm = () => {
                               position: 'relative'
                             }}>
                               {(field.value.imageUrl || field.value.image) && (
-                                <Tooltip title='Видалити зображення'>
-                                  <IconButton
-                                    sx={{
-                                      position: 'absolute',
-                                      top: -18,
-                                      right: -18,
-                                    }}
-                                    onClick={() => {
-                                      field.value.image && setImageToDelete(field.value.image)
-                                      field.onChange({
-                                        imageFile: null,
-                                        imageSrc: '',
-                                        image: ''
-                                      })
-                                    }}
-                                  >
-                                    <Delete sx={{ color: 'var(--error)' }} />
-                                  </IconButton>
-                                </Tooltip>
+                                <ImageDeleteButton onClick={() => {
+                                  field.value.image && setImageToDelete(field.value.image)
+                                  field.onChange({
+                                    ...field.value,
+                                    imageFile: null,
+                                    imageSrc: '',
+                                    image: ''
+                                  })
+                                }} />
+                                // <Tooltip title='Видалити зображення'>
+                                //   <IconButton
+                                //     sx={{
+                                //       position: 'absolute',
+                                //       top: -18,
+                                //       right: -18,
+                                //     }}
+                                //     onClick={() => {
+                                //       field.value.image && setImageToDelete(field.value.image)
+                                //       field.onChange({
+                                //         imageFile: null,
+                                //         imageSrc: '',
+                                //         image: ''
+                                //       })
+                                //     }}
+                                //   >
+                                //     <Delete sx={{ color: 'var(--error)' }} />
+                                //   </IconButton>
+                                // </Tooltip>
                               )}
                               <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '315px', display: 'flex' }}>
                                 {(field.value.imageUrl || field.value.image)

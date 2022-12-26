@@ -5,13 +5,15 @@ export const beforeSubmit = async (blockData) => {
 
   let imageKey = null;
   if (blockData?.data?.imageFile) {
-    imageKey = await uploadImage(blockData.data.imageFile)
+    imageKey = await uploadImage(blockData?.data?.imageFile)
 
-    delete result.data.imageFile;
+    delete result?.data?.imageFile;
+    // delete result?.data?.imageSrc;
+    delete result?.data?.imageUrl;
+
     result.data.image = imageKey;
   }
 
-  console.log(result);
   return result;
 }
 
