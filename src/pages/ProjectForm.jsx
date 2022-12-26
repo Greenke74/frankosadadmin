@@ -226,7 +226,7 @@ const ProjectForm = () => {
               errors: errors?.blocks
             }
           ]} >
-            <TabPanel index={0}>
+            <TabPanel index={0} currentTab={currentTab}>
               <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
                 <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
                   <FormControlLabel
@@ -325,7 +325,6 @@ const ProjectForm = () => {
                                       right: -18,
                                     }}
                                     onClick={() => {
-                                      console.log(field.value);
                                       field.value.image && setImageToDelete(field.value.image)
                                       field.onChange({
                                         imageFile: null,
@@ -375,7 +374,7 @@ const ProjectForm = () => {
                 </Grid>
               </Grid>
             </TabPanel>
-            <TabPanel index={1}>
+            <TabPanel index={1} currentTab={currentTab}>
               <BlocksComposition
                 fieldArray={blocksFieldArray}
                 allowedBlocks={projectBlocks}

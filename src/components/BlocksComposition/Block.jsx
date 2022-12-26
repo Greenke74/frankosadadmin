@@ -35,7 +35,15 @@ const Block = (
     services
   }
 ) => {
-  const [expanded, setExpanded] = useState(false);
+
+  const errors = formState?.errors &&
+    formState?.errors?.blocks &&
+    formState?.errors?.blocks[idx] &&
+    formState?.errors?.blocks[idx].value
+ 
+  const invalidData = Object.keys(errors ?? {}).length > 0;
+
+  const [expanded, setExpanded] = useState(invalidData);
   const [error, setError] = useState(false);
 
   const [label, setLabel] = useState('');
@@ -59,14 +67,14 @@ const Block = (
     return () => mounted = false;
   }, [])
 
-  const errors = formState?.errors &&
-    formState?.errors?.blocks &&
-    formState?.errors?.blocks[idx] &&
-    formState?.errors?.blocks[idx].value
+  useEffect(() => {
+    if(invalidData){
+      setExpanded(true);
+    }
+  }, [invalidData])
 
-  const invalidData = Object.keys(errors ?? {}).length > 0;
   return (
-    <Accordion expanded={invalidData || expanded}>
+    <Accordion expanded={expanded}>
       <AccordionSummary>
         <Box
           sx={{

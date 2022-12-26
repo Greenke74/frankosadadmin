@@ -19,7 +19,7 @@ import PageHeader from '../components/common/PageHeader';
 const ITEMS_PER_PAGE = 8;
 const ROW_HEIGHT = 82;
 
-const ProjectsPage = () => {
+const ProjectsList = () => {
 	const navigate = useNavigate();
 	const handleDelete = (id) => {
 		Swal.fire({
@@ -159,4 +159,4 @@ const ProjectsPage = () => {
 	)
 }
 
-export default ProjectsPage
+export default ProjectsList

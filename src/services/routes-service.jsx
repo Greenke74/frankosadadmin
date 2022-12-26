@@ -12,7 +12,7 @@ export const getRoutes = () => ([
 	{
 		path: '/projects',
 		label: 'Портфоліо',
-		element: () => import('../pages/ProjectsPage.jsx'),
+		element: () => import('../pages/ProjectsList.jsx'),
 	},
 	{
 		path: '/projects/:id',
