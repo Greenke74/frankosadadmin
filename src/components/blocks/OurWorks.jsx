@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFieldArray } from 'react-hook-form';
-import { Box, Popover, Typography, Chip, Grid, Tooltip, IconButton } from '@mui/material';
+import { Box, Popover, Typography, Chip, Grid, Tooltip, IconButton, Grow } from '@mui/material';
 import AddButton from '../common/AddButton';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -53,52 +53,54 @@ const OurWorks = ({
       <Grid container>
         {(fields ?? []).map(({ value: s, id }, idx) => {
           return (
-            <Grid item xs={12} sm={6} md={4} key={s.id}>
-              <Box
-                padding={1}
-                bgcolor='white'
-              >
-                <img
-                  src={getImageSrc(s.image)}
-                  alt={s.title}
-                  style={{
-                    borderRadius: 5,
-                    width: '100%',
-                    backgroundColor: '#BABABA',
-                    minHeight: '103px'
-                  }}
-                />
-                <Box marginTop={1} display='flex' flexWrap='nowrap' justifyContent='space-between' alignItems='center'>
-                  <Typography
-                    fontSize='16px'
-                    fontWeight={500}
-                    color='var(--theme-color)'
-                    textAlign='center'
-                    lineHeight='30px'
-                    marginLeft={1}
-                    component={'h3'}
-
+            <Grid item xs={12} sm={6} md={4} key={id ?? s.id}>
+              <Grow in={idx !== undefined} >
+                <Box
+                  padding={1}
+                  bgcolor='white'
+                >
+                  <img
+                    src={getImageSrc(s.image)}
+                    alt={s.title}
                     style={{
-                      WebkitLineClamp: 1,
-                      display: '-webkit-box',
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      cursor: 'default'
+                      borderRadius: 5,
+                      width: '100%',
+                      backgroundColor: '#BABABA',
+                      minHeight: '103px'
                     }}
-                  >
-                    {s.title}
-                  </Typography>
-                  <Tooltip disableFocusListener title='Видалити слайд'>
-                    <IconButton
-                      color='error'
-                      onClick={() => {
-                        remove(idx)
+                  />
+                  <Box marginTop={1} display='flex' flexWrap='nowrap' justifyContent='space-between' alignItems='center'>
+                    <Typography
+                      fontSize='16px'
+                      fontWeight={500}
+                      color='var(--theme-color)'
+                      textAlign='center'
+                      lineHeight='30px'
+                      marginLeft={1}
+                      component={'h3'}
+
+                      style={{
+                        WebkitLineClamp: 1,
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        cursor: 'default'
                       }}
-                    ><HighlightOffIcon />
-                    </IconButton>
-                  </Tooltip>
+                    >
+                      {s.title}
+                    </Typography>
+                    <Tooltip disableFocusListener title='Видалити слайд'>
+                      <IconButton
+                        color='error'
+                        onClick={() => {
+                          remove(idx)
+                        }}
+                      ><HighlightOffIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Box>
-              </Box>
+              </Grow>
             </Grid>
           )
         })}

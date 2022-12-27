@@ -30,11 +30,6 @@ export const blocks = [
 		element: () => import('./PictureParagraph.jsx')
 	},
 	{
-		label: 'Звичайний текст',
-		type: "simpleText",
-		element: () => import('./SimpleText.jsx')
-	},
-	{
 		label: 'Редактор контенту',
 		type: 'htmlContent',
 		element: () => import('./HtmlContent.jsx')
@@ -51,6 +46,6 @@ export const mainPageBlocks = [
 ]
 
 export const projectBlocks = [
-	'counter', 'stepByStep', 'pictureDescription', 'pictureParagraph', 'simpleText', 'htmlContent'
+	'counter', 'stepByStep', 'pictureDescription', 'pictureParagraph', 'htmlContent'
 ]
 

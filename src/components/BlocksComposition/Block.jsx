@@ -30,6 +30,7 @@ const Block = (
     registerName,
     register,
     control,
+    getValues,
     formState,
     projects,
     services
@@ -40,7 +41,7 @@ const Block = (
     formState?.errors?.blocks &&
     formState?.errors?.blocks[idx] &&
     formState?.errors?.blocks[idx].value
- 
+
   const invalidData = Object.keys(errors ?? {}).length > 0;
 
   const [expanded, setExpanded] = useState(invalidData);
@@ -68,7 +69,7 @@ const Block = (
   }, [])
 
   useEffect(() => {
-    if(invalidData){
+    if (invalidData) {
       setExpanded(true);
     }
   }, [invalidData])
@@ -100,6 +101,7 @@ const Block = (
                 component="h3"
                 fontSize='14px'
                 lineHeight='20px'
+                whiteSpace='nowrap'
               >
                 {label}
               </Typography>
@@ -180,6 +182,7 @@ const Block = (
                 register={register}
                 control={control}
                 errors={errors}
+                getValues={getValues}
                 appendImageToDelete={appendImageToDelete}
                 projects={projects}
                 services={services}

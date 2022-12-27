@@ -94,6 +94,21 @@ export const Spinner = ({ style }) => {
   )
 }
 
+export const CommonButton = styled(Button)({
+  '&': {
+    color: 'var(--theme-color)',
+    backgroundColor: 'white',
+    textTransform: 'none',
+    padding: '6px 20px',
+  },
+  '&:hover': {
+    backgroundColor: '#dedede'
+  },
+  '&.Mui-disabled': {
+    backgroundColor: '#f7eeee',
+  }
+})
+
 
 
 

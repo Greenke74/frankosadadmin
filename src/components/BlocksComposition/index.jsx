@@ -11,7 +11,7 @@ const BlocksComposition = ({
   allowedBlocks,
   isMainPage = false,
   onDeleteBlock,
-  appendImageToDelete = () => {}
+  appendImageToDelete = () => { }
 }) => {
   const {
     fields: blocks,
@@ -51,9 +51,9 @@ const BlocksComposition = ({
         <Grid container spacing={3} direction='column'>
           {blocks.map(({ value, id }, idx) => {
             return (
-              <Grid item key={id ?? value.id} sx={{overflow: 'hidden !important', maxWidth: '100% !important'}}>
+              <Grid item key={id ?? value.id} sx={{ overflow: 'hidden !important', maxWidth: '100% !important' }}>
                 <Grow in={true}>
-                  <div style={{maxWidth: '100%'}}>
+                  <div style={{ maxWidth: '100%' }}>
                     <Block
                       data={value}
                       idx={idx}
@@ -70,6 +70,7 @@ const BlocksComposition = ({
                       register={form.register}
                       control={form.control}
                       formState={form.formState}
+                      getValues={(propName) => Boolean(propName) && form.getValues(`blocks.${idx}.value.${propName}`)}
                       projects={projects}
                       services={services}
                     />

@@ -177,11 +177,15 @@ const MainSettings = () => {
 										</>)
 										: (<div style={{ width: 150, height: 150, backgroundColor: '#f7eeee', display: 'flex', justifyContent: 'center', alignItems: 'center' }} ><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></div>)}
 								</Card>
-								<ImageUploader id='mainImageUploader' ratio={1 / 1} onChange={async (file) => {
-									setImageToDelete(favicon);
-									setValue('faviconFile', file);
-									setValue('favicon', await getSrcFromFile(file))
-								}} />
+								<ImageUploader
+									id='mainImageUploader' ratio={1 / 1}
+									onChange={async (file) => {
+										if (file) {
+											setImageToDelete(favicon);
+											setValue('faviconFile', file);
+											setValue('favicon', await getSrcFromFile(file))
+										}
+									}} />
 							</Box>
 						</Grid>
 					</Grid>

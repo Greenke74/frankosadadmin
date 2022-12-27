@@ -364,14 +364,14 @@ const ProjectForm = () => {
                               id={`${uuid()}-image-uploader`}
                               ratio={IMAGE_ASPECT_RATIO}
                               onChange={async (file) => {
-                                field.onChange({
-                                  ...field.value,
-                                  image: null,
-                                  imageUrl: await getSrcFromFile(file),
-                                  imageFile: file,
-                                })
-
-
+                                if (file) {
+                                  field.onChange({
+                                    ...field.value,
+                                    image: null,
+                                    imageUrl: await getSrcFromFile(file),
+                                    imageFile: file,
+                                  })
+                                }
                               }}
                               buttonDisabled={field.value.imageUrl || field.value.image}
                             />

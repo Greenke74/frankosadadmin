@@ -35,7 +35,6 @@ const PageHeader = ({
         <Typography sx={{
           fontSize: '20px',
           fontWeight: 500,
-          textShadow: '0px 0px 11px rgb(60 113 47 / 70%)',
           flex: '1 0 auto'
         }}>
           {title ?? ''}

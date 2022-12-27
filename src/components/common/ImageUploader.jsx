@@ -36,9 +36,9 @@ const ImageUploader = ({ ratio, onChange, id, buttonDisabled = false }) => {
 					textTransform: 'none',
 					padding: '8.5px 20px',
 					borderRadius: '4px',
-					cursor: 'pointer',
 					fontSize: '14px',
-					fontFamily: 'Roboto'
+					fontFamily: 'Roboto',
+					cursor: buttonDisabled ? 'initial' : 'pointer'
 				}}
 				htmlFor={id ? `fileUploader-${id}` : 'fileUploader'}
 			>Завантажити зображення
@@ -56,7 +56,14 @@ const ImageUploader = ({ ratio, onChange, id, buttonDisabled = false }) => {
 					setFile(event.target.files[0]);
 				}}
 			/>
-			<Dialog open={!!file} onClose={() => setFile(null)} sx={{ padding: '9px' }} >
+			<Dialog
+				open={!!file}
+				onClose={() => {
+					setFile(null);
+					onChange(null)
+				}}
+				sx={{ padding: '9px' }}
+			>
 				<DialogContent>
 					<Cropper
 						src={fileUrl}

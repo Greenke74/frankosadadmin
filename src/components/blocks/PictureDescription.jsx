@@ -1,17 +1,15 @@
 import React from 'react'
 import { Controller } from 'react-hook-form';
 
-import { Box, Card, FormControl } from '@mui/material'
+import { Box, FormControl } from '@mui/material'
 import ImageUploader from '../common/ImageUploader'
-
-import { CameraAlt } from '@mui/icons-material'
+import ErrorMessage from '../common/ErrorMessage'
+import { StyledInputBase } from '../common/StyledComponents'
 
 import { getSrcFromFile } from '../../helpers/file-helpers'
-import { StyledInputBase } from '../common/StyledComponents'
 import { getImageSrc } from '../../services/storage-service'
 import { v1 as uuid } from 'uuid'
-import ErrorMessage from '../common/ErrorMessage'
-import ImageDeleteButton from '../common/ImageDeleteButton';
+import ImageCard from '../common/ImageCard';
 
 const IMAGE_ASPECT_RATIO = 4 / 1;
 
@@ -26,42 +24,32 @@ const PictureDescription = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', pb: 1 }}>
         <Controller
-          name={`${registerName}.data`}
+          name={`${registerName}.data.image`}
           control={control}
-          rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
+          shouldUnregister={true}
+          rules={{ validate: (value) => value?.url ? Boolean(value.url) : Boolean(value.imageSrc) || 'imageRequired' }}
           render={({ field }) => {
             return (
               <>
-                <Box sx={{
-                  mt: 3,
-                  maxWidth: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexDirection: 'column',
-                  position: 'relative'
-                }}>
-                  {(field.value?.imageUrl || field.value?.image) && (
-                    <ImageDeleteButton
-                      onClick={() => {
-                        field.value?.image && appendImageToDelete(field.value?.image)
-                        field.onChange({
-                          ...field.value,
-                          imageFile: null,
-                          imageUrl: '',
-                          image: ''
-                        })
-                      }}
-                    />
-                  )}
-                  <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '415px', display: 'flex' }}>
-                    {(field.value?.imageUrl || field.value?.image)
-                      ? (<>
-                        <img style={{ width: '100%' }} src={field.value?.imageUrl ?? getImageSrc(field.value?.image)} />
-                      </>)
-                      : (<Box sx={{ width: '415px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
-                  </Card>
-                </Box>
+                <ImageCard
+                  src={field.value?.url
+                    ? getImageSrc(field.value?.url)
+                    : field.value?.imageSrc
+                      ? field.value?.imageSrc
+                      : null
+                  }
+                  error={errors?.image?.message == 'imageRequired'}
+                  ratio={IMAGE_ASPECT_RATIO}
+                  onClickDelete={() => {
+                    field.value?.image && appendImageToDelete(field.value?.image)
+                    field.onChange({
+                      ...field.value,
+                      imageFile: null,
+                      imageSrc: '',
+                      image: ''
+                    })
+                  }}
+                />
                 <Box sx={{ mb: 2, mt: 1, width: '315px' }}>
                   {errors && errors.image && (
                     <ErrorMessage type='imageRequired' />
@@ -71,23 +59,23 @@ const PictureDescription = ({
                   id={`${uuid()}-image-uploader`}
                   ratio={IMAGE_ASPECT_RATIO}
                   onChange={async (file) => {
-                    field.onChange({
-                      ...field.value,
-                      image: null,
-                      imageUrl: await getSrcFromFile(file),
-                      imageFile: file,
-                    })
-
-
+                    if (file) {
+                      field.onChange({
+                        ...field.value,
+                        url: null,
+                        imageSrc: await getSrcFromFile(file),
+                        imageFile: file,
+                      })
+                    }
                   }}
-                  buttonDisabled={field.value?.imageUrl || field.value?.image}
+                  buttonDisabled={field.value?.imageSrc || field.value?.url}
                 />
               </>
             )
           }}
         />
       </Box>
-      {errors && errors?.data && errors?.data?.type === 'validate' && errors?.data?.message === 'imageRequired' && (
+      {errors && errors?.data && errors?.data?.image?.type === 'validate' && errors?.data?.image?.message === 'imageRequired' && (
         <Box sx={{ width: '100%', mt: 1 }}>
           <ErrorMessage
             type={'imageRequired'}
@@ -101,7 +89,7 @@ const PictureDescription = ({
         <Box sx={{ alignSelf: 'start', mt: 1 }}>
           <ErrorMessage
             type={errors?.data?.description?.type}
-            maxLength={errors?.data?.description?.type == 'maxLength' ? 2000 : null} />
+            maxLength={errors?.data?.description?.type == 'maxLength' ? 100 : null} />
         </Box>
       )}
     </Box>

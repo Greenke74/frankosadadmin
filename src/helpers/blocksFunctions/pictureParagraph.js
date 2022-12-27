@@ -7,7 +7,6 @@ export const beforeSubmit = async (blockData) => {
   if (blockData?.data?.image?.imageFile) {
     imageKey = await uploadImage(blockData?.data?.image?.imageFile)
 
-
     result.data.image = { url: imageKey };
   }
 

@@ -3,7 +3,7 @@ import { useFieldArray } from 'react-hook-form';
 
 import AddButton from './AddButton.jsx';
 import OptionsPicker from './OptionsPicker.jsx';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Grow, IconButton, Tooltip, Typography } from '@mui/material';
 
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
@@ -94,59 +94,60 @@ const Slider = (props) => {
           ) : (
             (slidesFields ?? []).map(({ value: s, id }, idx) => {
               return (
-                <Box
-                  key={s.id}
-                  sx={{
-                    bgcolor: 'white',
-                    flexBasis: '30%',
-                    maxWidth: '15vw',
-                    flexGrow: 1,
-                    flexShrink: 0,
-                    margin: 1
-                  }}
-                >
-                  <img
-                    src={getImageSrc(s.image)}
-                    alt={s.title}
-                    style={{
-                      borderRadius: 5,
-                      width: '100%',
-                      backgroundColor: '#BABABA',
-                      minHeight: '103px'
+                <Grow in={idx !== undefined} key={s.id}>
+                  <Box
+                    sx={{
+                      bgcolor: 'white',
+                      flexBasis: '30%',
+                      maxWidth: '15vw',
+                      flexGrow: 1,
+                      flexShrink: 0,
+                      margin: 1
                     }}
-                  />
-                  <Box marginTop={1} display='flex' flexWrap='nowrap' justifyContent='space-between' alignItems='center'>
-                    <Typography
-                      fontSize='16px'
-                      fontWeight={500}
-                      color='var(--theme-color)'
-                      textAlign='center'
-                      lineHeight='30px'
-                      marginLeft={1}
-                      component={'h3'}
-
+                  >
+                    <img
+                      src={getImageSrc(s.image)}
+                      alt={s.title}
                       style={{
-                        WebkitLineClamp: 1,
-                        display: '-webkit-box',
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        cursor: 'default'
+                        borderRadius: 5,
+                        width: '100%',
+                        backgroundColor: '#BABABA',
+                        minHeight: '103px'
                       }}
-                    >
-                      {s.title}
-                    </Typography>
-                    <Tooltip disableFocusListener title='Видалити слайд'>
-                      <IconButton
-                        color='error'
-                        id={`${id}-slide-delete-button`}
-                        onClick={() => {
-                          handleDeleteSlide(idx)
+                    />
+                    <Box marginTop={1} display='flex' flexWrap='nowrap' justifyContent='space-between' alignItems='center'>
+                      <Typography
+                        fontSize='16px'
+                        fontWeight={500}
+                        color='var(--theme-color)'
+                        textAlign='center'
+                        lineHeight='30px'
+                        marginLeft={1}
+                        component={'h3'}
+
+                        style={{
+                          WebkitLineClamp: 1,
+                          display: '-webkit-box',
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          cursor: 'default'
                         }}
-                      ><HighlightOffIcon />
-                      </IconButton>
-                    </Tooltip>
+                      >
+                        {s.title}
+                      </Typography>
+                      <Tooltip disableFocusListener title='Видалити слайд'>
+                        <IconButton
+                          color='error'
+                          id={`${id}-slide-delete-button`}
+                          onClick={() => {
+                            handleDeleteSlide(idx)
+                          }}
+                        ><HighlightOffIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </Box>
-                </Box>
+                </Grow>
               )
             })
           )}
