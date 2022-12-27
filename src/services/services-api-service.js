@@ -23,7 +23,6 @@ export const getServices = () => new Promise((resolve, reject) => {
 		supabase
 			.from('services')
 			.select()
-			.eq('is_published', true)
 			.then(({ data, error }) => {
 				if (error) {
 					reject(error);

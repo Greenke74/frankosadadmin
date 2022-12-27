@@ -8,9 +8,7 @@ import {
   Card,
   FormControl,
   FormControlLabel,
-  Grid,
-  Select,
-  MenuItem
+  Grid
 } from '@mui/material';
 
 import { StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
@@ -19,26 +17,23 @@ import ErrorMessage from '../components/common/ErrorMessage';
 import Tabs from '../components/common/Tabs';
 import BlocksComposition from '../components/BlocksComposition';
 
-import { CameraAlt } from '@mui/icons-material';
-
-import { getProjectPage, insertProject, updateProject } from '../services/portfolio-api-service';
+import { getServicePage, insertService, updateService } from '../services/services-api-service';
 import { getSrcFromFile } from '../helpers/file-helpers';
 import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
 import { slugify } from 'transliteration';
 import Swal from 'sweetalert2';
-import { projectBlocks } from '../components/blocks/index.js';
+import { serviceBlocks } from '../components/blocks/index.js';
 import { changesSavedAlert, checkErrorsAlert } from '../services/alerts-service';
 import { sortBlocks, submitBlocks } from '../helpers/blocks-helpers';
 import Page from '../components/common/Page';
 import PageHeader from '../components/common/PageHeader';
 import TabPanel from '../components/common/TabPanel';
 import { v1 as uuid } from 'uuid'
-import ImageDeleteButton from '../components/common/ImageDeleteButton';
+import ImageCard from '../components/common/ImageCard';
 
-const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
 const IMAGE_ASPECT_RATIO = 2 / 1;
 
-const ProjectForm = () => {
+const ServiceForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -53,8 +48,7 @@ const ProjectForm = () => {
   const form = useForm({
     defaultValues: {
       title: '',
-      location: '',
-      type: '',
+      description: '',
       alias: '',
       image: {
         image: '',
@@ -62,7 +56,6 @@ const ProjectForm = () => {
         imageFile: null
       },
       is_published: true,
-      completed_at: new Date().toISOString().substr(0, 10),
       blocks: []
     },
     mode: 'onSubmit'
@@ -76,17 +69,16 @@ const ProjectForm = () => {
 
   useEffect(() => {
     let mounted = true;
-    !isNaN(id) && getProjectPage(id).then(({ data: project }) => {
+    !isNaN(id) && getServicePage(id).then(({ data: service }) => {
       const formData = {
         ...getValues(),
-        ...project,
-        completed_at: project.completed_at.substr(0, 10),
+        ...service,
         image: {
-          image: project.image,
+          image: service.image,
           imageSrc: '',
           imageFile: null
         },
-        blocks: sortBlocks(project.blocks ?? []).map(b => ({ value: b }))
+        blocks: sortBlocks(service.blocks ?? []).map(b => ({ value: b }))
       }
       reset(formData);
       mounted && setInitialValues(formData);
@@ -128,16 +120,16 @@ const ProjectForm = () => {
 
       try {
         if (payload.id) {
-          await updateProject(payload);
+          await updateService(payload);
 
           setValue('imageFile', null);
 
           changesSavedAlert();
         } else {
-          const { data: { id } } = await insertProject(payload);
+          const { data: { id } } = await insertService(payload);
           setValue('imageFile', null);
 
-          navigate(`/projects/${id}`);
+          navigate(`/services/${id}`);
           changesSavedAlert();
         }
       } catch (error) {
@@ -145,7 +137,7 @@ const ProjectForm = () => {
           Swal.fire({
             position: 'top-right',
             icon: 'error',
-            title: 'Проєкт з такою назвою уже існує!',
+            title: 'Послуга з такою назвою уже існує!',
             color: 'var(--theme-color)',
             timer: 5000,
             showConfirmButton: false,
@@ -207,11 +199,11 @@ const ProjectForm = () => {
     <>
       <PageHeader
         title={isNaN(id)
-          ? 'Створення нового об\'єкта портфоліо'
-          : 'Редагування об\'єкта портфоліо'}
+          ? 'Створення нової послуги'
+          : 'Редагування послуги'}
         onSubmit={handleSubmit(onSubmit, onError)}
         submitDisabled={isSubmitting}
-        onGoBack={() => navigate('/projects')}
+        onGoBack={() => navigate('/services')}
       />
       <Page>
         <Box padding={2}>
@@ -221,7 +213,7 @@ const ProjectForm = () => {
               errors: generalInfoErrors
             },
             {
-              label: 'Сторінка проєкту',
+              label: 'Сторінка послуги',
               errors: errors?.blocks
             }
           ]} >
@@ -236,10 +228,10 @@ const ProjectForm = () => {
                   />
                   {is_published
                     ? <Alert severity='success'>
-                      Цей об'єкт відображатиметься на сторінці "Потрфоліо"
+                      Ця послуга відображатиметься на сторінці "Послуги"
                     </Alert>
                     : <Alert severity='info'>
-                      Цей об'єкт буде збережено як чернетку
+                      Цю послугу буде збережено як чернетку
                     </Alert>}
                 </Box>
               </Box>
@@ -248,54 +240,31 @@ const ProjectForm = () => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <FormControl variant="standard" fullWidth>
                       <StyledInputLabel shrink htmlFor="titleInput">
-                        Заголовок об'єкта
+                        Заголовок послуги
                       </StyledInputLabel>
-                      <StyledInputBase error={!!(errors?.title)} placeholder={'Заголовок об\'єкта'} id='titleInput' {...register('title', { required: true, maxLength: 50 })} />
+                      <StyledInputBase error={!!(errors?.title)} placeholder='Заголовок послуги' id='titleInput' {...register('title', { required: true, maxLength: 50 })} />
                     </FormControl>
                     {errors.title && <ErrorMessage type={errors?.title?.type} maxLength={errors?.title?.type === 'maxLength' ? 50 : undefined} />}
                     <FormControl variant="standard" fullWidth>
-                      <StyledInputLabel shrink htmlFor="locationInput">
-                        Локація
+                      <StyledInputLabel shrink htmlFor="descriptionInput">
+                        Опис
                       </StyledInputLabel>
-                      <StyledInputBase error={!!(errors?.location)} placeholder={'Локація'} id='locationInput' {...register('location', { required: true, maxLength: 50 })} />
+                      <StyledInputBase
+                        error={!!(errors?.description)}
+                        placeholder='Опис'
+                        id='descriptionInput'
+                        multiline={true}
+                        minRows={6}
+                        maxRows={20}
+                        {...register('description', { required: true, maxLength: 2000 })}
+                      />
                     </FormControl>
-                    {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 50 : undefined} />}
-                    <FormControl variant="standard" fullWidth>
-                      <StyledInputLabel shrink htmlFor="completedAtInput">
-                        Дата здачі
-                      </StyledInputLabel>
-                      <StyledInputBase type='date' error={!!(errors?.completed_at)} placeholder={'Дата здачі'} id='completedAtInput' {...register('completed_at', { required: true })} />
-                    </FormControl>
-                    {errors.completed_at && <ErrorMessage type={errors?.completed_at?.type} />}
-                    <Controller
-                      name='type'
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => (
-                        <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-                          <StyledInputLabel id='projectTypeSelectLabel' htmlFor="projectTypeSelect" >
-                            Тип проєкту
-                          </StyledInputLabel>
-                          <Select
-                            error={!!(errors?.completed_at)}
-                            labelId="projectTypeSelectLabel"
-                            label='Тип проєкту'
-                            id='projectTypeSelect'
-                            value={field.value}
-                            onChange={(e) => field.onChange(e)}
-                          >
-                            {projectTypes.map(t => (
-                              <MenuItem key={t} value={t} >{t}</MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      )}
-                    />
-                    {errors.type && <ErrorMessage type={errors?.type?.type} />}
+                    {errors.description && <ErrorMessage type={errors?.description?.type} maxLength={errors?.description?.type === 'maxLength' ? 2000 : undefined} />}
+
                   </Box>
                 </Grid>
                 <Grid item xs={12} lg={5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', pb: 1 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 'fit-content', margin: 'auto' }}>
                     <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
                       Зображення
                     </StyledInputLabel>
@@ -306,34 +275,23 @@ const ProjectForm = () => {
                       render={({ field }) => {
                         return (
                           <>
-                            <Box sx={{
-                              mt: 3,
-                              maxWidth: '100%',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              flexDirection: 'column',
-                              position: 'relative'
-                            }}>
-                              {(field.value.imageUrl || field.value.image) && (
-                                <ImageDeleteButton onClick={() => {
-                                  field.value.image && setImageToDelete(field.value.image)
-                                  field.onChange({
-                                    ...field.value,
-                                    imageFile: null,
-                                    imageSrc: '',
-                                    image: ''
-                                  })
-                                }} />
-                              )}
-                              <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '315px', display: 'flex' }}>
-                                {(field.value.imageUrl || field.value.image)
-                                  ? (<>
-                                    <img style={{ maxWidth: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
-                                  </>)
-                                  : (<Box sx={{ width: '315px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
-                              </Card>
-                            </Box>
+                            <ImageCard
+                              src={field.value.image
+                                ? getImageSrc(field.value.image)
+                                : field.value.imageUrl ?? null}
+                              onClickDelete={() => {
+                                field.value.image && setImageToDelete(field.value.image)
+                                field.onChange({
+                                  ...field.value,
+                                  imageFile: null,
+                                  imageSrc: '',
+                                  image: ''
+                                })
+                              }}
+                              ratio={IMAGE_ASPECT_RATIO}
+                              error={errors && errors.image}
+                              customDivideBy={9}
+                            />
                             <Box sx={{ mb: 2, mt: 1, width: '315px' }}>
                               {errors && errors.image && (
                                 <ErrorMessage type='imageRequired' />
@@ -366,7 +324,7 @@ const ProjectForm = () => {
             <TabPanel index={1} currentTab={currentTab}>
               <BlocksComposition
                 fieldArray={blocksFieldArray}
-                allowedBlocks={projectBlocks}
+                allowedBlocks={serviceBlocks}
                 form={form}
                 onDeleteBlock={onDeleteBlock}
                 appendImageToDelete={appendImageToDelete}
@@ -379,4 +337,4 @@ const ProjectForm = () => {
   )
 }
 
-export default ProjectForm
+export default ServiceForm

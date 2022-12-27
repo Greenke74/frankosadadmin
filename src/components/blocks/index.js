@@ -49,3 +49,7 @@ export const projectBlocks = [
 	'counter', 'stepByStep', 'pictureDescription', 'pictureParagraph', 'htmlContent'
 ]
 
+export const serviceBlocks = [
+	'counter', 'stepByStep', 'pictureDescription', 'pictureParagraph', 'htmlContent'
+]
+

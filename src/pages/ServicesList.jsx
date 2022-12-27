@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 
+import Page from '../components/common/Page';
+import PageHeader from '../components/common/PageHeader';
 import { Alert, Box } from '@mui/material'
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import IsPublished from '../components/common/IsPublished';
@@ -8,13 +10,15 @@ import AddButton from '../components/common/AddButton';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import { getServices } from '../services/services-api-service';
+
+import { deleteService, getServices } from '../services/services-api-service';
 import { getImageSrc } from '../services/storage-service';
+import { deleteConfirmAlert, deletedSuccessfullyAlert } from '../services/alerts-service';
 
 const ITEMS_PER_PAGE = 8;
 const ROW_HEIGHT = 82;
 
-const ServicesPage = () => {
+const ServicesList = () => {
   const navigate = useNavigate();
 
   const [data, setData] = useState([]);
@@ -26,6 +30,17 @@ const ServicesPage = () => {
     })
     return () => mounted = false;
   }, [])
+
+  const handleDelete = (id) => {
+		deleteConfirmAlert('послугу').then(async result => {
+			if (result.value) {
+				await deleteService(id);
+				deletedSuccessfullyAlert('Послугу')
+				const services = await getServices()
+				setData(services);
+			}
+		})
+	}
 
   const columns = [
     {
@@ -93,39 +108,44 @@ const ServicesPage = () => {
   ]
 
   return (
-    <Box padding={2} >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #e0e0e0', borderRadius: 1, marginBottom: 2, padding: 1 }}>
-        <AddButton
-          label='Додати послугу'
-          onClick={() => navigate('/service/new')}
-        />
-        <Alert sx={{ height: '36.5px', overflow: 'hidden', padding: '0 10px' }} severity='info'>
-          Ви можете додати нові послуги
-        </Alert>
-      </Box>
-      <Box height={`calc((${ITEMS_PER_PAGE} * ${ROW_HEIGHT}px) + 111px)`}>
-        <DataGrid
-          rows={data}
-          columns={columns}
-          disableColumnFilter
-          disableColumnMenu
-          rowHeight={ROW_HEIGHT}
-          pageSize={ITEMS_PER_PAGE}
-          disableSelectionOnClick={true}
-          columnVisibilityModel={{
-            id: false
-          }}
-          sortModel={[{ field: 'id', sort: 'desc' }]}
-          sx={{
-            'div:last-child > div': {
-              borderBottom: 'none !important'
-            }
-          }}
-        >
-        </DataGrid>
-      </Box>
-    </Box >
+    <>
+      <PageHeader title={'Список послуг'} />
+      <Page>
+        <Box padding={2} >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #e0e0e0', borderRadius: 1, marginBottom: 2, padding: 1 }}>
+            <AddButton
+              label='Додати послугу'
+              onClick={() => navigate('/services/new')}
+            />
+            <Alert sx={{ height: '36.5px', overflow: 'hidden', padding: '0 10px' }} severity='info'>
+              Ви можете додати нові послуги
+            </Alert>
+          </Box>
+          <Box height={`calc((${ITEMS_PER_PAGE} * ${ROW_HEIGHT}px) + 111px)`}>
+            <DataGrid
+              rows={data}
+              columns={columns}
+              disableColumnFilter
+              disableColumnMenu
+              rowHeight={ROW_HEIGHT}
+              pageSize={ITEMS_PER_PAGE}
+              disableSelectionOnClick={true}
+              columnVisibilityModel={{
+                id: false
+              }}
+              sortModel={[{ field: 'id', sort: 'desc' }]}
+              sx={{
+                'div:last-child > div': {
+                  borderBottom: 'none !important'
+                }
+              }}
+            >
+            </DataGrid>
+          </Box>
+        </Box >
+      </Page>
+    </>
   )
 }
 
-export default ServicesPage
+export default ServicesList
