@@ -55,7 +55,7 @@ export const getServicePage = (value) => new Promise((resolve, reject) => {
 
 export const insertService = (data) => new Promise((resolve, reject) => {
 	try {
-		supabase.rpc('insert_services', data)
+		supabase.rpc('insert_service', data)
 			.then(response => {
 				if (response.error) {
 					reject(response.error.message)
