@@ -72,3 +72,13 @@ export const deletedSuccessfullyAlert = (entity) => Swal.fire({
   showConfirmButton: false,
   toast: true,
 })
+
+export const alreadyExistsAlert = (entity) => Swal.fire({
+  position: 'top-right',
+  icon: 'success',
+  title: `${entity} з такою назвою уже існує!`,
+  color: 'var(--theme-color)',
+  timer: 3000,
+  showConfirmButton: false,
+  toast: true,
+})

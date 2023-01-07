@@ -9,6 +9,7 @@ const TabPanel = ({ children, index, currentTab }) => {
           flex: '1 0 100%',
           pt: 1,
           px: '5px',
+          width:'100%'
         }}
       >
         {children}

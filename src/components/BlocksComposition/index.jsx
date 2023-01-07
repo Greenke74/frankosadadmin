@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Grid, Grow } from '@mui/material';
+
+import { Box, Grid, Grow, useMediaQuery } from '@mui/material';
+
 import BlockModal from './BlockModal';
 import Block from './Block';
+
 import { getProjects } from '../../services/portfolio-api-service';
 import { getServices } from '../../services/services-api-service';
 
@@ -13,6 +16,8 @@ const BlocksComposition = ({
   onDeleteBlock,
   appendImageToDelete = () => { }
 }) => {
+  const isDesktop = useMediaQuery("(min-width:900px)");
+
   const {
     fields: blocks,
     append: appendBlock,
@@ -43,12 +48,12 @@ const BlocksComposition = ({
   }
 
   return (
-    <Box p={1} pb={0} border='.13rem #c0c0c0 dashed' borderRadius='8px' overflow='hidden'>
+    <Box border={isDesktop? '.13rem #c0c0c0 dashed' : '1px #c0c0c0 dashed'} borderRadius='8px' overflow='hidden'>
       {/* <Box sx={{ mt: '2px' }}>
           {isLoading ? (<StyledLinearProgress />) : (<Box sx={{ height: '4px' }} />)}
         </Box> */}
-      <Box px={2} py={3}>
-        <Grid container spacing={3} direction='column'>
+      <Box px={2} py={isDesktop? 3: 2}>
+        <Grid container spacing={isDesktop? 3 : 2} direction='column'>
           {blocks.map(({ value, id }, idx) => {
             return (
               <Grid item key={id ?? value.id} sx={{ overflow: 'hidden !important', maxWidth: '100% !important' }}>

@@ -1,44 +1,61 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 
 import {
   Box,
   Alert,
-  Card,
   FormControl,
   FormControlLabel,
   Grid,
   Select,
-  MenuItem
-} from '@mui/material';
+  MenuItem,
+  useMediaQuery,
+} from "@mui/material";
 
-import { StyledCheckbox, StyledInputBase, StyledInputLabel } from '../components/common/StyledComponents';
-import ImageUploader from '../components/common/ImageUploader';
-import ErrorMessage from '../components/common/ErrorMessage';
-import Tabs from '../components/common/Tabs';
-import BlocksComposition from '../components/BlocksComposition';
+import {
+  StyledCheckbox,
+  StyledInputBase,
+  StyledInputLabel,
+} from "../components/common/StyledComponents";
+import ImageUploader from "../components/common/ImageUploader";
+import ErrorMessage from "../components/common/ErrorMessage";
+import Tabs from "../components/common/Tabs";
+import BlocksComposition from "../components/BlocksComposition";
+import Page from "../components/common/Page";
+import PageHeader from "../components/common/PageHeader";
+import TabPanel from "../components/common/TabPanel";
+import ImageCard from "../components/common/ImageCard";
 
-import { CameraAlt } from '@mui/icons-material';
+import {
+  getProjectPage,
+  insertProject,
+  updateProject,
+} from "../services/portfolio-api-service";
+import {
+  deleteImage,
+  getImageSrc,
+  uploadImage,
+} from "../services/storage-service.js";
+import {
+  alreadyExistsAlert,
+  changesSavedAlert,
+  checkErrorsAlert,
+} from "../services/alerts-service";
 
-import { getProjectPage, insertProject, updateProject } from '../services/portfolio-api-service';
-import { getSrcFromFile } from '../helpers/file-helpers';
-import { deleteImage, getImageSrc, uploadImage } from '../services/storage-service.js';
-import { slugify } from 'transliteration';
-import Swal from 'sweetalert2';
-import { projectBlocks } from '../components/blocks/index.js';
-import { changesSavedAlert, checkErrorsAlert } from '../services/alerts-service';
-import { sortBlocks, submitBlocks } from '../helpers/blocks-helpers';
-import Page from '../components/common/Page';
-import PageHeader from '../components/common/PageHeader';
-import TabPanel from '../components/common/TabPanel';
-import { v1 as uuid } from 'uuid'
-import ImageDeleteButton from '../components/common/ImageDeleteButton';
+import { projectBlocks } from "../components/blocks/index.js";
+import { sortBlocks, submitBlocks } from "../helpers/blocks-helpers";
+import { getSrcFromFile } from "../helpers/file-helpers";
+import { v1 as uuid } from "uuid";
+import { slugify } from "transliteration";
 
-const projectTypes = ['Приватний будинок', 'Житловий комплекс', 'Підприємство']
+const projectTypes = ["Приватний будинок", "Житловий комплекс", "Підприємство"];
 const IMAGE_ASPECT_RATIO = 2 / 1;
 
 const ProjectForm = () => {
+  const isDesktop = useMediaQuery("(min-width:900px)");
+  const isMedium = useMediaQuery("(min-width:600px)");
+
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -52,70 +69,84 @@ const ProjectForm = () => {
 
   const form = useForm({
     defaultValues: {
-      title: '',
-      location: '',
-      type: '',
-      alias: '',
+      title: "",
+      location: "",
+      type: "",
+      alias: "",
       image: {
-        image: '',
-        imageSrc: '',
-        imageFile: null
+        image: "",
+        imageSrc: "",
+        imageFile: null,
       },
       is_published: true,
       completed_at: new Date().toISOString().substr(0, 10),
-      blocks: []
+      blocks: [],
     },
-    mode: 'onSubmit'
-  })
-  const { reset, getValues, setValue, watch, handleSubmit, register, formState: { errors }, control } = form;
+    mode: "onSubmit",
+  });
+  const {
+    reset,
+    getValues,
+    setValue,
+    watch,
+    handleSubmit,
+    register,
+    formState: { errors },
+    control,
+  } = form;
 
-  const blocksFieldArray = useFieldArray({ control: control, name: 'blocks' })
+  const blocksFieldArray = useFieldArray({ control: control, name: "blocks" });
 
-
-  const is_published = watch('is_published')
+  const is_published = watch("is_published");
 
   useEffect(() => {
     let mounted = true;
-    !isNaN(id) && getProjectPage(id).then(({ data: project }) => {
-      const formData = {
-        ...getValues(),
-        ...project,
-        completed_at: project.completed_at.substr(0, 10),
-        image: {
-          image: project.image,
-          imageSrc: '',
-          imageFile: null
-        },
-        blocks: sortBlocks(project.blocks ?? []).map(b => ({ value: b }))
-      }
-      reset(formData);
-      mounted && setInitialValues(formData);
-    })
+    !isNaN(id) &&
+      getProjectPage(id).then(({ data: project }) => {
+        const formData = {
+          ...getValues(),
+          ...project,
+          completed_at: project.completed_at.substr(0, 10),
+          image: {
+            image: project.image,
+            imageSrc: "",
+            imageFile: null,
+          },
+          blocks: sortBlocks(project.blocks ?? []).map((b) => ({ value: b })),
+        };
+        reset(formData);
+        mounted && setInitialValues(formData);
+      });
 
-    return () => mounted = false;
-  }, [id])
+    return () => (mounted = false);
+  }, [id]);
 
-  const onDeleteBlock = (block) => setBlocksToDelete(prev => [...prev, block])
+  const onDeleteBlock = (block) =>
+    setBlocksToDelete((prev) => [...prev, block]);
 
   const onSubmit = async (data) => {
     const { blocks: formBlocks } = data;
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
-    const blocks = await submitBlocks(formBlocks, blocksToDelete, imagesToDelete)
+    const blocks = await submitBlocks(
+      formBlocks,
+      blocksToDelete,
+      imagesToDelete
+    );
 
     const { title } = data;
 
     const payload = {
       ...initialValues,
       ...data,
-      alias: slugify(title.trim()?.slice(0, 75), { replace: [['.', '-']] }),
-      blocks_ids: blocks.map(b => b.value.id)
-    }
+      alias: slugify(title.trim()?.slice(0, 75), { replace: [[".", "-"]] }),
+      blocks_ids: blocks.map((b) => b.value.id),
+    };
 
     let imageKey = null;
     if (data?.image?.imageFile) {
-      imageKey = await uploadImage(data.image?.imageFile)
-      await deleteImage(imageToDelete)
+      imageKey = await uploadImage(data.image?.imageFile);
+      await deleteImage(imageToDelete);
 
       delete payload.imageFile;
       payload.image = imageKey;
@@ -124,33 +155,27 @@ const ProjectForm = () => {
     }
 
     if (JSON.stringify(payload) !== JSON.stringify(initialValues)) {
-      delete payload.blocks
+      delete payload.blocks;
 
       try {
         if (payload.id) {
           await updateProject(payload);
 
-          setValue('imageFile', null);
+          setValue("imageFile", null);
 
           changesSavedAlert();
         } else {
-          const { data: { id } } = await insertProject(payload);
-          setValue('imageFile', null);
+          const {
+            data: { id },
+          } = await insertProject(payload);
+          setValue("imageFile", null);
 
           navigate(`/projects/${id}`);
           changesSavedAlert();
         }
       } catch (error) {
-        if (error?.includes('duplicate key value violates unique constraint')) {
-          Swal.fire({
-            position: 'top-right',
-            icon: 'error',
-            title: 'Проєкт з такою назвою уже існує!',
-            color: 'var(--theme-color)',
-            timer: 5000,
-            showConfirmButton: false,
-            toast: true,
-          })
+        if (error?.includes("duplicate key value violates unique constraint")) {
+          alreadyExistsAlert("Проєкт");
         }
         if (imageKey) {
           await deleteImage(imageKey);
@@ -171,11 +196,11 @@ const ProjectForm = () => {
         ...payload,
         image: {
           image: payload.image ?? data.image,
-          imageSrc: '',
-          imageFile: null
+          imageSrc: "",
+          imageFile: null,
         },
-        blocks: blocks
-      }
+        blocks: blocks,
+      };
       setInitialValues(newFormData);
       form.reset(newFormData);
 
@@ -184,108 +209,180 @@ const ProjectForm = () => {
 
       setIsSubmitting(false);
     }
-  }
+  };
 
   const onError = (errors) => {
     const generalInfoErrors = { ...errors };
     if (generalInfoErrors?.blocks) {
       delete generalInfoErrors.blocks;
     }
-    setCurrentTab(Object.keys(generalInfoErrors).length > 0 ? 0 : 1)
-    checkErrorsAlert()
-  }
+    setCurrentTab(Object.keys(generalInfoErrors).length > 0 ? 0 : 1);
+    checkErrorsAlert();
+  };
 
-  const appendImageToDelete = (id) => setImagesToDelete(prev => ([...prev, id]))
+  const appendImageToDelete = (id) =>
+    setImagesToDelete((prev) => [...prev, id]);
 
   const generalInfoErrors = { ...errors };
   if (generalInfoErrors?.blocks) {
     delete generalInfoErrors.blocks;
   }
 
-
   return (
     <>
       <PageHeader
-        title={isNaN(id)
-          ? 'Створення нового об\'єкта портфоліо'
-          : 'Редагування об\'єкта портфоліо'}
+        title={
+          isNaN(id)
+            ? "Створення нового об'єкта портфоліо"
+            : "Редагування об'єкта портфоліо"
+        }
         onSubmit={handleSubmit(onSubmit, onError)}
         submitDisabled={isSubmitting}
-        onGoBack={() => navigate('/projects')}
+        onGoBack={() => navigate("/projects")}
       />
       <Page>
-        <Box padding={2}>
-          <Tabs currentTab={currentTab} setCurrentTab={setCurrentTab} tabs={[
-            {
-              label: 'Загальна інформація',
-              errors: generalInfoErrors
-            },
-            {
-              label: 'Сторінка проєкту',
-              errors: errors?.blocks
-            }
-          ]} >
+        <Box padding={isDesktop ? 2 : 1}>
+          <Tabs
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+            tabs={[
+              {
+                label: "Загальна інформація",
+                errors: generalInfoErrors,
+              },
+              {
+                label: "Сторінка проєкту",
+                errors: errors?.blocks,
+              },
+            ]}
+          >
             <TabPanel index={0} currentTab={currentTab}>
-              <Box bgcolor='#dedede52' padding={2} borderRadius='8px'>
-                <Box display='flex' paddingLeft={1} flexWrap='nowrap' height='100%' alignItems='center'>
+              <Box bgcolor="#dedede52" padding={2} borderRadius="8px">
+                <Box
+                  display="flex"
+                  paddingLeft={1}
+                  flexWrap="nowrap"
+                  height="100%"
+                  alignItems="center"
+                >
                   <FormControlLabel
                     control={
-                      <StyledCheckbox checked={is_published} onChange={((e) => setValue('is_published', e.target.checked))} />
+                      <StyledCheckbox
+                        checked={is_published}
+                        onChange={(e) =>
+                          setValue("is_published", e.target.checked)
+                        }
+                      />
                     }
-                    label={'Опублікувати'}
+                    label={"Опублікувати"}
                   />
                   {is_published
-                    ? <Alert severity='success'>
-                      Цей об'єкт відображатиметься на сторінці "Потрфоліо"
-                    </Alert>
-                    : <Alert severity='info'>
-                      Цей об'єкт буде збережено як чернетку
-                    </Alert>}
+                    ? isMedium && (
+                        <Alert severity="success">
+                          Цей об'єкт відображатиметься на сторінці "Потрфоліо"
+                        </Alert>
+                      )
+                    : isMedium && (
+                        <Alert severity="info">
+                          Цей об'єкт буде збережено як чернетку
+                        </Alert>
+                      )}
                 </Box>
               </Box>
               <Grid container spacing={2} marginTop={1}>
                 <Grid item xs={12} lg={7}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "15px",
+                    }}
+                  >
                     <FormControl variant="standard" fullWidth>
                       <StyledInputLabel shrink htmlFor="titleInput">
                         Заголовок об'єкта
                       </StyledInputLabel>
-                      <StyledInputBase error={!!(errors?.title)} placeholder={'Заголовок об\'єкта'} id='titleInput' {...register('title', { required: true, maxLength: 50 })} />
+                      <StyledInputBase
+                        error={!!errors?.title}
+                        placeholder={"Заголовок об'єкта"}
+                        id="titleInput"
+                        {...register("title", {
+                          required: true,
+                          maxLength: 50,
+                        })}
+                      />
                     </FormControl>
-                    {errors.title && <ErrorMessage type={errors?.title?.type} maxLength={errors?.title?.type === 'maxLength' ? 50 : undefined} />}
+                    {errors.title && (
+                      <ErrorMessage
+                        type={errors?.title?.type}
+                        maxLength={
+                          errors?.title?.type === "maxLength" ? 50 : undefined
+                        }
+                      />
+                    )}
                     <FormControl variant="standard" fullWidth>
                       <StyledInputLabel shrink htmlFor="locationInput">
                         Локація
                       </StyledInputLabel>
-                      <StyledInputBase error={!!(errors?.location)} placeholder={'Локація'} id='locationInput' {...register('location', { required: true, maxLength: 50 })} />
+                      <StyledInputBase
+                        error={!!errors?.location}
+                        placeholder={"Локація"}
+                        id="locationInput"
+                        {...register("location", {
+                          required: true,
+                          maxLength: 50,
+                        })}
+                      />
                     </FormControl>
-                    {errors.location && <ErrorMessage type={errors?.location?.type} maxLength={errors?.location?.type === 'maxLength' ? 50 : undefined} />}
+                    {errors.location && (
+                      <ErrorMessage
+                        type={errors?.location?.type}
+                        maxLength={
+                          errors?.location?.type === "maxLength"
+                            ? 50
+                            : undefined
+                        }
+                      />
+                    )}
                     <FormControl variant="standard" fullWidth>
                       <StyledInputLabel shrink htmlFor="completedAtInput">
                         Дата здачі
                       </StyledInputLabel>
-                      <StyledInputBase type='date' error={!!(errors?.completed_at)} placeholder={'Дата здачі'} id='completedAtInput' {...register('completed_at', { required: true })} />
+                      <StyledInputBase
+                        type="date"
+                        error={!!errors?.completed_at}
+                        placeholder={"Дата здачі"}
+                        id="completedAtInput"
+                        {...register("completed_at", { required: true })}
+                      />
                     </FormControl>
-                    {errors.completed_at && <ErrorMessage type={errors?.completed_at?.type} />}
+                    {errors.completed_at && (
+                      <ErrorMessage type={errors?.completed_at?.type} />
+                    )}
                     <Controller
-                      name='type'
+                      name="type"
                       control={control}
                       rules={{ required: true }}
                       render={({ field }) => (
-                        <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-                          <StyledInputLabel id='projectTypeSelectLabel' htmlFor="projectTypeSelect" >
+                        <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                          <StyledInputLabel
+                            id="projectTypeSelectLabel"
+                            htmlFor="projectTypeSelect"
+                          >
                             Тип проєкту
                           </StyledInputLabel>
                           <Select
-                            error={!!(errors?.completed_at)}
+                            error={!!errors?.completed_at}
                             labelId="projectTypeSelectLabel"
-                            label='Тип проєкту'
-                            id='projectTypeSelect'
+                            label="Тип проєкту"
+                            id="projectTypeSelect"
                             value={field.value}
                             onChange={(e) => field.onChange(e)}
                           >
-                            {projectTypes.map(t => (
-                              <MenuItem key={t} value={t} >{t}</MenuItem>
+                            {projectTypes.map((t) => (
+                              <MenuItem key={t} value={t}>
+                                {t}
+                              </MenuItem>
                             ))}
                           </Select>
                         </FormControl>
@@ -295,48 +392,57 @@ const ProjectForm = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={12} lg={5}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', pb: 1 }}>
-                    <StyledInputLabel required shrink htmlFor='imageUploader' sx={{ alignSelf: 'start' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      flexDirection: "column",
+                      pb: 1,
+                    }}
+                  >
+                    <StyledInputLabel
+                      required
+                      shrink
+                      htmlFor="imageUploader"
+                      sx={{ alignSelf: "start" }}
+                    >
                       Зображення
                     </StyledInputLabel>
                     <Controller
                       name={`image`}
                       control={control}
-                      rules={{ validate: (value) => value?.image ? Boolean(value.image) : Boolean(value.imageUrl) || 'imageRequired' }}
-                      render={({ field }) => {
+                      rules={{
+                        validate: (value) =>
+                          value?.image
+                            ? Boolean(value.image)
+                            : Boolean(value.imageUrl) || "imageRequired",
+                      }}
+                      render={({ field: { onChange, value } }) => {
                         return (
                           <>
-                            <Box sx={{
-                              mt: 3,
-                              maxWidth: '100%',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              flexDirection: 'column',
-                              position: 'relative'
-                            }}>
-                              {(field.value.imageUrl || field.value.image) && (
-                                <ImageDeleteButton onClick={() => {
-                                  field.value.image && setImageToDelete(field.value.image)
-                                  field.onChange({
-                                    ...field.value,
-                                    imageFile: null,
-                                    imageSrc: '',
-                                    image: ''
-                                  })
-                                }} />
-                              )}
-                              <Card sx={{ boxShadow: errors?.image?.message == 'imageRequired' ? '0px 0px 3px 0px red' : undefined, width: '315px', display: 'flex' }}>
-                                {(field.value.imageUrl || field.value.image)
-                                  ? (<>
-                                    <img style={{ maxWidth: '100%' }} src={field.value.imageUrl ?? getImageSrc(field.value.image)} />
-                                  </>)
-                                  : (<Box sx={{ width: '315px', height: '135.5px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><CameraAlt sx={{ fontSize: 36, color: '#dedede' }} /></Box>)}
-                              </Card>
-                            </Box>
-                            <Box sx={{ mb: 2, mt: 1, width: '315px' }}>
+                            <ImageCard
+                              src={
+                                value.imageUrl
+                                  ? value.imageUrl
+                                  : value.image
+                                  ? getImageSrc(value.image)
+                                  : null
+                              }
+                              error={errors?.image?.message == "imageRequired"}
+                              onClickDelete={() => {
+                                value.image && setImageToDelete(value.image);
+                                onChange({
+                                  ...value,
+                                  imageFile: null,
+                                  imageSrc: "",
+                                  image: "",
+                                });
+                              }}
+                              customDivideBy={isDesktop ? 8 : isMedium ? 5 : 3}
+                            />
+                            <Box sx={{ mb: 2, mt: 1, width: "315px" }}>
                               {errors && errors.image && (
-                                <ErrorMessage type='imageRequired' />
+                                <ErrorMessage type="imageRequired" />
                               )}
                             </Box>
                             <ImageUploader
@@ -344,21 +450,20 @@ const ProjectForm = () => {
                               ratio={IMAGE_ASPECT_RATIO}
                               onChange={async (file) => {
                                 if (file) {
-                                  field.onChange({
-                                    ...field.value,
+                                  onChange({
+                                    ...value,
                                     image: null,
                                     imageUrl: await getSrcFromFile(file),
                                     imageFile: file,
-                                  })
+                                  });
                                 }
                               }}
-                              buttonDisabled={field.value.imageUrl || field.value.image}
+                              buttonDisabled={value.imageUrl || value.image}
                             />
                           </>
-                        )
+                        );
                       }}
                     />
-
                   </Box>
                 </Grid>
               </Grid>
@@ -376,7 +481,7 @@ const ProjectForm = () => {
         </Box>
       </Page>
     </>
-  )
-}
+  );
+};
 
-export default ProjectForm
+export default ProjectForm;

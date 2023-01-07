@@ -1,6 +1,6 @@
 export const getRoutes = () => ([
 	{
-		path: '/',
+		path: '/main-page',
 		label: 'Головна сторінка',
 		element: () => import('../pages/MainPage.jsx')
 	},

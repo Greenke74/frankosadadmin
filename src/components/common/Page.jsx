@@ -1,10 +1,26 @@
-import { Box } from '@mui/material'
-import React from 'react'
+import React from "react";
+import { Box, useMediaQuery } from "@mui/material";
 
 const Page = ({ children }) => {
-  return (
-    <Box sx={{m: 2, borderRadius: '5px', bgcolor: '#fff', maxWidth: 1200}}>{children}</Box>
-  )
-}
+  const isDesktop = useMediaQuery("(min-width:900px)");
 
-export default Page
+  return (
+    <Box
+      sx={{
+        p: isDesktop ? 2 : 1,
+      }}
+    >
+      <Box
+        sx={{
+          borderRadius: "5px",
+          bgcolor: "#fff",
+          maxWidth: 1200,
+        }}
+      >
+        {children}
+      </Box>
+    </Box>
+  );
+};
+
+export default Page;

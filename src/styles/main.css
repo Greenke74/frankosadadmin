@@ -30,7 +30,7 @@ body {
     font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--background-color);
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: scroll !important;
 }
 
 input[type="file"] {

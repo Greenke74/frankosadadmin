@@ -44,7 +44,8 @@ const Tabs = ({ tabs = [], children, currentTab, setCurrentTab }) => {
         <Box sx={{
           display: 'flex',
           flexWrap: 'nowrap',
-          transform: `translate(calc(-100% * ${currentTab}), 0px)`
+          transform: `translate(calc(-100% * ${currentTab}), 0px)`,
+          width: '100%'
         }}>
           {children}
         </Box>
