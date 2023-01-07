@@ -11,8 +11,8 @@ import AddButton from "../components/common/AddButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 
+import { deleteService, getServices } from "../services/services-api-service";
 import { getImageSrc } from "../services/storage-service";
-import { deleteProject, getProjects } from "../services/portfolio-api-service";
 import {
   deleteConfirmAlert,
   deletedSuccessfullyAlert,
@@ -21,29 +21,28 @@ import {
 const ITEMS_PER_PAGE = 8;
 const ROW_HEIGHT = 82;
 
-const ProjectsList = () => {
+const ServicesList = () => {
+  const navigate = useNavigate();
   const isDesktop = useMediaQuery("(min-width:900px)");
   const isMedium = useMediaQuery("(min-width:600px)");
-  const isLarge = useMediaQuery("(min-width:1200px)");
-  const navigate = useNavigate();
 
   const [data, setData] = useState([]);
 
   useEffect(() => {
     let mounted = true;
-    getProjects().then((response) => {
+    getServices().then((response) => {
       mounted && setData(response);
     });
     return () => (mounted = false);
   }, []);
 
   const handleDelete = (id) => {
-    deleteConfirmAlert("проєкт").then(async (result) => {
+    deleteConfirmAlert("послугу").then(async (result) => {
       if (result.value) {
-        await deleteProject(id);
-        deletedSuccessfullyAlert("Проєкт");
-        const projects = await getProjects();
-        setData(projects);
+        await deleteService(id);
+        deletedSuccessfullyAlert("Послугу");
+        const services = await getServices();
+        setData(services);
       }
     });
   };
@@ -85,22 +84,10 @@ const ProjectsList = () => {
             {row.title}
           </p>
         ),
-      headerName: "Зданий проєкт",
+      headerName: "Послуга",
     },
     {
-      hideable: true,
-      field: "completed_at",
-      width: 140,
-      flex: 0.3,
-      sortable: false,
-      headerName: "Дата здачі",
-      type: "date",
-      renderCell: ({ row }) => (
-        <span>{new Date(row.completed_at).toLocaleDateString("uk-UA")}</span>
-      ),
-    },
-    {
-      hideable: true,
+      headable: true,
       field: "is_published",
       sortable: false,
       width: 120,
@@ -112,11 +99,24 @@ const ProjectsList = () => {
       ),
     },
     {
-      hideable: true,
-      field: "location",
-      flex: 0.4,
-      sortable: false,
-      headerName: "Локація",
+      headable: true,
+      field: "description",
+      headerName: "Опис",
+      width: 440,
+      renderCell: ({ row }) => (
+        <div
+          style={{
+            display: "-webkit-box",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 3,
+            whiteSpace: "break-spaces",
+          }}
+        >
+          {row.description}
+        </div>
+      ),
     },
     {
       headerName: "Дії",
@@ -127,15 +127,15 @@ const ProjectsList = () => {
         <GridActionsCellItem
           icon={<EditRoundedIcon color="success" />}
           onClick={() => {
-            navigate(`/projects/${params.row.id}`);
+            navigate(`/services/${params.row.id}`);
           }}
           label="Print"
-          title={"Редагувати об'єкт"}
+          title={"Редагувати послугу"}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Delete"
-          title={"Видалити об'єкт"}
+          title={"Видалити послугу"}
           onClick={() => {
             handleDelete(params.row.id);
           }}
@@ -146,7 +146,7 @@ const ProjectsList = () => {
 
   return (
     <>
-      <PageHeader title={"Список проєктів"} />
+      <PageHeader title={"Список послуг"} />
       <Page>
         <Box padding={2}>
           <Box
@@ -161,15 +161,15 @@ const ProjectsList = () => {
             }}
           >
             <AddButton
-              label="Додати проєкт"
-              onClick={() => navigate("/projects/new")}
+              label="Додати послугу"
+              onClick={() => navigate("/services/new")}
             />
             {isDesktop && (
               <Alert
                 sx={{ height: "36.5px", overflow: "hidden", padding: "0 10px" }}
                 severity="info"
               >
-                Ви можете додати нові проєкти
+                Ви можете додати нові послуги
               </Alert>
             )}
           </Box>
@@ -184,9 +184,8 @@ const ProjectsList = () => {
               disableSelectionOnClick={true}
               columnVisibilityModel={{
                 id: false,
-                location: isLarge,
                 is_published: isMedium,
-                completed_at: isDesktop,
+                description: isDesktop,
               }}
               sortModel={[{ field: "id", sort: "desc" }]}
               sx={{
@@ -202,4 +201,4 @@ const ProjectsList = () => {
   );
 };
 
-export default ProjectsList;
+export default ServicesList;

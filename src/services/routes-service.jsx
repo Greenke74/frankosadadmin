@@ -1,6 +1,6 @@
 export const getRoutes = () => ([
 	{
-		path: '/',
+		path: '/main-page',
 		label: 'Головна сторінка',
 		element: () => import('../pages/MainPage.jsx')
 	},
@@ -24,7 +24,13 @@ export const getRoutes = () => ([
 	{
 		path: '/services',
 		label: 'Послуги',
-		element: () => import('../pages/ServicesPage.jsx'),
+		element: () => import('../pages/ServicesList.jsx'),
+	},
+	{
+		path: '/services/:id',
+		label: 'Послуга',
+		element: () => import('../pages/ServiceForm.jsx'),
+		hideAsideButton: true
 	},
 	{
 		path: '/account-settings',

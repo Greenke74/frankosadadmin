@@ -52,3 +52,33 @@ export const unsavedChanges = () => Swal.fire({
   focusConfirm: true,
   allowOutsideClick: false
 })
+
+export const deleteConfirmAlert = (entity) => Swal.fire({
+  title: 'Видалити',
+  html: `Ви впевнені, що хочете видалити ${entity.toLowerCase()}?`,
+  showCancelButton: true,
+  cancelButtonText: 'Скасувати',
+  confirmButtonText: 'Видалити',
+  focusCancel: true,
+  customClass: 'deleteSwal'
+})
+
+export const deletedSuccessfullyAlert = (entity) => Swal.fire({
+  position: 'top-right',
+  icon: 'success',
+  title: `${entity} успішно видалено`,
+  color: 'var(--theme-color)',
+  timer: 3000,
+  showConfirmButton: false,
+  toast: true,
+})
+
+export const alreadyExistsAlert = (entity) => Swal.fire({
+  position: 'top-right',
+  icon: 'success',
+  title: `${entity} з такою назвою уже існує!`,
+  color: 'var(--theme-color)',
+  timer: 3000,
+  showConfirmButton: false,
+  toast: true,
+})
