@@ -38,11 +38,16 @@ export const blocks = [
 		label: 'Наші роботи',
 		type: 'ourWorks',
 		element: () => import('./OurWorks.jsx')
+	},
+	{
+		label: 'Відгуки клієнтів',
+		type: 'reviews',
+		element: () => import('./Reviews.jsx')
 	}
 ]
 
 export const mainPageBlocks = [
-	'counter', 'stepByStep', 'servicesSlider', 'projectsSlider', 'ourWorks'
+	'counter', 'stepByStep', 'servicesSlider', 'projectsSlider', 'ourWorks', 'reviews'
 ]
 
 export const projectBlocks = [
