@@ -41,7 +41,6 @@ const SignInForm = ({ setResetPassword }) => {
       });
   };
 
-  console.log(authLoading);
   return (
     <Box
       sx={{
